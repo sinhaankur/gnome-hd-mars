@@ -1,18 +1,20 @@
 # ---- rights-restricted disc content (see CREDITS.md / LICENSE) ----
 # Original 1997 G-NOME disc image and everything extracted from it stays local:
 # © 7th Level, Inc. — and far over GitHub's 100 MB file limit anyway.
-G-NOME.bin
-G-NOME.cue
-extracted/
-cinematics/
-audio/
-assets/
+# (patterns anchored with "/" so they only match at the repo root —
+#  an unanchored "assets/" would wrongly swallow godot/assets/ too)
+/G-NOME.bin
+/G-NOME.cue
+/extracted/
+/cinematics/
+/audio/
+/assets/
 
 # ---- re-derivable bulk data ----
 # raw NASA HiRISE/MOLA downloads — re-fetch via tools/hirise_regions.py
-mars_data/
+/mars_data/
 # user-supplied reference mechs, license unverified (do not distribute)
-Glb/
+/Glb/
 # vendored MIT repo — re-clone from ra100/blender-claude-plugin
 tools/addons/blender-claude-plugin
 

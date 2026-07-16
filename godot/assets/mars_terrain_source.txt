@@ -1,0 +1,5 @@
+source=HiRISE DTEEC_001918_1735_001984_1735_U01 (Candor Chasma, Valles Marineris)
+m_per_px=1.0116
+window_px=396  (~401 m of real Mars per region)
+out_px=512
+regions=plains,craters,canyon,rugged  (distinct sub-windows of the same DTM)

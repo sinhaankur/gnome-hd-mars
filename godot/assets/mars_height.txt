@@ -1,0 +1,9 @@
+source=MOLA MEGDR megt44n270hb (128 px/deg)
+crop_px=512
+m_per_px=463.08
+world_span_m=237096.0
+elev_min_m=-4724.0
+elev_max_m=-3521.0
+relief_m=1203.0
+center_lat=26.0000
+center_lon=318.0000
