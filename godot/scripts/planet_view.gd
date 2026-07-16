@@ -32,7 +32,9 @@ func _ready() -> void:
 	_build_space()
 	_build_globe()
 	_build_markers()
-	_build_hud()
+	# DEV_CLEAN=1 skips the HUD — for capturing clean frames (menu backdrop, promo shots)
+	if OS.get_environment("DEV_CLEAN") != "1":
+		_build_hud()
 
 # ---------------------------------------------------------------- build
 func _build_space() -> void:
@@ -103,25 +105,9 @@ func _build_globe() -> void:
 	mi.material_override = m
 	_globe.add_child(mi)
 
-	# thin dusty atmosphere rim — fresnel shell, the pale halo Mars shows from orbit
-	var atmo := MeshInstance3D.new()
-	var asph := SphereMesh.new()
-	asph.radius = GLOBE_R * 1.03; asph.height = GLOBE_R * 2.06
-	atmo.mesh = asph
-	var sh := Shader.new()
-	sh.code = """
-shader_type spatial;
-render_mode unshaded, blend_add, cull_front;
-void fragment(){
-	// Mars' limb haze from orbit is VERY thin — keep this a whisper, not an outline
-	float rim = pow(1.0 - abs(dot(NORMAL, VIEW)), 5.0);
-	ALBEDO = vec3(0.80, 0.62, 0.44) * rim;
-	ALPHA = rim * 0.22;
-}
-"""
-	var am := ShaderMaterial.new(); am.shader = sh
-	atmo.material_override = am
-	_globe.add_child(atmo)
+	# NO atmosphere shell: even a whisper-alpha fresnel shell reads as a hard grey ring
+	# at the silhouette (the shell is seen edge-on there). Real orbital photos of Mars
+	# show essentially no limb halo — the bare globe against black IS the real look.
 
 func _latlon_to_point(latlon: Vector2) -> Vector3:
 	# lat° / east-lon° -> point on the globe surface, matching SphereMesh's equirect UV

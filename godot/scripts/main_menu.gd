@@ -15,11 +15,20 @@ func _ready() -> void:
 	_build()
 
 func _build() -> void:
-	# --- background: Mars-red ---
-	var bg := ColorRect.new()
-	bg.color = Color(0.14, 0.08, 0.07)
+	# --- background: Mars from orbit (captured from the planet scene, DEV_CLEAN=1) ---
+	var bg := TextureRect.new()
+	var img := Image.load_from_file(ProjectSettings.globalize_path("res://assets/menu_bg.png"))
+	if img:
+		bg.texture = ImageTexture.create_from_image(img)
+	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	# gentle darkening so the logo/buttons stay readable over the planet
+	var shade := ColorRect.new()
+	shade.color = Color(0.0, 0.0, 0.0, 0.35)
+	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(shade)
 
 	# --- centered vertical stack: logo above, buttons below ---
 	var center := CenterContainer.new()

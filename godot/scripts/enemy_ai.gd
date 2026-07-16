@@ -138,7 +138,7 @@ func _spawn_explosion() -> void:
 	bm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	bm.emission_enabled = true
 	bm.emission = Color(1.0, 0.55, 0.15)
-	bm.emission_energy_multiplier = 5.0
+	bm.emission_energy_multiplier = 3.0   # hot but not neon (FX restraint bar)
 	bm.albedo_color = Color(1.0, 0.6, 0.2, 0.9)
 	ball.material_override = bm
 	parent.add_child(ball)

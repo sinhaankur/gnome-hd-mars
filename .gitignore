@@ -22,3 +22,6 @@ tools/addons/blender-claude-plugin
 godot/.godot/
 .DS_Store
 **/.DS_Store
+
+# transient art-pass captures — regenerated every DEV_SHOTS run
+/reference/shots/
