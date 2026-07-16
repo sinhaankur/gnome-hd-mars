@@ -59,7 +59,7 @@ func _ready() -> void:
 	# --- Environment Engine: owns terrain, sun, scatter, installation ---
 	env = EnvironmentEngine.new()
 	env.name = "EnvironmentEngine"
-	env.world_size = 400.0
+	env.world_size = 800.0   # 4x the roamable ground — "the ground is limited" playtest note
 	env.height_scale = _level.get("height_scale", 34.0)   # per-level terrain relief
 	env.day_start = _level.get("day_start", 0.32)          # per-level time of day
 	env.region = _level.get("region", "")                  # per-level MOLA region heightmap

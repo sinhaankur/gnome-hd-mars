@@ -132,25 +132,23 @@ func is_walkable(x: float, z: float) -> bool:
 	return slope_at(x, z) <= max_walkable_slope
 
 func random_edge_spawn(rng: RandomNumberGenerator = null) -> Vector3:
-	# a walkable point near a random map edge — for enemy spawns approaching the base
+	# a walkable point on the COMBAT PERIMETER — a fixed-radius ring around the
+	# installation, independent of world size, so bigger maps don't slow the assault
 	if rng == null:
 		rng = RandomNumberGenerator.new()
-	var half := world_size * 0.5 - 20.0
+	var radius := minf(world_size * 0.5 - 20.0, 240.0)
 	for _try in range(24):
-		var edge := rng.randi_range(0, 3)
-		var x := 0.0
-		var z := 0.0
-		match edge:
-			0: x = rng.randf_range(-half, half); z = -half
-			1: x = rng.randf_range(-half, half); z = half
-			2: x = -half; z = rng.randf_range(-half, half)
-			3: x = half; z = rng.randf_range(-half, half)
+		var ang := rng.randf() * TAU
+		var x := installation_pos.x + cos(ang) * radius
+		var z := installation_pos.z + sin(ang) * radius
 		if is_walkable(x, z):
 			var y := ground_height(x, z)
 			if not is_nan(y):
 				return Vector3(x, y + 2.0, z)
-	# fallback: a fixed corner
-	return Vector3(half, maxf(ground_height(half, half), 5.0) + 2.0, half)
+	# fallback: due north of the base on the ring
+	var fx := installation_pos.x
+	var fz := installation_pos.z + radius
+	return Vector3(fx, maxf(ground_height(fx, fz), 5.0) + 2.0, fz)
 
 func time_of_day() -> float:
 	return sun.time_of_day() if sun else 0.0
@@ -250,11 +248,12 @@ func _build_wind_dust() -> void:
 	pm.initial_velocity_min = 6.0
 	pm.initial_velocity_max = 12.0
 	pm.gravity = Vector3(2.0, 0.0, 0.6)   # wind push
-	pm.scale_min = 0.3
-	pm.scale_max = 1.1
-	pm.color = Color(0.75, 0.6, 0.5, 0.18)
+	# FINE haze, not floating chunks: real blowing dust reads as soft specks
+	pm.scale_min = 0.12
+	pm.scale_max = 0.4
+	pm.color = Color(0.75, 0.6, 0.5, 0.13)
 	dust.process_material = pm
-	var qm := QuadMesh.new(); qm.size = Vector2(1.2, 1.2)
+	var qm := QuadMesh.new(); qm.size = Vector2(0.5, 0.5)
 	dust.draw_pass_1 = qm
 	var dm := StandardMaterial3D.new()
 	dm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
