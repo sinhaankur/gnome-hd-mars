@@ -88,17 +88,23 @@ func _build_marker(poi_name: String, _color: Color) -> Node3D:
 			root.add_child(scorch)
 		"Water-Ice Deposit":
 			# pale exposed ice patch + chunks — bright against the regolith
+			# dusty exposed ice: pale but not white — fresh-snow white glows unnaturally
+			# under the Mars sun; real exposed ice is dust-tinged and half-buried
 			var ice := StandardMaterial3D.new()
-			ice.albedo_color = Color(0.85, 0.90, 0.95); ice.roughness = 0.25
+			ice.albedo_color = Color(0.74, 0.78, 0.80); ice.roughness = 0.45
 			var patch := MeshInstance3D.new()
 			var pd := CylinderMesh.new(); pd.top_radius = 3.6; pd.bottom_radius = 3.6; pd.height = 0.15
-			patch.mesh = pd; patch.material_override = ice; patch.position.y = 0.05
+			patch.mesh = pd; patch.material_override = ice; patch.position.y = 0.02
 			root.add_child(patch)
+			var irng := RandomNumberGenerator.new()
+			irng.seed = 902
 			for i in range(4):
 				var chunk := MeshInstance3D.new()
-				var cs := SphereMesh.new(); cs.radius = 0.6; cs.height = 0.9
-				chunk.mesh = cs; chunk.material_override = ice
-				chunk.position = Vector3(cos(i * 1.7) * 1.8, 0.25, sin(i * 1.7) * 1.8)
+				chunk.mesh = Atoms.rock_mesh(irng)
+				chunk.material_override = ice
+				chunk.scale = Vector3(0.55, 0.35, 0.55)
+				chunk.position = Vector3(cos(i * 1.7) * 1.8, 0.1, sin(i * 1.7) * 1.8)
+				chunk.rotation.y = irng.randf() * TAU
 				root.add_child(chunk)
 		"Derelict Rover":
 			# boxy rover hull on six wheels, long dead and dust-caked
@@ -136,17 +142,22 @@ func _build_marker(poi_name: String, _color: Color) -> Node3D:
 				crate.rotation.y = i * 0.4
 				root.add_child(crate)
 		"Ancient Riverbed":
-			# a curve of smooth pale stones tracing the old channel
-			for i in range(7):
+			# water-rounded cobbles half-buried along the old channel — irregular rock
+			# meshes in terrain tones (bright smooth spheres read as golf balls in a row)
+			var rrng := RandomNumberGenerator.new()
+			rrng.seed = 1207
+			var cobble_mat := Atoms.rock_material(Color(0.55, 0.49, 0.44))
+			for i in range(9):
 				var stone := MeshInstance3D.new()
-				var ss := SphereMesh.new(); ss.radius = 1.0; ss.height = 1.0
-				stone.mesh = ss
-				var pm := StandardMaterial3D.new()
-				pm.albedo_color = Color(0.72, 0.62, 0.52); pm.roughness = 0.9
-				stone.material_override = pm
-				var tt := float(i) / 6.0
-				stone.position = Vector3(sin(tt * 2.4) * 6.0, 0.15, tt * 14.0 - 7.0)
-				stone.scale = Vector3(1.4, 0.4, 1.8)
+				stone.mesh = Atoms.rock_mesh(rrng)
+				stone.material_override = cobble_mat
+				var tt := float(i) / 8.0
+				var s := rrng.randf_range(0.7, 1.6)
+				stone.scale = Vector3(s * rrng.randf_range(1.0, 1.5), s * 0.35, s * rrng.randf_range(1.0, 1.5))
+				stone.rotation.y = rrng.randf() * TAU
+				stone.position = Vector3(sin(tt * 2.4) * 6.0 + rrng.randf_range(-1.0, 1.0),
+										 -s * 0.12,   # embedded, not perched
+										 tt * 14.0 - 7.0)
 				root.add_child(stone)
 
 	# survey mast: thin pole + small red blinking beacon lamp (diegetic, like real hardware)

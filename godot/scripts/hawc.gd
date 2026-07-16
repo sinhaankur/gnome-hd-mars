@@ -204,14 +204,10 @@ func _set_thrusters(on: bool) -> void:
 		_thrusters.process_material = pm
 		var qm := QuadMesh.new(); qm.size = Vector2(0.8, 0.8)
 		_thrusters.draw_pass_1 = qm
-		var fm := StandardMaterial3D.new()
-		fm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		fm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		fm.emission_enabled = true
+		var fm := Atoms.dust_material(Color(1.0, 0.7, 0.3, 0.5)).duplicate() as StandardMaterial3D
+		fm.emission_enabled = true   # flame glows — the shared dust puff plus emission
 		fm.emission = Color(1.0, 0.6, 0.2)
-		fm.emission_energy_multiplier = 4.0
-		fm.albedo_color = Color(1.0, 0.7, 0.3, 0.9)
-		fm.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+		fm.emission_energy_multiplier = 1.6   # 4.0 bloomed into a giant white cumulus cloud
 		_thrusters.material_override = fm
 		_thrusters.emitting = false
 		add_child(_thrusters)
@@ -239,12 +235,7 @@ func _landing_impact(fall_speed: float) -> void:
 	burst.process_material = pm
 	var qm := QuadMesh.new(); qm.size = Vector2(1.2, 1.2)
 	burst.draw_pass_1 = qm
-	var dm := StandardMaterial3D.new()
-	dm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	dm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	dm.albedo_color = Color(0.72, 0.56, 0.45, 0.5)
-	dm.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	burst.material_override = dm
+	burst.material_override = Atoms.dust_material(Color(0.72, 0.56, 0.45, 0.5))
 	_spawn_parent().add_child(burst)
 	burst.global_position = global_position   # set after entering the tree
 	burst.emitting = true

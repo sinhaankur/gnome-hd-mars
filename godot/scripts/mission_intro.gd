@@ -189,12 +189,7 @@ func _touchdown_dust(ground: Vector3) -> void:
 	dust.process_material = pm
 	var qm := QuadMesh.new(); qm.size = Vector2(2.0, 2.0)
 	dust.draw_pass_1 = qm
-	var dm := StandardMaterial3D.new()
-	dm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	dm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	dm.albedo_color = Color(0.68, 0.55, 0.42, 0.45)
-	dm.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	dust.material_override = dm
+	dust.material_override = Atoms.dust_material(Color(0.68, 0.55, 0.42, 0.45))
 	_env.add_child(dust)
 	dust.global_position = ground + Vector3.UP * 0.5
 	dust.emitting = true

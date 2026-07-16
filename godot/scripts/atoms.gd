@@ -79,7 +79,7 @@ static func rock_material(base: Color) -> ShaderMaterial:
 	sh.code = """
 shader_type spatial;
 uniform vec3 base_col = vec3(0.5, 0.4, 0.3);
-uniform vec3 dust_col = vec3(0.70, 0.58, 0.45);   // settled regolith, matches terrain highs
+uniform vec3 dust_col = vec3(0.74, 0.67, 0.60);   // settled regolith, matches terrain highs
 varying vec3 v_world; varying vec3 v_nrm;
 void vertex(){
 	v_world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
@@ -90,15 +90,18 @@ float noise(vec2 p){ vec2 i=floor(p),f=fract(p); float a=hash(i),b=hash(i+vec2(1
 float fbm(vec2 p){ float v=0.0, a=0.5; for(int i=0;i<4;i++){ v+=a*noise(p); p*=2.07; a*=0.5; } return v; }
 void fragment(){
 	vec2 w = v_world.xz + vec2(v_world.y * 0.7);
-	// patchy mineral tone variation across the boulder
+	// patchy mineral tone variation across the boulder. COLOR is white for plain
+	// MeshInstances; MultiMesh scatter sets a per-instance tint so one material
+	// serves thousands of varied rocks.
 	float patch = fbm(w * 1.4);
-	vec3 col = base_col * (0.82 + patch * 0.36);
+	vec3 col = base_col * COLOR.rgb * (0.82 + patch * 0.36);
 	// fine surface grain
 	float grain = noise(w * 22.0);
 	col *= 0.93 + grain * 0.14;
 	// tan dust settles on up-facing surfaces — like every rock in the rover photos
+	// (kept subtle: a heavy dust cap made every rock brighter than the ground)
 	float up = clamp(v_nrm.y, 0.0, 1.0);
-	col = mix(col, dust_col, smoothstep(0.45, 0.95, up) * 0.55);
+	col = mix(col, dust_col, smoothstep(0.45, 0.95, up) * 0.35);
 	ALBEDO = col;
 	ROUGHNESS = 0.95;
 	SPECULAR = 0.1;
@@ -110,7 +113,60 @@ void fragment(){
 	_rock_mat_cache[key] = m
 	return m
 
+static func align_foot(visual: Node3D, body: Node3D, foot_y: float = 0.4) -> void:
+	# GLB mech models rarely have their origin at the feet — the visual then hovers at
+	# the model's arbitrary origin height while the physics capsule stands correctly
+	# (measured: warrior.glb floated ~3 m). Shift the visual so its lowest mesh point
+	# sits at the capsule bottom. Call AFTER the body is inside the tree.
+	var bottom := INF
+	var inv := body.global_transform.affine_inverse()
+	for mi in all_mesh_instances(visual):
+		var m := mi as MeshInstance3D
+		var xf: Transform3D = inv * m.global_transform
+		var aabb: AABB = m.get_aabb()
+		for i in range(8):
+			bottom = minf(bottom, (xf * aabb.get_endpoint(i)).y)
+	if bottom != INF:
+		visual.position.y -= bottom - foot_y
+
 # --- effect atoms --------------------------------------------------------------
+static var _radial_tex: GradientTexture2D   # shared soft-falloff sprite for all particles
+
+static func radial_sprite() -> GradientTexture2D:
+	# white center fading to transparent edge — an untextured particle quad renders as a
+	# hard-edged floating SQUARE (the worst particle artifact); this makes it a soft puff
+	if _radial_tex == null:
+		var g := Gradient.new()
+		g.set_color(0, Color(1, 1, 1, 1))
+		g.set_color(1, Color(1, 1, 1, 0))
+		var t := GradientTexture2D.new()
+		t.gradient = g
+		t.fill = GradientTexture2D.FILL_RADIAL
+		t.fill_from = Vector2(0.5, 0.5)
+		t.fill_to = Vector2(0.5, 0.0)
+		t.width = 64; t.height = 64
+		_radial_tex = t
+	return _radial_tex
+
+static var _dust_mat_cache: Dictionary = {}   # color -> shared soft dust material
+
+static func dust_material(color: Color) -> StandardMaterial3D:
+	# soft round dust-puff material for GPU particle quads (wind dust, devils, thrusters,
+	# landing bursts). Unshaded + billboard + radial falloff. Cached per color.
+	var key := color.to_html()
+	if _dust_mat_cache.has(key):
+		return _dust_mat_cache[key]
+	var m := StandardMaterial3D.new()
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.albedo_color = color
+	m.albedo_texture = radial_sprite()
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	m.vertex_color_use_as_albedo = true   # lets the process material's color tint apply
+	m.disable_receive_shadows = true
+	_dust_mat_cache[key] = m
+	return m
+
 static func flash_light(parent: Node, pos: Vector3, color: Color, energy: float,
 						rng: float, secs: float) -> void:
 	# a brief point-light flash that fades out and frees itself (muzzle/impact/explosion)
@@ -154,6 +210,7 @@ static func spark_burst(parent: Node, pos: Vector3, color: Color, amount: int = 
 	m.emission = color
 	m.emission_energy_multiplier = 4.0
 	m.albedo_color = color
+	m.albedo_texture = radial_sprite()   # soft round spark, not a square
 	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
 	p.material_override = m
 	parent.add_child(p)        # must be in-tree BEFORE setting a global transform

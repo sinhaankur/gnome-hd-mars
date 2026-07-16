@@ -116,6 +116,8 @@ func _spawn_enemy(tier_key: String, fallback_hp: int) -> void:
 	if _env and _env.installation:
 		e.set("primary_target", _env.installation)
 	add_child(e)
+	# GLB origin isn't at the feet — align the model's lowest point to the capsule bottom
+	Atoms.align_foot(visual, e)
 	# clean up + wave tracking when it dies
 	if e.has_signal("destroyed"):
 		e.destroyed.connect(_on_enemy_destroyed)

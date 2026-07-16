@@ -172,7 +172,8 @@ func _build_sky_and_sun() -> void:
 	mat.sky_horizon_color = Color(0.78, 0.68, 0.55)  # pale dusty-peach horizon band
 	mat.ground_horizon_color = Color(0.66, 0.52, 0.40)
 	mat.ground_bottom_color = Color(0.48, 0.36, 0.27)
-	mat.sky_energy_multiplier = 1.0
+	# in the reference photos soil is nearly as bright as the sky (0.88:1)
+	mat.sky_energy_multiplier = 0.95
 	mat.sun_angle_max = 10.0
 	sky.sky_material = mat
 	env.sky = sky
@@ -180,42 +181,41 @@ func _build_sky_and_sun() -> void:
 	env.ambient_light_energy = 0.9
 	env.ambient_light_color = Color(0.70, 0.62, 0.55)
 	env.fog_enabled = true
-	env.fog_mode = Environment.FOG_MODE_DEPTH
-	env.fog_light_color = Color(0.74, 0.63, 0.50)
-	env.fog_density = 0.0038                          # dusty air: strong aerial perspective —
+	# EXPONENTIAL, not DEPTH: in depth mode fog_density acts as a max OPACITY, so a
+	# density-style value (0.004) made the fog invisible — no aerial perspective at all,
+	# dark ground running to a hard horizon line. Exponential restores the tan dust wash.
+	env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
+	env.fog_light_color = Color(0.74, 0.66, 0.56)
+	env.fog_density = 0.002                           # dusty air: strong aerial perspective —
 	env.fog_sky_affect = 0.15                         # distant relief fades to tan like the photos
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES   # nicer contrast than filmic here
-	env.tonemap_white = 2.2                           # headroom for the brighter sun
-	env.tonemap_exposure = 1.1                        # a touch brighter overall
+	env.tonemap_white = 2.4                           # headroom for the bright sun
+	env.tonemap_exposure = 1.0
 	# detail render pass — depth/glow/reflections so every surface reads crisply
 	env.ssao_enabled = true
 	env.ssao_radius = 1.2
-	env.ssao_intensity = 1.0                          # gentle: dusty skylight softens crevices
+	env.ssao_intensity = 0.7                          # gentle: dusty skylight softens crevices
 	env.ssil_enabled = true
 	env.ssil_intensity = 0.6
 	env.glow_enabled = true
-	env.glow_intensity = 0.45                         # subtle halo only — heavy glow bloomed
+	env.glow_intensity = 0.30                         # subtle halo only — heavy glow bloomed
 	env.glow_bloom = 0.05                             # every bright surface into white slabs
-	env.glow_hdr_threshold = 1.0
+	# threshold must sit ABOVE sunlit-surface radiance (sun energy ~3): at 1.0 every pale
+	# rock/crater rim bloomed into a white blob — only true emitters should glow
+	env.glow_hdr_threshold = 1.9
 	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN
 	env.ssr_enabled = true
 	env.ssr_max_steps = 32
 	we.environment = env
 	add_child(we)
 
-	# soft warm FILL light from the opposite side (no shadows) so the mech's shadow side
-	# and terrain aren't crushed to black — fixes the murky, underlit look.
-	var fill := DirectionalLight3D.new()
-	fill.name = "FillLight"
-	fill.rotation_degrees = Vector3(-25, -140, 0)
-	fill.light_color = Color(0.86, 0.76, 0.64)  # warm dust-bounce fill (Mars sky is tan, not blue)
-	fill.light_energy = 0.5
-	fill.shadow_enabled = false
-	add_child(fill)
-
 	s.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 	s.directional_shadow_max_distance = 220.0
-	s.shadow_bias = 0.03
+	# bias tuning: too low dapples the displaced terrain with acne speckle; too much
+	# normal bias (3.0) offset receivers ~3 m along their normals and ERASED all cast
+	# shadows — dropship, mech, rocks all floated shadowless
+	s.shadow_bias = 0.05
+	s.shadow_normal_bias = 1.2
 	s.env = env
 	s.day_length_sec = 120.0
 	s.start_time = day_start
@@ -230,6 +230,17 @@ func _build_sky_and_sun() -> void:
 			env.glow_enabled = false
 	add_child(s)
 	sun = s
+
+	# soft warm FILL light from the opposite side (no shadows) so the mech's shadow side
+	# and terrain aren't crushed to black — fixes the murky, underlit look.
+	# Added AFTER the sun: light order affects which directional light gets shadow slots.
+	var fill := DirectionalLight3D.new()
+	fill.name = "FillLight"
+	fill.rotation_degrees = Vector3(-25, -140, 0)
+	fill.light_color = Color(0.86, 0.76, 0.64)  # warm dust-bounce fill (Mars sky is tan, not blue)
+	fill.light_energy = 0.25
+	fill.shadow_enabled = false
+	add_child(fill)
 
 func _build_wind_dust() -> void:
 	# Blowing dust drifting low across the surface — a big GPU particle box that follows
@@ -255,13 +266,7 @@ func _build_wind_dust() -> void:
 	dust.process_material = pm
 	var qm := QuadMesh.new(); qm.size = Vector2(0.5, 0.5)
 	dust.draw_pass_1 = qm
-	var dm := StandardMaterial3D.new()
-	dm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	dm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	dm.albedo_color = Color(0.78, 0.62, 0.5, 0.16)
-	dm.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	dm.disable_receive_shadows = true
-	dust.material_override = dm
+	dust.material_override = Atoms.dust_material(Color(0.78, 0.62, 0.5, 0.16))
 	dust.position = Vector3(0, 15, 0)
 	add_child(dust)
 	_wind_dust = dust
@@ -299,13 +304,7 @@ func _build_dust_devils() -> void:
 		devil.process_material = pm
 		var qm := QuadMesh.new(); qm.size = Vector2(2.0, 2.0)
 		devil.draw_pass_1 = qm
-		var dm := StandardMaterial3D.new()
-		dm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		dm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		dm.albedo_color = Color(0.72, 0.55, 0.44, 0.3)
-		dm.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-		dm.disable_receive_shadows = true
-		devil.material_override = dm
+		devil.material_override = Atoms.dust_material(Color(0.72, 0.55, 0.44, 0.3))
 		# place far out on the plains
 		var ang := rng.randf() * TAU
 		var dist := rng.randf_range(120, 170)
@@ -506,15 +505,23 @@ func _scatter_rocks() -> void:
 	# rock palette sampled from the Perseverance panoramas: grey-brown basalt dusted
 	# with tan regolith — never saturated red, never near-black. The shared rock shader
 	# (Atoms.rock_material) adds patchiness, grain, and dust settled on top faces.
-	var rock_dark := Atoms.rock_material(Color(0.42, 0.33, 0.26))
-	var rock_rust := Atoms.rock_material(Color(0.58, 0.44, 0.33))
-	var rock_pale := Atoms.rock_material(Color(0.70, 0.58, 0.46))
-	var mats := [rock_dark, rock_rust, rock_pale]
+	var rock_dark := Atoms.rock_material(Color(0.44, 0.38, 0.32))
 	var half := world_size * 0.5 - 15.0
 
 	# --- natural boulders: ALL rounded (no angular debris boxes), Mars-toned, mostly
 	# embedded low in the ground so they look weathered and sit like real Mars rocks.
-	for i in range(140):
+	# MULTIMESH scatter (one draw call per rock-mesh variant, per-instance color tint)
+	# lets density approach the rover photos — the ground there is LITTERED with rocks.
+	# count scales with map area so density holds as world_size grows.
+	var rock_count := int(1600.0 * (world_size * world_size) / (800.0 * 800.0))
+	# neutral grey multipliers, all <= 1: in the rover photos rocks read DARKER than
+	# the dusty soil — pale/HDR tints turned the plain into white confetti
+	var tints := [Color(0.62, 0.60, 0.58), Color(0.80, 0.77, 0.74), Color(1.0, 0.96, 0.92)]
+	var variants := 8
+	var buckets: Array = []            # per rock-mesh variant: Array[{xform, color}]
+	for v in range(variants):
+		buckets.append([])
+	for i in range(rock_count):
 		var x: float = rng.randf_range(-half, half)
 		var z: float = rng.randf_range(-half, half)
 		if Vector2(x, z).distance_to(Vector2(0, 160)) < 22.0:
@@ -524,26 +531,44 @@ func _scatter_rocks() -> void:
 		var y := ground_height(x, z)
 		if is_nan(y):
 			continue
-		var rock := MeshInstance3D.new()
-		rock.mesh = Atoms.rock_mesh(rng)   # irregular lumpy boulder, not a perfect ball
-		rock.material_override = mats[rng.randi() % mats.size()]
-		var sc := rng.randf_range(0.6, 2.4)
+		var sc := rng.randf_range(0.5, 2.2)
+		var b := Basis.from_euler(Vector3(rng.randf_range(-0.15, 0.15), rng.randf() * TAU, rng.randf_range(-0.15, 0.15)))
 		# squashed, irregular boulders
-		rock.scale = Vector3(sc * rng.randf_range(0.9, 1.4),
+		b = b.scaled(Vector3(sc * rng.randf_range(0.9, 1.4),
 							 sc * rng.randf_range(0.4, 0.8),
-							 sc * rng.randf_range(0.9, 1.4))
-		rock.rotation = Vector3(rng.randf_range(-0.15, 0.15), rng.randf() * TAU, rng.randf_range(-0.15, 0.15))
+							 sc * rng.randf_range(0.9, 1.4)))
 		# embed so the bottom sinks into the ground (weathered look), not perched on top
-		rock.position = Vector3(x, y - rock.scale.y * 0.25, z)
-		add_child(rock)
+		var xf := Transform3D(b, Vector3(x, y - sc * 0.25, z))
+		var tint: Color = tints[rng.randi() % tints.size()]
+		tint = tint * rng.randf_range(0.85, 1.1)
+		buckets[rng.randi() % variants].append({"xform": xf, "color": tint})
+	var boulder_mat := Atoms.rock_material(Color(0.46, 0.41, 0.36))   # grey basalt; tint via instance COLOR
+	for v in range(variants):
+		var entries: Array = buckets[v]
+		if entries.is_empty():
+			continue
+		var bmm := MultiMesh.new()
+		bmm.transform_format = MultiMesh.TRANSFORM_3D
+		bmm.use_colors = true
+		var bmesh := Atoms.rock_mesh(rng)
+		bmesh.surface_set_material(0, boulder_mat)
+		bmm.mesh = bmesh
+		bmm.instance_count = entries.size()
+		for i in range(entries.size()):
+			bmm.set_instance_transform(i, entries[i]["xform"])
+			bmm.set_instance_color(i, entries[i]["color"])
+		var bmi := MultiMeshInstance3D.new()
+		bmi.name = "Boulders%d" % v
+		bmi.multimesh = bmm
+		add_child(bmi)
 
 	# --- a few impact craters (rings of raised rim) as landmarks ---
-	for c in range(5):
+	for c in range(8):
 		var cx := rng.randf_range(-half*0.85, half*0.85)
 		var cz := rng.randf_range(-half*0.85, half*0.85)
 		if Vector2(cx, cz).distance_to(Vector2(installation_pos.x, installation_pos.z)) < 70.0:
 			continue
-		_build_crater(cx, cz, rng.randf_range(10.0, 20.0), mats[0], rng)
+		_build_crater(cx, cz, rng.randf_range(10.0, 20.0), rock_dark, rng)
 
 func _build_crater(cx: float, cz: float, radius: float, mat: Material, rng: RandomNumberGenerator) -> void:
 	# a raised rim ring of rocks marking an impact crater
@@ -572,10 +597,18 @@ func _scatter_detail() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 31337
 	var half := world_size * 0.5 - 10.0
-	var pebble_mat := Atoms.rock_material(Color(0.58, 0.46, 0.36))
+	var pebble_mat := Atoms.rock_material(Color(0.48, 0.43, 0.39))   # darker than the soil
 
-	# 1) PEBBLES — lots of tiny stones dusting the surface (cheap, big density payoff)
-	for i in range(400):
+	# 1) PEBBLES — lots of tiny stones dusting the surface (cheap, big density payoff).
+	# ONE MultiMesh node instead of hundreds of MeshInstance3Ds; count scales with the
+	# map area so the 800 m world stays as littered as the rover photos.
+	var peb_mesh := SphereMesh.new()
+	peb_mesh.radius = 1.0; peb_mesh.height = 2.0
+	peb_mesh.radial_segments = 6; peb_mesh.rings = 3   # tiny on screen: low poly is plenty
+	peb_mesh.material = pebble_mat
+	var count := int(1200.0 * (world_size * world_size) / (800.0 * 800.0))
+	var xforms: Array[Transform3D] = []
+	for i in range(count):
 		var x := rng.randf_range(-half, half)
 		var z := rng.randf_range(-half, half)
 		if Vector2(x, z).distance_to(Vector2(installation_pos.x, installation_pos.z)) < 30.0:
@@ -583,18 +616,27 @@ func _scatter_detail() -> void:
 		var y := ground_height(x, z)
 		if is_nan(y):
 			continue
-		var peb := MeshInstance3D.new()
-		var sm := SphereMesh.new(); sm.radius = 1.0; sm.height = 2.0
-		peb.mesh = sm
-		peb.material_override = pebble_mat
 		var s := rng.randf_range(0.15, 0.5)
-		peb.scale = Vector3(s, s * rng.randf_range(0.4, 0.7), s)
-		peb.position = Vector3(x, y - s * 0.2, z)
-		add_child(peb)
+		var b := Basis.from_euler(Vector3(0, rng.randf() * TAU, 0))
+		b = b.scaled(Vector3(s, s * rng.randf_range(0.4, 0.7), s))
+		xforms.append(Transform3D(b, Vector3(x, y - s * 0.2, z)))
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = peb_mesh
+	mm.instance_count = xforms.size()
+	for i in range(xforms.size()):
+		mm.set_instance_transform(i, xforms[i])
+	var pebbles := MultiMeshInstance3D.new()
+	pebbles.name = "Pebbles"
+	pebbles.multimesh = mm
+	pebbles.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(pebbles)
 
-	# 2) LANDMARK MESAS — a few big flat-topped rock formations as navigation landmarks
-	var mesa_mat := Atoms.rock_material(Color(0.60, 0.46, 0.35))
-	for i in range(6):
+	# 2) LANDMARK OUTCROPS — clusters of giant lumpy rocks reading as weathered rocky
+	# rises (the smooth CylinderMesh "mesas" read as giant plastic tubs with sun-blown
+	# flat caps — the reference photos show broken rocky outcrops, not tidy cones)
+	var mesa_mat := Atoms.rock_material(Color(0.52, 0.46, 0.41))
+	for i in range(8):
 		var x := rng.randf_range(-half * 0.9, half * 0.9)
 		var z := rng.randf_range(-half * 0.9, half * 0.9)
 		if Vector2(x, z).distance_to(Vector2(0, 160)) < 40.0:
@@ -604,17 +646,23 @@ func _scatter_detail() -> void:
 		var y := ground_height(x, z)
 		if is_nan(y):
 			continue
-		var mesa := MeshInstance3D.new()
-		var cm := CylinderMesh.new()
-		# low + wide reads as a weathered butte (tall narrow cylinders read as traffic cones)
-		var top := rng.randf_range(9.0, 16.0)
-		cm.top_radius = top * 0.75; cm.bottom_radius = top; cm.height = rng.randf_range(7.0, 14.0)
-		cm.radial_segments = 9   # angular, rocky
-		mesa.mesh = cm
-		mesa.material_override = mesa_mat
-		mesa.rotation.y = rng.randf() * TAU
-		mesa.position = Vector3(x, y + cm.height * 0.45, z)
-		add_child(mesa)
+		for k in range(rng.randi_range(3, 5)):
+			var rock := MeshInstance3D.new()
+			rock.mesh = Atoms.rock_mesh(rng)
+			rock.material_override = mesa_mat
+			var s := rng.randf_range(5.0, 10.0)
+			rock.scale = Vector3(s * rng.randf_range(1.2, 1.9),
+								 s * rng.randf_range(0.45, 0.75),
+								 s * rng.randf_range(1.2, 1.9))
+			rock.rotation = Vector3(rng.randf_range(-0.12, 0.12), rng.randf() * TAU, rng.randf_range(-0.12, 0.12))
+			var ox := x + rng.randf_range(-9.0, 9.0)
+			var oz := z + rng.randf_range(-9.0, 9.0)
+			var oy := ground_height(ox, oz)
+			if is_nan(oy):
+				continue
+			# sunk deep so the cluster reads as bedrock breaking the surface
+			rock.position = Vector3(ox, oy - rock.scale.y * 0.35, oz)
+			add_child(rock)
 
 	# 3) HALF-BURIED WRECKAGE — a couple of dead hulks tilted into the regolith (story detail)
 	var wreck_mat := StandardMaterial3D.new()
@@ -653,13 +701,15 @@ func _build_horizon() -> void:
 		var r := dist + rng.randf_range(-40, 40)
 		var peak := MeshInstance3D.new()
 		var cone := CylinderMesh.new()
-		cone.top_radius = rng.randf_range(4.0, 18.0)   # flat-topped mesas, not pyramids
-		cone.bottom_radius = rng.randf_range(60, 120)
-		cone.height = rng.randf_range(18, 55)
+		# LOW and WIDE: distant Mars relief is worn-down ridgeline, not alpine peaks —
+		# tall cones read as smooth pyramids poking through the haze
+		cone.top_radius = rng.randf_range(10.0, 30.0)   # flat-topped mesas, not pyramids
+		cone.bottom_radius = rng.randf_range(90, 160)
+		cone.height = rng.randf_range(10, 26)
 		cone.radial_segments = 8
 		peak.mesh = cone
 		peak.material_override = hm
 		peak.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		peak.rotation.y = rng.randf() * TAU
-		peak.position = Vector3(cos(ang) * r, cone.height * 0.35 - 10.0, sin(ang) * r)
+		peak.position = Vector3(cos(ang) * r, cone.height * 0.35 - 6.0, sin(ang) * r)
 		ring.add_child(peak)

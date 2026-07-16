@@ -202,6 +202,8 @@ func _build_hawc(pos: Vector3) -> CharacterBody3D:
 
 	body.position = pos
 	add_child(body)
+	# GLB origin isn't at the feet — align the model's lowest point to the capsule bottom
+	Atoms.align_foot(visual, body)
 	body.connect("died", Callable(self, "_on_player_died"))
 	return body
 

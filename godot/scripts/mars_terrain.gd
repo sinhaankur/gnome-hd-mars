@@ -85,8 +85,12 @@ static func make(world_size: float = 400.0, height_scale: float = 60.0,
 			var p10 := Vector3(x1, y10, z0)
 			var p01 := Vector3(x0, y01, z1)
 			var p11 := Vector3(x1, y11, z1)
-			_tri(st, p00, p01, p11)
-			_tri(st, p00, p11, p10)
+			# winding order matters: the old (p00,p01,p11) order made these faces
+			# BACK faces when seen from above — generate_normals() then pointed the
+			# normals DOWN, so the ground ignored direct sunlight and could never
+			# show a cast shadow (the root cause of the "dark terrain" saga)
+			_tri(st, p00, p11, p01)
+			_tri(st, p00, p10, p11)
 
 	st.generate_normals()   # no UVs/tangents needed: the Mars shader is triplanar/world-space
 	var mesh := st.commit()
@@ -131,10 +135,15 @@ shader_type spatial;
 render_mode cull_disabled, diffuse_burley;   // solid from all angles (no see-through from below)
 // palette sampled from the Perseverance panoramas (reference/real_mars/): caramel and
 // butterscotch, low saturation — the old maroon-red read as lava, not Mars regolith
-uniform vec3 low_col  = vec3(0.46, 0.33, 0.24);   // valley-floor regolith
-uniform vec3 mid_col  = vec3(0.58, 0.43, 0.31);   // butterscotch mid-tones
-uniform vec3 high_col = vec3(0.73, 0.60, 0.46);   // pale dust drifts
-uniform vec3 slope_col= vec3(0.40, 0.31, 0.25);   // exposed basalt: grey-brown, never black
+// MEASURED against reference/real_mars/PIA24921.jpg: mid-ground soil there averages
+// sRGB(174,147,123) — bright, LOW-saturation caramel. The old palette rendered the
+// plain at sRGB(80,61,35): half the brightness, twice the saturation ("dark mud").
+// NOTE: the warm sun + tan fog supply most of the orange — the albedo itself must be
+// near-grey pale caramel, or the lit result oversaturates far past the photos.
+uniform vec3 low_col  = vec3(0.58, 0.50, 0.44);   // valley-floor regolith
+uniform vec3 mid_col  = vec3(0.66, 0.57, 0.49);   // butterscotch mid-tones
+uniform vec3 high_col = vec3(0.74, 0.66, 0.57);   // pale dust drifts
+uniform vec3 slope_col= vec3(0.42, 0.36, 0.31);   // exposed basalt: grey-brown, never black
 uniform float height_span = 22.0;                 // matches terrain height_scale
 varying vec3 v_world; varying vec3 v_nrm; varying float v_h;
 void vertex(){
@@ -163,12 +172,13 @@ void fragment(){
 	// ROCK SPECKLE — scattered dark stones
 	float rocks = noise(w*2.5);
 	float rockMask = smoothstep(0.72, 0.8, rocks);
-	col = mix(col, slope_col*0.8, rockMask*0.6);
+	col = mix(col, slope_col*0.8, rockMask*0.45);
 
-	// CRACKS — thin dark fracture lines in dried regolith
+	// CRACKS — thin dark fracture lines in dried regolith (kept faint: heavy dark
+	// webbing was dragging the whole plain darker than the reference photos)
 	float crack = fbm(w*0.9);
 	float crackLine = smoothstep(0.02, 0.0, abs(crack-0.5)-0.005);
-	col *= 1.0 - crackLine*0.4;
+	col *= 1.0 - crackLine*0.22;
 
 	// fine dust grain
 	float grain = noise(w*14.0);

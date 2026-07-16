@@ -18,7 +18,7 @@ const DISC_DIST := 900.0           # far away so it reads as the sky sun
 
 # --- key colors for interpolation across the day ---
 const SUN_DAWN  := Color(1.0, 0.55, 0.38)    # low red sun, dust-reddened
-const SUN_NOON  := Color(1.0, 0.90, 0.78)    # pale, slightly cool Mars midday
+const SUN_NOON  := Color(1.0, 0.92, 0.86)    # near-neutral midday: the SOIL supplies the warmth
 const SUN_DUSK  := Color(1.0, 0.48, 0.34)
 
 # REAL Mars palette, matched to the Perseverance Mastcam-Z panoramas in
@@ -30,12 +30,18 @@ const SKY_HZ_DAY    := Color(0.78, 0.68, 0.55)   # pale dusty-peach horizon
 const SKY_HZ_DUSK   := Color(0.62, 0.55, 0.52)   # cool grey Martian twilight
 const SKY_HZ_NIGHT  := Color(0.10, 0.11, 0.17)
 
-const FOG_DAY   := Color(0.74, 0.63, 0.50)        # tan dust haze
+const FOG_DAY   := Color(0.74, 0.66, 0.56)        # tan dust haze (low-sat, like the photos)
 const FOG_DUSK  := Color(0.58, 0.50, 0.46)
 const FOG_NIGHT := Color(0.12, 0.13, 0.17)
 
 func _ready() -> void:
 	_t = start_time
+	# DEV: lock the sun at a fixed time of day (e.g. DEV_TOD=0.85 for long dusk shadows)
+	# so art-pass screenshots are comparable across runs
+	var dev_tod := OS.get_environment("DEV_TOD")
+	if dev_tod.is_valid_float():
+		_t = clampf(dev_tod.to_float(), 0.0, 1.0)
+		paused = true
 	shadow_enabled = true
 	# make THIS light draw the sun disc in the procedural sky
 	sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_AND_SKY
@@ -120,9 +126,11 @@ func _apply(t: float) -> void:
 	light_color = scol
 	# night: sun below horizon -> kill direct light
 	var above: float = clampf((elev + 4.0) / 10.0, 0.0, 1.0)  # fades out as it dips below
-	# brighter sun so the mech + terrain read clearly (was 1.25 — too dim/murky)
-	light_energy = lerpf(0.0, 3.2, above) * lerpf(0.75, 1.0, day)
-	shadow_opacity = clampf(above, 0.0, 0.75)           # softer shadows, fade as sun sets
+	# NOTE: while terrain normals were inverted (mars_terrain winding bug) this was
+	# cranked to 4.6 to compensate — with lit ground working, ~1.2 is the honest value
+	# (Godot directional energy 1.0 ~= full daylight on a white surface)
+	light_energy = lerpf(0.0, 0.95, above) * lerpf(0.75, 1.0, day)
+	shadow_opacity = clampf(above, 0.0, 0.9)            # firm ground-contact, fade as sun sets
 
 	# tint the visible sun disc to match (warmer/redder low, pale high)
 	if _disc and is_instance_valid(_disc):
@@ -145,8 +153,8 @@ func _apply(t: float) -> void:
 	# --- AMBIENT: bright enough that shadows aren't crushed black; warm sky-fill.
 	# Mars' dusty air scatters a LOT of light into shadows (see the reference photos:
 	# shadow sides stay readable), so daytime ambient runs high. ---
-	env.ambient_light_energy = lerpf(0.25, 1.7, above)
-	env.ambient_light_color = Color(0.80, 0.72, 0.66).lerp(Color(0.28, 0.26, 0.34), 1.0 - above)
+	env.ambient_light_energy = lerpf(0.15, 0.55, above)
+	env.ambient_light_color = Color(0.80, 0.75, 0.70).lerp(Color(0.28, 0.26, 0.34), 1.0 - above)
 
 	# --- FOG (affects terrain + everything at distance): reddens at dusk, dims at night ---
 	var fog: Color = FOG_DAY.lerp(FOG_DUSK, horizon).lerp(FOG_NIGHT, 1.0 - above)
