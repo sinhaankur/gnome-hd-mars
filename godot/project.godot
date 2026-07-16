@@ -1,0 +1,152 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="G-NOME HD"
+config/description="HD reimagining of G-NOME (1997). Mars — Operation Red Wall."
+run/main_scene="res://scenes/main_menu.tscn"
+config/features=PackedStringArray("4.6", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+Settings="*res://scripts/settings.gd"
+DevShot="*res://scripts/dev_shot.gd"
+Sfx="*res://scripts/sfx.gd"
+Campaign="*res://scripts/campaign.gd"
+Audio="*res://scripts/audio_manager.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/mode=0
+window/size/resizable=true
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/stretch/scale=1.0
+
+[dotnet]
+
+project/assembly_name="G-NOME HD"
+
+[rendering]
+
+anti_aliasing/quality/msaa_3d=2
+anti_aliasing/quality/screen_space_aa=1
+lights_and_shadows/directional_shadow/size=4096
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
+environment/ssao/quality=3
+environment/ssil/quality=2
+environment/glow/upscale_mode=1
+anti_aliasing/quality/use_taa=true
+
+[input]
+
+move_forward={
+"deadzone": 0.5,
+"events": [{
+"device": -1,
+"keycode": 87,
+"physical_keycode": 87,
+"pressed": false,
+"type": "InputEventKey"
+}, {
+"device": -1,
+"keycode": 4194320,
+"physical_keycode": 4194320,
+"pressed": false,
+"type": "InputEventKey"
+}]
+}
+move_back={
+"deadzone": 0.5,
+"events": [{
+"device": -1,
+"keycode": 83,
+"physical_keycode": 83,
+"pressed": false,
+"type": "InputEventKey"
+}, {
+"device": -1,
+"keycode": 4194322,
+"physical_keycode": 4194322,
+"pressed": false,
+"type": "InputEventKey"
+}]
+}
+turn_left={
+"deadzone": 0.5,
+"events": [{
+"device": -1,
+"keycode": 65,
+"physical_keycode": 65,
+"pressed": false,
+"type": "InputEventKey"
+}, {
+"device": -1,
+"keycode": 4194319,
+"physical_keycode": 4194319,
+"pressed": false,
+"type": "InputEventKey"
+}]
+}
+turn_right={
+"deadzone": 0.5,
+"events": [{
+"device": -1,
+"keycode": 68,
+"physical_keycode": 68,
+"pressed": false,
+"type": "InputEventKey"
+}, {
+"device": -1,
+"keycode": 4194321,
+"physical_keycode": 4194321,
+"pressed": false,
+"type": "InputEventKey"
+}]
+}
+fire={
+"deadzone": 0.5,
+"events": [{
+"device": -1,
+"keycode": 32,
+"physical_keycode": 32,
+"pressed": false,
+"type": "InputEventKey"
+}, {
+"device": -1,
+"button_index": 1,
+"pressed": false,
+"type": "InputEventMouseButton"
+}]
+}
+jump={
+"deadzone": 0.5,
+"events": [{
+"device": -1,
+"keycode": 4194325,
+"physical_keycode": 4194325,
+"pressed": false,
+"type": "InputEventKey"
+}]
+}
+camera_mode={
+"deadzone": 0.5,
+"events": [{
+"device": -1,
+"keycode": 86,
+"physical_keycode": 86,
+"pressed": false,
+"type": "InputEventKey"
+}]
+}

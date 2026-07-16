@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3 uid="uid://b1gnomelaserbb"]
+
+[ext_resource type="Script" path="res://scripts/laser.gd" id="1_laser"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
+radius = 0.12
+height = 1.2
+
+[sub_resource type="StandardMaterial3D" id="Mat_1"]
+emission_enabled = true
+emission = Color(1, 0.55, 0.1, 1)
+emission_energy_multiplier = 6.0
+albedo_color = Color(1, 0.6, 0.15, 1)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape_1"]
+radius = 0.12
+height = 1.2
+
+[node name="Laser" type="Area3D"]
+script = ExtResource("1_laser")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
+mesh = SubResource("CapsuleMesh_1")
+material_override = SubResource("Mat_1")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
+shape = SubResource("CapsuleShape_1")
