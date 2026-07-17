@@ -14,7 +14,6 @@ var _game_cam: Camera3D
 var _cine_cam: Camera3D
 var _player: Node3D
 var _dropship: Node3D
-var _thrusters: Array = []   # engine glow materials, animated during descent
 
 func play(level: Dictionary, env: Node, game_cam: Camera3D, player: Node3D = null) -> void:
 	_level = level
@@ -119,51 +118,38 @@ func _run_landing() -> void:
 		0.0, 1.0, 3.0)
 	tw.tween_callback(_finish)
 
+const DROPSHIP_PATH := "res://assets/dropship.glb"
+
 func _build_dropship() -> Node3D:
-	# kitbashed lifter: hull + cockpit + stub wings + four downward engine pods.
-	# Grey weathered metal, orange thrust glow — corporate cargo hardware, not sci-fi neon.
+	# real lifter model (Blender kitbash -> assets/dropship.glb): slab hull, visor
+	# cockpit, four corner engine pods, mech cradle underneath. Grey weathered metal,
+	# orange accents — corporate cargo hardware, not sci-fi neon.
 	var ship := Node3D.new()
 	ship.name = "Dropship"
-	var metal := StandardMaterial3D.new()
-	metal.albedo_color = Color(0.52, 0.52, 0.54); metal.metallic = 0.6; metal.roughness = 0.5
-	var dark := StandardMaterial3D.new()
-	dark.albedo_color = Color(0.22, 0.23, 0.26); dark.metallic = 0.3; dark.roughness = 0.6
-
-	var hull := MeshInstance3D.new()
-	hull.mesh = BoxMesh.new(); hull.scale = Vector3(7.0, 2.6, 12.0)
-	hull.material_override = metal
-	ship.add_child(hull)
-	var nose := MeshInstance3D.new()
-	nose.mesh = BoxMesh.new(); nose.scale = Vector3(4.2, 1.8, 3.0)
-	nose.material_override = dark
-	nose.position = Vector3(0, 0.7, -6.8)
-	ship.add_child(nose)
+	var scene: PackedScene = load(DROPSHIP_PATH)
+	if scene:
+		ship.add_child(scene.instantiate())
+	else:
+		# fallback marker if the model is missing
+		var hull := MeshInstance3D.new()
+		hull.mesh = BoxMesh.new(); hull.scale = Vector3(7.0, 3.0, 14.0)
+		ship.add_child(hull)
+	# translucent braking-thrust flames under the four pod nozzles
+	# (pods sit at ±4.3 / ±4.9 in the model, nozzle exits at y ≈ -2.4)
 	for sx in [-1.0, 1.0]:
-		var wing := MeshInstance3D.new()
-		wing.mesh = BoxMesh.new(); wing.scale = Vector3(5.5, 0.35, 4.0)
-		wing.material_override = metal
-		wing.position = Vector3(sx * 5.8, 0.3, 1.0)
-		ship.add_child(wing)
-		for z in [-3.5, 4.5]:
-			var pod := MeshInstance3D.new()
-			var pc := CylinderMesh.new(); pc.top_radius = 0.9; pc.bottom_radius = 1.1; pc.height = 2.4
-			pod.mesh = pc; pod.material_override = dark
-			pod.position = Vector3(sx * 5.8, -1.2, z)
-			ship.add_child(pod)
-			# thrust glow disc under each pod
-			var glow := MeshInstance3D.new()
-			var gc := CylinderMesh.new(); gc.top_radius = 0.85; gc.bottom_radius = 0.5; gc.height = 1.2
-			glow.mesh = gc
-			var gm := StandardMaterial3D.new()
-			gm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			gm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			gm.albedo_color = Color(1.0, 0.55, 0.2, 0.7)
-			gm.emission_enabled = true; gm.emission = Color(1.0, 0.5, 0.15)
-			gm.emission_energy_multiplier = 3.0
-			glow.material_override = gm
-			glow.position = Vector3(sx * 5.8, -2.6, z)
-			ship.add_child(glow)
-			_thrusters.append(gm)
+		for sz in [-1.0, 1.0]:
+			var flame := MeshInstance3D.new()
+			var fc := CylinderMesh.new(); fc.top_radius = 0.8; fc.bottom_radius = 0.35; fc.height = 1.6
+			flame.mesh = fc
+			var fm := StandardMaterial3D.new()
+			fm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			fm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			fm.albedo_color = Color(1.0, 0.55, 0.2, 0.65)
+			fm.emission_enabled = true; fm.emission = Color(1.0, 0.5, 0.15)
+			fm.emission_energy_multiplier = 3.0
+			flame.material_override = fm
+			flame.position = Vector3(sx * 4.3, -3.2, sz * 4.9)
+			ship.add_child(flame)
 	return ship
 
 func _touchdown_dust(ground: Vector3) -> void:
