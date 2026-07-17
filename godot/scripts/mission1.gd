@@ -10,7 +10,11 @@ extends Node3D
 # User-chosen mech: Oscar Creativo "Bot Mecha Warrior" (warrior.glb) — 50k tris,
 # 57 textures, rigged with a "Motion" walk anim. Stands at identity rotation,
 # native ~2.5u tall, feet at y=0. The user prefers this over any custom mech.
-const MECH_PATH := "res://assets/warrior.glb"
+const MECH_PATH := "res://assets/warrior.glb"        # enemy HAWCs
+# player's hero HAWC: user-supplied detailed PBR mech ("Bot Mecha Warrior" by
+# Oscar Creativo, CC — credit in story screen), optimized from 254MB to 48MB
+# (textures 4K->1K) via Blender; rigged, same "Motion" walk anim as warrior.
+const HERO_PATH := "res://assets/hawc_hero.glb"
 const MECH_SCALE := 2.8           # ~2.5u model -> ~7m tall
 const MECH_FOOT_LIFT := 0.0
 # Model face orientation vs movement. 0 = faces forward (model +Z = body +Z = movement dir).
@@ -243,7 +247,9 @@ func _build_hawc(pos: Vector3) -> CharacterBody3D:
 
 	var visual := Node3D.new()
 	visual.name = "Visual"   # hawc.gd applies recoil to this node
-	var scene: PackedScene = load(MECH_PATH)
+	var scene: PackedScene = load(HERO_PATH)
+	if scene == null:
+		scene = load(MECH_PATH)   # fall back to the shared mech model
 	var mech_model: Node = null
 	if scene:
 		var hawk := scene.instantiate()
