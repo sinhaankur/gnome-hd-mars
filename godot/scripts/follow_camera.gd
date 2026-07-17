@@ -37,6 +37,16 @@ var _zoom: float = 0.0         # wheel zoom offset on top of base distance
 func add_shake(amount: float) -> void:
 	_shake = clampf(_shake + amount, 0.0, 1.0)
 
+## Retarget to another body (possession: mech <-> pilot on foot). The follow
+## geometry scales to the new body so a 1.8 m pilot isn't filmed like a 7 m mech.
+func set_target(t: Node3D, dist: float, h: float, look_h: float) -> void:
+	_target = t
+	distance = dist
+	height = h
+	look_height = look_h
+	_zoom = 0.0
+	_cur_dist = dist
+
 func _ready() -> void:
 	_target = get_node_or_null(target_path)
 	fov = base_fov

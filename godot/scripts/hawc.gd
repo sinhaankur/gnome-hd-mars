@@ -16,6 +16,7 @@ extends CharacterBody3D
 @export var max_health: int = 100
 
 var _cooldown := 0.0
+var _gashr_cool := 0.0
 var health: int = 100
 var camera: Node3D = null
 var _recoil := 0.0                    # firing recoil kick (decays each frame)
@@ -26,6 +27,11 @@ var _thrusters: GPUParticles3D        # jetpack flame particles (created on firs
 
 signal health_changed(current: int, maximum: int)
 signal died
+signal exit_requested   # player pressed interact: the LEVEL handles dismounting
+
+## FALSE while the pilot is on foot — the mech is parked: no input, no firing,
+## just gravity so it stays settled. The level flips this on possess/dismount.
+var controlled := true
 
 @onready var muzzle_l: Node3D = get_node_or_null("MuzzleL")
 @onready var muzzle_r: Node3D = get_node_or_null("MuzzleR")
@@ -72,6 +78,13 @@ func _cam_yaw() -> float:
 	return rotation.y
 
 func _physics_process(delta: float) -> void:
+	if not controlled:
+		# parked: coast to a stop, keep gravity so it settles on the ground
+		velocity.x = move_toward(velocity.x, 0.0, decel * delta)
+		velocity.z = move_toward(velocity.z, 0.0, decel * delta)
+		velocity.y = 0.0 if is_on_floor() else velocity.y - gravity * delta
+		move_and_slide()
+		return
 	# --- camera-relative movement direction from WASD/arrows ---
 	var iy := Input.get_axis("move_back", "move_forward")   # +1 = forward (W)
 	var ix := Input.get_axis("turn_right", "turn_left")     # +1 = left (A)
@@ -127,6 +140,16 @@ func _physics_process(delta: float) -> void:
 		_fire()
 		_cooldown = fire_cooldown
 
+	# --- GASHR launcher (ejects an enemy HAWC's pilot — steal loop) ---
+	_gashr_cool = max(0.0, _gashr_cool - delta)
+	if Input.is_action_just_pressed("gashr") and _gashr_cool <= 0.0:
+		_fire_gashr()
+		_gashr_cool = 2.5
+
+	# --- dismount: the level spawns the on-foot pilot next to us ---
+	if Input.is_action_just_pressed("interact"):
+		exit_requested.emit()
+
 	# --- firing recoil: shove the visual back + pitch up a touch, then settle ---
 	_recoil = move_toward(_recoil, 0.0, delta * 2.5)
 	if _visual:
@@ -157,6 +180,24 @@ func _fire() -> void:
 	var sfx := get_node_or_null("/root/Sfx")
 	if sfx:
 		sfx.laser()
+
+const GashrScript := preload("res://scripts/gashr.gd")
+
+func _fire_gashr() -> void:
+	# non-lethal ejector shell, lobbed from between the muzzles along the facing (+Z)
+	var forward := global_transform.basis.z
+	forward.y = 0.0
+	forward = forward.normalized()
+	var shell := Area3D.new()
+	shell.set_script(GashrScript)
+	_spawn_parent().add_child(shell)
+	var origin := global_position + Vector3.UP * 4.5 + forward * 3.5
+	shell.global_transform = Transform3D(Basis.looking_at(forward, Vector3.UP), origin)
+	if camera and camera.has_method("add_shake"):
+		camera.add_shake(0.15)
+	var sfx := get_node_or_null("/root/Sfx")
+	if sfx:
+		sfx.hit()   # a thunk, not a laser crack
 
 func _muzzle_flash(at: Node3D) -> void:
 	# bright light + a visible glowing flare sprite at the barrel

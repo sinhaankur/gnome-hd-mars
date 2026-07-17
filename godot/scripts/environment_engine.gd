@@ -113,7 +113,12 @@ func ground_height(x: float, z: float) -> float:
 func place_on_ground(node: Node3D, lift: float = 0.0) -> void:
 	if node == null or not is_instance_valid(node):
 		return
-	var y := ground_height(node.global_position.x, node.global_position.z)
+	if _space == null:
+		_space = get_world_3d().direct_space_state
+	# exclude the node's own collider or the ray lands on its head, not the ground
+	var excl: Array = [node.get_rid()] if node is CollisionObject3D else []
+	var y := Atoms.ground_height(_space, node.global_position.x, node.global_position.z,
+								 300.0, -300.0, excl)
 	if not is_nan(y):
 		node.global_position.y = y + lift
 

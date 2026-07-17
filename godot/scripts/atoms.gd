@@ -30,11 +30,16 @@ static func all_mesh_instances(n: Node, out: Array = []) -> Array:
 
 # --- world query atoms ---------------------------------------------------------
 static func ground_height(space: PhysicsDirectSpaceState3D, x: float, z: float,
-						   top: float = 300.0, bottom: float = -300.0) -> float:
-	# straight-down raycast to the terrain surface Y; NAN if it misses (off-map)
+						   top: float = 300.0, bottom: float = -300.0,
+						   exclude: Array = []) -> float:
+	# straight-down raycast to the terrain surface Y; NAN if it misses (off-map).
+	# Pass the queried body's own RID in `exclude` when placing a physics body —
+	# otherwise the ray hits the body itself and "ground" is the top of its head.
 	if space == null:
 		return NAN
 	var q := PhysicsRayQueryParameters3D.create(Vector3(x, top, z), Vector3(x, bottom, z))
+	if not exclude.is_empty():
+		q.exclude = exclude
 	var hit := space.intersect_ray(q)
 	if hit.is_empty():
 		return NAN

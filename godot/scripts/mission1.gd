@@ -71,6 +71,7 @@ func _ready() -> void:
 	_player = _build_hawc(Vector3(0, 30, 160))
 	_cam = _build_camera(_player)
 	_player.camera = _cam
+	_player.exit_requested.connect(_dismount)   # E: step out on foot (G-NOME loop)
 
 	# --- Enemy Engine: the wave director, loaded with THIS level's wave script ---
 	enemies = EnemyEngine.new()
@@ -123,10 +124,14 @@ func _on_env_ready() -> void:
 	_env_setup_done = true
 	env.place_on_ground(_player, 1.0)
 	explore.populate()   # scatter points of interest on the walkable surface
-	# play the intro cinematic (dropship delivers the mech) + briefing card, THEN assault
+	# play the intro cinematic (dropship delivers the mech) + briefing card, THEN assault.
+	# The mech is parked during the cinematic so E/Q/fire can't trigger mid-landing.
 	var intro := MissionIntro.new()
 	add_child(intro)
-	intro.finished.connect(func(): enemies.start())
+	_player.controlled = false
+	intro.finished.connect(func():
+		_player.controlled = true
+		enemies.start())
 	intro.play(_level, env, _cam, _player)
 
 func _on_poi_discovered(poi_name: String, description: String, index: int, total: int) -> void:
@@ -157,6 +162,78 @@ func _on_mission_won() -> void:
 func _on_day_phase(phase: String) -> void:
 	# hook for later: enemies bolder at night, etc. For now just note it on the HUD.
 	pass
+
+# ---------------------------------------------------------------- POSSESSION
+# The G-NOME signature loop: exit your HAWC on foot, GASHR an enemy HAWC to eject
+# its pilot, board the vacant hull. The LEVEL coordinates; bodies never touch
+# each other (pilot emits enter_requested, hawc emits exit_requested).
+const PilotScript := preload("res://scripts/pilot.gd")
+var _pilot: CharacterBody3D
+const BOARD_REACH := 7.0   # how close the pilot must be to board a hull
+
+func _dismount() -> void:
+	if _over or not _env_setup_done:
+		return
+	if _pilot == null:
+		_pilot = PilotScript.new()
+		_pilot.name = "PilotGant"
+		add_child(_pilot)
+		_pilot.enter_requested.connect(_try_enter)
+		_pilot.died.connect(_on_player_died)
+		_pilot.camera = _cam
+	_pilot.visible = true
+	_pilot.set_physics_process(true)
+	# step out beside the mech's flank, snapped to the ground
+	var side: Vector3 = _player.global_transform.basis.x
+	_pilot.global_position = _player.global_position + side * 5.0 + Vector3.UP * 1.0
+	env.place_on_ground(_pilot, 0.5)
+	_player.controlled = false
+	_player.remove_from_group("player")
+	_pilot.add_to_group("player")
+	_cam.set_target(_pilot, 7.0, 2.6, 1.8)
+	_notice("ON FOOT — Q: GASHR ejects enemy pilots · E by a HAWC: board it")
+
+func _try_enter() -> void:
+	# board whatever HAWC is in reach: your own parked one, or a vacant enemy hull
+	var pos: Vector3 = _pilot.global_position
+	if _player and is_instance_valid(_player) and pos.distance_to(_player.global_position) < BOARD_REACH:
+		_mount(_player)
+		return
+	for hull in get_tree().get_nodes_in_group("hijackable"):
+		if is_instance_valid(hull) and pos.distance_to(hull.global_position) < BOARD_REACH:
+			_steal(hull)
+			return
+
+func _mount(mech: CharacterBody3D) -> void:
+	_pilot.remove_from_group("player")
+	_pilot.visible = false
+	_pilot.set_physics_process(false)
+	mech.controlled = true
+	mech.add_to_group("player")
+	_cam.set_target(mech, 17.0, 8.0, 5.5)
+	var sfx := get_node_or_null("/root/Sfx")
+	if sfx:
+		sfx.ui()
+
+func _steal(hull: Node3D) -> void:
+	# commandeer: swap the vacant enemy hull for a fresh player-controlled HAWC
+	# (both use the same warrior model, so the silhouette carries over)
+	var xf: Transform3D = hull.global_transform
+	hull.queue_free()
+	var m := _build_hawc(xf.origin + Vector3.UP * 0.5)
+	m.rotation.y = xf.basis.get_euler().y
+	m.camera = _cam
+	m.exit_requested.connect(_dismount)
+	_player = m
+	if _hud:
+		_hud.retarget(m)
+	_mount(m)
+	_notice("HAWC COMMANDEERED — enemy hull is yours")
+
+func _notice(text: String) -> void:
+	# reuse the exploration notice slot (bottom-left telemetry tone)
+	_discovery_text = text
+	_discovery_timer = 6.0
 
 # ---------------------------------------------------------------- HAWC (player)
 func _build_hawc(pos: Vector3) -> CharacterBody3D:

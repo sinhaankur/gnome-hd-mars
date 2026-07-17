@@ -28,6 +28,10 @@ func setup(player: Node, env: Node, get_base_hp: Callable) -> void:
 	layer = 10
 	_build()
 
+func retarget(player: Node) -> void:
+	# possession switched bodies (pilot on foot / commandeered HAWC): follow the new one
+	_player = player
+
 func _build() -> void:
 	# --- crosshair (center reticle) ---
 	_crosshair = Control.new()
@@ -139,7 +143,9 @@ func _update_enemy_bars() -> void:
 	for e in _enemy_bars.keys():
 		var data: Dictionary = _enemy_bars[e]
 		var bar: ProgressBar = data["bar"]
-		if not is_instance_valid(e):
+		if not is_instance_valid(e) or not e.is_in_group("enemies"):
+			# freed, OR neutralized (GASHR-ejected hulls leave the group but stay
+			# in the world as hijackable wrecks — no hostile bar on those)
 			bar.queue_free()
 			_enemy_bars.erase(e)
 			continue

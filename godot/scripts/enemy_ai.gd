@@ -84,6 +84,38 @@ func _fire() -> void:
 
 signal hit_registered   # fired whenever this enemy is damaged (for HUD hit marker)
 
+var vacant := false   # pilot ejected: hull is inert and can be commandeered
+
+func eject_pilot() -> void:
+	# GASHR hit (non-lethal): the pilot bails, the HAWC powers down intact.
+	# Leaving the "enemies" group neutralizes it for the wave; joining "hijackable"
+	# lets the on-foot player steal it — the G-NOME signature loop.
+	if vacant:
+		return
+	vacant = true
+	remove_from_group("enemies")
+	add_to_group("hijackable")
+	set_physics_process(false)
+	velocity = Vector3.ZERO
+	# canopy pop: flash + a small pilot capsule that flees and despawns (flavor)
+	var parent: Node = get_tree().current_scene if get_tree().current_scene else get_parent()
+	if parent and is_inside_tree():
+		var top := global_position + Vector3.UP * 5.0
+		Atoms.flash_light(parent, top, Color(0.5, 1.0, 0.6), 5.0, 10.0, 0.3)
+		Atoms.spark_burst(parent, top, Color(0.7, 0.8, 0.7), 8)
+		var runner := MeshInstance3D.new()
+		var cm := CapsuleMesh.new(); cm.radius = 0.3; cm.height = 1.4
+		runner.mesh = cm
+		var rm := StandardMaterial3D.new(); rm.albedo_color = Color(0.4, 0.38, 0.35)
+		runner.material_override = rm
+		parent.add_child(runner)
+		runner.global_position = global_position + Vector3.UP * 1.0
+		var flee := (global_position - top).cross(Vector3.UP)
+		flee = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1)).normalized() if flee.length() < 0.1 else flee.normalized()
+		var tw := runner.create_tween()
+		tw.tween_property(runner, "global_position", runner.global_position + flee * 40.0, 8.0)
+		tw.tween_callback(runner.queue_free)
+
 func take_hit() -> void:
 	hp -= 1
 	scale *= 0.93
@@ -94,7 +126,8 @@ func take_hit() -> void:
 		if sfx:
 			sfx.explosion()
 		_spawn_explosion()
-		destroyed.emit()
+		if not vacant:          # a vacant hull already left the wave count on eject
+			destroyed.emit()
 		queue_free()
 	elif sfx:
 		sfx.hit()

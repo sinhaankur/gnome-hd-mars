@@ -27,6 +27,8 @@ func _ensure_input_map() -> void:
 		"turn_right":   [KEY_D, KEY_RIGHT],
 		"jump":         [KEY_SHIFT],
 		"fire":         [KEY_SPACE],
+		"interact":     [KEY_E],     # exit HAWC / commandeer a vacant one (G-NOME loop)
+		"gashr":        [KEY_Q],     # non-lethal ejector launcher
 	}
 	for action in binds:
 		if not InputMap.has_action(action):
