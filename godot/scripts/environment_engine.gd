@@ -617,12 +617,15 @@ func _scatter_detail() -> void:
 
 	# 1) PEBBLES — lots of tiny stones dusting the surface (cheap, big density payoff).
 	# ONE MultiMesh node instead of hundreds of MeshInstance3Ds; count scales with the
-	# map area so the 800 m world stays as littered as the rover photos.
+	# map area so the 800 m world stays as littered as the rover photos. The rover
+	# panoramas show ground carpeted with stones every few tens of cm, so the old
+	# 1200 (~1 per 530 m² here) read as bare sand — density is ~10x now, still one
+	# draw call. Pebbles also run a touch bigger so they register from mech height.
 	var peb_mesh := SphereMesh.new()
 	peb_mesh.radius = 1.0; peb_mesh.height = 2.0
 	peb_mesh.radial_segments = 6; peb_mesh.rings = 3   # tiny on screen: low poly is plenty
 	peb_mesh.material = pebble_mat
-	var count := int(1200.0 * (world_size * world_size) / (800.0 * 800.0))
+	var count := int(12000.0 * (world_size * world_size) / (800.0 * 800.0))
 	var xforms: Array[Transform3D] = []
 	for i in range(count):
 		var x := rng.randf_range(-half, half)
@@ -632,7 +635,7 @@ func _scatter_detail() -> void:
 		var y := ground_height(x, z)
 		if is_nan(y):
 			continue
-		var s := rng.randf_range(0.15, 0.5)
+		var s := rng.randf_range(0.2, 0.7)
 		var b := Basis.from_euler(Vector3(0, rng.randf() * TAU, 0))
 		b = b.scaled(Vector3(s, s * rng.randf_range(0.4, 0.7), s))
 		xforms.append(Transform3D(b, Vector3(x, y - s * 0.2, z)))
@@ -647,6 +650,43 @@ func _scatter_detail() -> void:
 	pebbles.multimesh = mm
 	pebbles.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(pebbles)
+
+	# 1b) COBBLES — the fist-to-head-sized angular rocks that DOMINATE the rover
+	# panoramas (the bridge between fine pebbles and the big boulders). Irregular
+	# rock_mesh, not spheres, so they read as broken stone; these cast shadows (unlike
+	# the pebbles) because at this size the little shadows are what sell "littered".
+	var cobble_mat := Atoms.rock_material(Color(0.46, 0.41, 0.36))
+	var cob_count := int(3500.0 * (world_size * world_size) / (800.0 * 800.0))
+	var cob_meshes: Array = [Atoms.rock_mesh(rng), Atoms.rock_mesh(rng), Atoms.rock_mesh(rng)]
+	for m in cob_meshes:
+		(m as ArrayMesh).surface_set_material(0, cobble_mat)
+	var cob_buckets: Array = [[], [], []]
+	for i in range(cob_count):
+		var x := rng.randf_range(-half, half)
+		var z := rng.randf_range(-half, half)
+		if Vector2(x, z).distance_to(Vector2(installation_pos.x, installation_pos.z)) < 30.0:
+			continue
+		var y := ground_height(x, z)
+		if is_nan(y):
+			continue
+		var s := rng.randf_range(0.5, 1.4)
+		var b := Basis.from_euler(Vector3(rng.randf_range(-0.2, 0.2), rng.randf() * TAU, rng.randf_range(-0.2, 0.2)))
+		b = b.scaled(Vector3(s * rng.randf_range(0.8, 1.3), s * rng.randf_range(0.4, 0.7), s * rng.randf_range(0.8, 1.3)))
+		cob_buckets[rng.randi() % 3].append(Transform3D(b, Vector3(x, y - s * 0.18, z)))
+	for bi in range(3):
+		var entries: Array = cob_buckets[bi]
+		if entries.is_empty():
+			continue
+		var cmm := MultiMesh.new()
+		cmm.transform_format = MultiMesh.TRANSFORM_3D
+		cmm.mesh = cob_meshes[bi]
+		cmm.instance_count = entries.size()
+		for i in range(entries.size()):
+			cmm.set_instance_transform(i, entries[i])
+		var cmi := MultiMeshInstance3D.new()
+		cmi.name = "Cobbles%d" % bi
+		cmi.multimesh = cmm
+		add_child(cmi)
 
 	# 2) LANDMARK OUTCROPS — clusters of giant lumpy rocks reading as weathered rocky
 	# rises (the smooth CylinderMesh "mesas" read as giant plastic tubs with sun-blown
