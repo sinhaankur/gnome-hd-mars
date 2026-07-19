@@ -15,6 +15,9 @@ const MECH_PATH := "res://assets/warrior.glb"        # enemy HAWCs
 # Oscar Creativo, CC — credit in story screen), optimized from 254MB to 48MB
 # (textures 4K->1K) via Blender; rigged, same "Motion" walk anim as warrior.
 const HERO_PATH := "res://assets/hawc_hero.glb"
+# Loaded by path (not class_name) so it resolves even before the editor rescans
+# the global class cache — a bare `-s` script run won't register new class_names.
+const HERO_FIX := preload("res://scripts/hero_material_fix.gd")
 const MECH_SCALE := 2.8           # ~2.5u model -> ~7m tall
 const MECH_FOOT_LIFT := 0.0
 # Model face orientation vs movement. 0 = faces forward (model +Z = body +Z = movement dir).
@@ -249,9 +252,11 @@ func _build_hawc(pos: Vector3) -> CharacterBody3D:
 
 	var visual := Node3D.new()
 	visual.name = "Visual"   # hawc.gd applies recoil to this node
+	var is_hero := true
 	var scene: PackedScene = load(HERO_PATH)
 	if scene == null:
 		scene = load(MECH_PATH)   # fall back to the shared mech model
+		is_hero = false
 	var mech_model: Node = null
 	if scene:
 		var hawk := scene.instantiate()
@@ -261,6 +266,11 @@ func _build_hawc(pos: Vector3) -> CharacterBody3D:
 		# hawc.gd), so at identity the face already points forward. Exposed as a constant so
 		# it's a one-line change if the model ever reads backward in-game.
 		hawk.rotation.y = MECH_FACE_FLIP
+		# The hero GLB exports every surface as metallic=1/roughness=1 with no ORM
+		# map, so it renders near-black under the Mars sun. Correct the PBR values
+		# (keeps all baked textures) so the hero mech is actually legible.
+		if is_hero:
+			HERO_FIX.apply(hawk)
 		visual.add_child(hawk)
 		mech_model = hawk
 	visual.position.y = MECH_FOOT_LIFT
