@@ -31,6 +31,15 @@ signal enemy_destroyed_signal   # relayed for scoring
 @export var time_between_waves: float = 6.0
 @export var mech_path: String = "res://assets/warrior.glb"
 @export var mech_scale: float = 2.8
+# archetype -> model. ACTUAL assets wherever one exists (user rule); kitbash
+# stand-ins only where none does yet (heavy quad / tank / hover — to replace).
+const ARCH_MODELS := {
+	"sentry": "res://assets/warrior.glb",
+	"tactical": "res://assets/combat_robot.glb",
+	"heavy": "res://assets/hawc_heavy.glb",
+	"support": "res://assets/hawc_support.glb",
+	"hover": "res://assets/hawc_hover.glb",
+}
 var faction := ""   # territory's faction: its own machines get fielded (EnemyTiers)
 
 var _env: EnvironmentEngine
@@ -83,7 +92,7 @@ func _spawn_enemy(tier_key: String, fallback_hp: int) -> void:
 	e.detect_range = tier["detect"]
 
 	var visual := Node3D.new()
-	var scene: PackedScene = load(mech_path)
+	var scene: PackedScene = load(ARCH_MODELS.get(tier.get("arch", ""), mech_path))
 	var mech_model: Node = null
 	if scene:
 		var m := scene.instantiate()

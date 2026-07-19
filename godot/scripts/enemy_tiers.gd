@@ -43,6 +43,7 @@ static func get_tier(key: String, faction: String = "") -> Dictionary:
 		"fire_cd": t["fire_cd"],
 		"detect": t["detect"],
 		"tint": spec["faction"],
+		"arch": spec["arch"],
 		"name": v,
 	}
 
