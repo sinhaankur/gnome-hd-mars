@@ -261,10 +261,12 @@ func _build_hawc(pos: Vector3) -> CharacterBody3D:
 	if scene:
 		var hawk := scene.instantiate()
 		hawk.scale = Vector3.ONE * MECH_SCALE
-		# MECH_FACE_FLIP tunes which way the model faces relative to movement. The warrior
+		# MECH_FACE_FLIP tunes which way the model faces relative to movement. The hero
 		# model's face is its local +Z; the body's +Z is the movement direction (atan2 in
-		# hawc.gd), so at identity the face already points forward. Exposed as a constant so
-		# it's a one-line change if the model ever reads backward in-game.
+		# hawc.gd), so at identity the face already points forward. VERIFIED by render
+		# (tools/render_facing.gd, 2026-07-19): face leads movement on both +X and +Z, so
+		# 0.0 is correct. Exposed as a constant so it's a one-line fix if a model ever
+		# reads backward in-game.
 		hawk.rotation.y = MECH_FACE_FLIP
 		# The hero GLB exports every surface as metallic=1/roughness=1 with no ORM
 		# map, so it renders near-black under the Mars sun. Correct the PBR values
