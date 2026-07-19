@@ -54,6 +54,26 @@ func _draw() -> void:
 					var col := Color(0.4, 1.0, 0.6) if poi.get("found", false) else Color(0.3, 0.8, 0.9)
 					draw_colored_polygon(PackedVector2Array([pp+Vector2(0,-4), pp+Vector2(4,0), pp+Vector2(0,4), pp+Vector2(-4,0)]), col)
 
+	# objective beacon (amber) — clamped to the radar edge when out of range so the
+	# player always knows which way to drive to reach it (reach missions only; the
+	# group is empty otherwise). Pairs with the diegetic amber strobe in the world.
+	for b in get_tree().get_nodes_in_group("objective_beacon"):
+		if not is_instance_valid(b):
+			continue
+		var raw: Vector2 = to_radar.call(b.global_position)
+		var amber := Color(1.0, 0.62, 0.12)
+		if (raw - c).length() < r - 5:
+			# in range: a small amber ring so it reads as an objective, not an enemy
+			draw_arc(raw, 5.0, 0, TAU, 16, amber, 2.0)
+			draw_circle(raw, 2.0, amber)
+		else:
+			# out of range: a chevron pinned to the rim pointing toward the beacon
+			var dir := (raw - c).normalized()
+			var edge := c + dir * (r - 6)
+			var perp := Vector2(-dir.y, dir.x)
+			draw_colored_polygon(PackedVector2Array([
+				edge + dir * 6, edge - dir * 3 + perp * 5, edge - dir * 3 - perp * 5]), amber)
+
 	# enemies (red blips)
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if not is_instance_valid(e):

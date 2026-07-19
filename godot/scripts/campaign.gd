@@ -147,6 +147,13 @@ var completed: Array = []  # per-level victory flags — drives territory owners
 func _ready() -> void:
 	completed.resize(LEVELS.size())
 	completed.fill(false)
+	# DEV: jump straight into a chosen level for capture/testing, e.g. DEV_LEVEL=1 for
+	# the first "reach" mission. No effect in normal play (var unset). Kept tiny and
+	# opt-in so it never leaks into a real session.
+	var dev := OS.get_environment("DEV_LEVEL")
+	if dev.is_valid_int():
+		current_index = clampi(dev.to_int(), 0, LEVELS.size() - 1)
+		unlocked = maxi(unlocked, current_index + 1)
 
 func territory_status(i: int) -> String:
 	# ownership drives marker color on the globe: player-held / contested / rival-held

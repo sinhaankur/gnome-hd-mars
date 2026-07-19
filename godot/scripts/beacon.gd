@@ -15,9 +15,11 @@ signal reached
 
 var _done := false
 var _strobe: StandardMaterial3D
+var _lamp: OmniLight3D
 var _blink_t := 0.0
 
 func _ready() -> void:
+	add_to_group("objective_beacon")   # the HUD radar finds it by group for a direction blip
 	_build()
 
 func _build() -> void:
@@ -66,23 +68,33 @@ func _build() -> void:
 	dish.position = Vector3(3.2, 3.6, -1.0)
 	add_child(dish)
 
-	# --- comms mast: tall thin pole with the amber hazard strobe on top ---
+	# --- comms mast: tall thin pole with the amber hazard strobe on top. TALL (14 m)
+	# so the strobe clears the horizon dust-haze and reads as a pinpoint from 250 m out,
+	# which is how the player navigates to it. ---
 	var mast := MeshInstance3D.new()
-	var mc := CylinderMesh.new(); mc.top_radius = 0.08; mc.bottom_radius = 0.14; mc.height = 9.0
+	var mc := CylinderMesh.new(); mc.top_radius = 0.08; mc.bottom_radius = 0.16; mc.height = 14.0
 	mast.mesh = mc; mast.material_override = metal
-	mast.position = Vector3(0, 4.5, 0)
+	mast.position = Vector3(0, 7.0, 0)
 	add_child(mast)
 	var strobe := MeshInstance3D.new()
-	var ss := SphereMesh.new(); ss.radius = 0.22; ss.height = 0.44
+	var ss := SphereMesh.new(); ss.radius = 0.35; ss.height = 0.7   # bigger bulb = reads at distance
 	strobe.mesh = ss
 	_strobe = StandardMaterial3D.new()
-	_strobe.albedo_color = Color(0.5, 0.32, 0.08)
+	_strobe.albedo_color = Color(0.6, 0.38, 0.10)
 	_strobe.emission_enabled = true
 	_strobe.emission = Color(1.0, 0.62, 0.12)   # amber, like real aviation hazard beacons
-	_strobe.emission_energy_multiplier = 3.0
+	_strobe.emission_energy_multiplier = 6.0    # punches through the tan fog
 	strobe.material_override = _strobe
 	strobe.name = "Strobe"
-	strobe.position = Vector3(0, 9.2, 0)
+	strobe.position = Vector3(0, 14.2, 0)
+	# a small omni so the strobe casts a faint local glow (sells it as a real light)
+	var lamp := OmniLight3D.new()
+	lamp.light_color = Color(1.0, 0.62, 0.12)
+	lamp.light_energy = 2.0
+	lamp.omni_range = 12.0
+	lamp.position = Vector3(0, 14.2, 0)
+	_lamp = lamp
+	add_child(lamp)
 	add_child(strobe)
 
 func _process(delta: float) -> void:
@@ -91,17 +103,22 @@ func _process(delta: float) -> void:
 		return
 	_blink_t += delta
 	var on := fmod(_blink_t, 1.8) < 0.35
-	_strobe.emission_energy_multiplier = 3.2 if on else 0.25
+	_strobe.emission_energy_multiplier = 6.0 if on else 0.6
+	if _lamp and is_instance_valid(_lamp):
+		_lamp.light_energy = 2.4 if on else 0.0
 
 func check(player_pos: Vector3) -> void:
 	if _done:
 		return
 	if player_pos.distance_to(global_position) < reach_radius:
 		_done = true
-		# strobe locks to steady green: "objective secured"
+		# strobe + lamp lock to steady green: "objective secured"
 		if _strobe:
 			_strobe.emission = Color(0.35, 1.0, 0.5)
-			_strobe.emission_energy_multiplier = 2.0
+			_strobe.emission_energy_multiplier = 2.5
+		if _lamp and is_instance_valid(_lamp):
+			_lamp.light_color = Color(0.35, 1.0, 0.5)
+			_lamp.light_energy = 2.0
 		reached.emit()
 
 func distance_from(p: Vector3) -> float:
