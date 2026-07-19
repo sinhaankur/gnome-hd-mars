@@ -10,102 +10,128 @@ extends Node
 # names enemy TIERS (see enemy_tiers.gd). Difficulty escalates: early = scouts/soldiers,
 # later = heavies and a boss. "region" selects a distinct real-HiRISE heightmap.
 const LEVELS := [
+	# THE ORIGINAL 1997 CAMPAIGN, replicated from the game bible: Sgt. Joshua Gant's
+	# covert UIA mission across planet Ruhelen's four territories. Each territory
+	# fields ITS faction's real machines (HawcSpecs) and carries its environmental
+	# theme via a terrain palette. Machines first; look-and-feel polish comes later.
 	{
-		"id": 1, "name": "Operation Red Wall",
-		"subtitle": "Northern Plains, Arabia Terra",
+		"id": 1, "name": "Reenlistment",
+		"subtitle": "Darken Republic border — Phygos crisis",
 		"region": "plains", "height_scale": 30.0, "day_start": 0.32,
-		"objective": "defend",
+		"objective": "defend", "faction": "darken",
 		"waves": [
 			{"count": 2, "tier": "scout"},
 			{"count": 3, "tier": "soldier"},
 			{"count": 2, "tier": "soldier"}, {"count": 1, "tier": "heavy"},
 		],
-		"brief": "AREX scouts probe Red Wall, then the line units move up. Hold the installation.",
+		"brief": "Ten years retired, reactivated by Director Wilkins. Cross into the Darken Republic and hold the UIA staging post while your cover settles.",
 	},
 	{
-		"id": 2, "name": "Dust Run",
-		"subtitle": "Utopia Planitia crossing",
-		"region": "craters", "height_scale": 22.0, "day_start": 0.15,   # dawn
-		"objective": "reach",
+		"id": 2, "name": "Rendezvous: Kylie",
+		"subtitle": "Deep Darken desert, dawn",
+		"region": "craters", "height_scale": 22.0, "day_start": 0.15,
+		"objective": "reach", "faction": "darken",
 		"waves": [
 			{"count": 3, "tier": "scout"},
 			{"count": 3, "tier": "soldier"},
 		],
-		"brief": "Reach the forward beacon across open ground. Fast scout patrols will harass you.",
+		"brief": "Sgt. Stephen Kylie — munitions, old friend — waits at the beacon. Darken patrols hunt the crossing. Reach him.",
 	},
 	{
-		"id": 3, "name": "The Chasma",
-		"subtitle": "Valles Marineris rim",
-		"region": "canyon", "height_scale": 46.0, "day_start": 0.7,     # late afternoon
-		"objective": "defend",
+		"id": 3, "name": "The Crossing",
+		"subtitle": "Bendian Merc territory — ice fields",
+		"region": "canyon", "height_scale": 46.0, "day_start": 0.7,
+		"objective": "reach", "faction": "merc",
+		"palette": {"low": Color(0.60, 0.64, 0.70), "mid": Color(0.70, 0.74, 0.79),
+					"high": Color(0.84, 0.87, 0.91), "slope": Color(0.44, 0.47, 0.52)},
 		"waves": [
-			{"count": 3, "tier": "soldier"},
-			{"count": 2, "tier": "heavy"},
-			{"count": 4, "tier": "soldier"}, {"count": 1, "tier": "heavy"},
+			{"count": 3, "tier": "scout"},
+			{"count": 2, "tier": "soldier"}, {"count": 2, "tier": "scout"},
 		],
-		"brief": "A rugged canyon-rim outpost. Heavies are inbound — terrain is broken, use your jetpack.",
+		"brief": "Merc land: ice, salvage, no auto-eject — their pilots fight to the death. Cross to Dr. Thane's position.",
 	},
 	{
-		"id": 4, "name": "Broken Ridge",
-		"subtitle": "Highland ridgeline, midday",
-		"region": "rugged", "height_scale": 40.0, "day_start": 0.5,     # harsh noon light
-		"objective": "defend",
+		"id": 4, "name": "The Citadel",
+		"subtitle": "Mesa Caracon, Merc stronghold",
+		"region": "rugged", "height_scale": 40.0, "day_start": 0.5,
+		"objective": "defend", "faction": "merc",
+		"palette": {"low": Color(0.60, 0.64, 0.70), "mid": Color(0.70, 0.74, 0.79),
+					"high": Color(0.84, 0.87, 0.91), "slope": Color(0.44, 0.47, 0.52)},
 		"waves": [
 			{"count": 4, "tier": "scout"},
 			{"count": 3, "tier": "soldier"}, {"count": 2, "tier": "heavy"},
-			{"count": 5, "tier": "soldier"}, {"count": 2, "tier": "heavy"},
+			{"count": 3, "tier": "soldier"}, {"count": 1, "tier": "boss"},
 		],
-		"brief": "A relay station on a broken ridge. Fast probes first, then a heavy column. Hold it.",
+		"brief": "Thane found it: tech atop Mesa Caracon that can neutralize the G-Nome. Take the Citadel's ground and hold while she extracts it.",
 	},
 	{
-		"id": 5, "name": "Cold Trench",
-		"subtitle": "Frozen chasm floor, dawn",
-		"region": "canyon", "height_scale": 50.0, "day_start": 0.12,    # cold dawn
-		"objective": "reach",
+		"id": 5, "name": "Scorp Border",
+		"subtitle": "Grassland frontier, dusk infiltration",
+		"region": "canyon", "height_scale": 50.0, "day_start": 0.75,
+		"objective": "reach", "faction": "scorp",
+		"palette": {"low": Color(0.33, 0.40, 0.26), "mid": Color(0.41, 0.48, 0.31),
+					"high": Color(0.54, 0.58, 0.38), "slope": Color(0.38, 0.34, 0.28)},
 		"waves": [
 			{"count": 4, "tier": "scout"},
 			{"count": 4, "tier": "soldier"},
-			{"count": 2, "tier": "heavy"}, {"count": 3, "tier": "soldier"},
 		],
-		"brief": "Push through the trench to the extraction beacon. They'll try to pin you in the cold.",
+		"brief": "Bypass the Scorp border in the tall grass. The team's fourth member waits inside: Major Jack Sheridan — the man who lost Pearl.",
 	},
 	{
-		"id": 6, "name": "The Foundry",
-		"subtitle": "AREX staging ground",
+		"id": 6, "name": "The Laboratory",
+		"subtitle": "Scorp genetics facility",
 		"region": "craters", "height_scale": 26.0, "day_start": 0.6,
-		"objective": "defend",
+		"objective": "defend", "faction": "scorp",
+		"palette": {"low": Color(0.33, 0.40, 0.26), "mid": Color(0.41, 0.48, 0.31),
+					"high": Color(0.54, 0.58, 0.38), "slope": Color(0.38, 0.34, 0.28)},
 		"waves": [
 			{"count": 5, "tier": "soldier"}, {"count": 2, "tier": "heavy"},
 			{"count": 4, "tier": "heavy"},
-			{"count": 6, "tier": "soldier"}, {"count": 3, "tier": "heavy"},
 		],
-		"brief": "Strike their forward foundry. Expect heavy resistance — this is where they build.",
+		"brief": "The G-Nome lab. Sheridan leads you in — then turns: Kylie taken, the creature stolen. Fight clear of the Scorp response.",
 	},
 	{
-		"id": 7, "name": "Last Light",
-		"subtitle": "Polar approach, dusk",
-		"region": "rugged", "height_scale": 34.0, "day_start": 0.85,    # dusk into night
-		"objective": "defend",
+		"id": 7, "name": "Shalten Frontier",
+		"subtitle": "Volcanic wastes — rogue Union forces",
+		"region": "rugged", "height_scale": 34.0, "day_start": 0.85,
+		"objective": "defend", "faction": "union",
+		"palette": {"low": Color(0.24, 0.22, 0.22), "mid": Color(0.32, 0.29, 0.28),
+					"high": Color(0.44, 0.38, 0.34), "slope": Color(0.16, 0.15, 0.16)},
 		"waves": [
 			{"count": 4, "tier": "soldier"},
 			{"count": 3, "tier": "heavy"},
-			{"count": 4, "tier": "soldier"}, {"count": 2, "tier": "heavy"}, {"count": 1, "tier": "boss"},
+			{"count": 4, "tier": "soldier"}, {"count": 2, "tier": "heavy"},
 		],
-		"brief": "The final push at nightfall — everything they have, led by a Warlord. Do not let them pass.",
+		"brief": "The Scorp now cooperate: stop Sheridan cloning the G-Nome. His rogue Union units hold the volcanic frontier. Destroy the recombination lab.",
+	},
+	{
+		"id": 8, "name": "G-NOME",
+		"subtitle": "Shalten caldera — the truth about Pearl",
+		"region": "canyon", "height_scale": 50.0, "day_start": 0.9,
+		"objective": "defend", "faction": "union",
+		"palette": {"low": Color(0.24, 0.22, 0.22), "mid": Color(0.32, 0.29, 0.28),
+					"high": Color(0.44, 0.38, 0.34), "slope": Color(0.16, 0.15, 0.16)},
+		"waves": [
+			{"count": 4, "tier": "soldier"}, {"count": 2, "tier": "heavy"},
+			{"count": 3, "tier": "heavy"}, {"count": 1, "tier": "boss"},
+			{"count": 1, "tier": "boss"},
+		],
+		"brief": "Kylie is dead. Run Sheridan down in the caldera. When the cargo bay breaks open, tranquilize what comes out — and read the barcode on its paw.",
 	},
 ]
 
-# --- TERRITORY MAP (planet layer). Each level is a territory at its REAL location on
-# Mars (lat°, east-lon°) — the globe scene places markers from these. RIVAL_HOLDINGS are
-# non-mission strongholds that dress the map so the war reads planet-wide.
+# --- TERRITORY MAP (planet layer). The globe now reads as RUHELEN: one territory
+# marker per campaign mission, tracing Gant's route Darken → Merc → Scorp → Shalten.
+# (Coordinates are real Mars features standing in for Ruhelen's regions.)
 const TERRITORY_INFO := [
-	{"latlon": Vector2(21.0, 6.0),     "place": "Arabia Terra"},
-	{"latlon": Vector2(46.7, 117.5),   "place": "Utopia Planitia"},
-	{"latlon": Vector2(-6.5, 289.0),   "place": "Candor Chasma, Valles Marineris"},
-	{"latlon": Vector2(-35.0, 145.0),  "place": "Terra Cimmeria highlands"},
-	{"latlon": Vector2(83.0, 313.0),   "place": "Chasma Boreale, north pole"},
-	{"latlon": Vector2(3.0, 154.7),    "place": "Elysium Planitia"},
-	{"latlon": Vector2(-83.0, 160.0),  "place": "Planum Australe, south pole"},
+	{"latlon": Vector2(21.0, 6.0),     "place": "Darken Republic border"},
+	{"latlon": Vector2(46.7, 117.5),   "place": "Darken deep desert"},
+	{"latlon": Vector2(83.0, 313.0),   "place": "Merc ice fields"},
+	{"latlon": Vector2(-35.0, 145.0),  "place": "Mesa Caracon"},
+	{"latlon": Vector2(3.0, 154.7),    "place": "Scorp border grasslands"},
+	{"latlon": Vector2(-6.5, 289.0),   "place": "Scorp genetics facility"},
+	{"latlon": Vector2(18.65, 226.2),  "place": "Shalten Frontier"},
+	{"latlon": Vector2(24.8, 196.0),   "place": "Shalten caldera"},
 ]
 const RIVAL_HOLDINGS := [
 	{"latlon": Vector2(18.65, 226.2), "place": "Olympus Mons"},

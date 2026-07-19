@@ -31,6 +31,7 @@ signal enemy_destroyed_signal   # relayed for scoring
 @export var time_between_waves: float = 6.0
 @export var mech_path: String = "res://assets/warrior.glb"
 @export var mech_scale: float = 2.8
+var faction := ""   # territory's faction: its own machines get fielded (EnemyTiers)
 
 var _env: EnvironmentEngine
 var _player: Node3D
@@ -70,7 +71,7 @@ func _next_wave() -> void:
 
 func _spawn_enemy(tier_key: String, fallback_hp: int) -> void:
 	# resolve the tier (data-driven stats + look). Empty key => a plain "soldier"-ish unit.
-	var tier: Dictionary = EnemyTiers.get_tier(tier_key) if tier_key != "" else {
+	var tier: Dictionary = EnemyTiers.get_tier(tier_key, faction) if tier_key != "" else {
 		"hp": fallback_hp, "scale": 1.0, "move": 6.0, "fire_cd": 1.4, "detect": 80.0, "tint": "darken"}
 
 	var e := CharacterBody3D.new()

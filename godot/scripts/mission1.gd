@@ -67,6 +67,7 @@ func _ready() -> void:
 	env.height_scale = _level.get("height_scale", 34.0)   # per-level terrain relief
 	env.day_start = _level.get("day_start", 0.32)          # per-level time of day
 	env.region = _level.get("region", "")                  # per-level MOLA region heightmap
+	env.palette = _level.get("palette", {})                # territory theme (ice/grass/volcanic)
 	env.installation_pos = Vector3(0, 0, -180)
 	env.installation_pad_radius = 32.0
 	add_child(env)
@@ -84,6 +85,7 @@ func _ready() -> void:
 		enemies.waves = _level["waves"]
 	add_child(enemies)
 	enemies.configure(env, _player, MECH_PATH, MECH_SCALE)
+	enemies.faction = _level.get("faction", "")   # territory fields its own machines
 	enemies.wave_started.connect(_on_wave_started)
 	enemies.wave_cleared.connect(_on_wave_cleared)
 	enemies.mission_won.connect(_on_mission_won)

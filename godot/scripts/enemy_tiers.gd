@@ -19,9 +19,22 @@ const TIERS := {
 	"boss":    {"vehicle": "Scorpion", "fire_cd": 0.8, "detect": 110.0},
 }
 
-static func get_tier(key: String) -> Dictionary:
+# tier -> silhouette class, so any faction can field its own machine for a tier
+const TIER_ARCH := {"scout": "sentry", "soldier": "tactical", "heavy": "heavy", "boss": "heavy"}
+
+static func get_tier(key: String, faction: String = "") -> Dictionary:
 	var t: Dictionary = TIERS.get(key, TIERS["soldier"])
 	var v: String = t["vehicle"]
+	# territory campaigns field THAT faction's machines: pick its vehicle of the
+	# tier's archetype (Darken scout = Talon, Merc scout = Ogre, Scorp = Jinx…)
+	if faction != "":
+		var arch: String = TIER_ARCH.get(key, "sentry")
+		var pool: Array = []
+		for n in Specs.by_faction(faction):
+			if Specs.get_spec(n)["arch"] == arch:
+				pool.append(n)
+		if not pool.is_empty():
+			v = pool[0] if key != "boss" else pool[-1]
 	var spec: Dictionary = Specs.get_spec(v)
 	return {
 		"hp": Specs.hp(v),

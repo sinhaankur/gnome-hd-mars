@@ -28,6 +28,7 @@ signal ready_built
 @export var max_walkable_slope: float = 0.55   # ~33° — steeper than this is "cliff"
 @export var day_start: float = 0.32            # time-of-day the level begins (0..1)
 @export var region: String = ""                # which MOLA region heightmap to use
+@export var palette: Dictionary = {}           # territory terrain colors (low/mid/high/slope)
 
 var terrain: StaticBody3D
 var sun: MarsSun
@@ -40,6 +41,16 @@ func _ready() -> void:
 	# --- terrain ---
 	terrain = MarsTerrain.make(world_size, height_scale, installation_pos, installation_pad_radius, region)
 	add_child(terrain)
+	# territory theme: override the terrain shader's Mars palette (ice/grass/volcanic —
+	# Ruhelen's four environmental themes; see Campaign LEVELS)
+	if not palette.is_empty():
+		for mi in Atoms.all_mesh_instances(terrain):
+			var m := mi.material_override as ShaderMaterial
+			if m:
+				for k in ["low", "mid", "high", "slope"]:
+					if palette.has(k):
+						var c: Color = palette[k]
+						m.set_shader_parameter(k + "_col", Vector3(c.r, c.g, c.b))
 	_build_safety_floor()   # solid ground below everything so nothing falls into the void
 	# --- sky + sun day-cycle ---
 	_build_sky_and_sun()
