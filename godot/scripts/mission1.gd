@@ -18,6 +18,9 @@ const HERO_PATH := "res://assets/hawc_hero.glb"
 # Loaded by path (not class_name) so it resolves even before the editor rescans
 # the global class cache — a bare `-s` script run won't register new class_names.
 const HERO_FIX := preload("res://scripts/hero_material_fix.gd")
+# preload by path (not class_name) so a bare -s run resolves it before the editor
+# rescans the global class cache — same reason as HERO_FIX above.
+const BEACON_SCENE := preload("res://scripts/beacon.gd")
 const MECH_SCALE := 2.8           # ~2.5u model -> ~7m tall
 const MECH_FOOT_LIFT := 0.0
 # Model face orientation vs movement. 0 = faces forward (model +Z = body +Z = movement dir).
@@ -27,6 +30,7 @@ const MECH_FACE_FLIP := 0.0
 var env: EnvironmentEngine
 var enemies: EnemyEngine
 var explore: Exploration
+var _beacon: Node3D                    # "reach" objective landmark (Beacon; null on defend levels)
 var _hud: GameHUD
 var _level: Dictionary = {}
 var _discovery_text := ""
@@ -133,6 +137,10 @@ func _on_env_ready() -> void:
 	_env_setup_done = true
 	env.place_on_ground(_player, 1.0)
 	explore.populate()   # scatter points of interest on the walkable surface
+	# "reach" missions get a PHYSICAL beacon outpost to drive to (diegetic landmark,
+	# not a floating marker); reaching it wins. "defend" missions skip this entirely.
+	if _level.get("objective", "defend") == "reach":
+		_spawn_beacon()
 	# play the intro cinematic (dropship delivers the mech) + briefing card, THEN assault.
 	# The mech is parked during the cinematic so E/Q/fire can't trigger mid-landing.
 	var intro := MissionIntro.new()
@@ -142,6 +150,41 @@ func _on_env_ready() -> void:
 		_player.controlled = true
 		enemies.start())
 	intro.play(_level, env, _cam, _player)
+
+func _spawn_beacon() -> void:
+	# find walkable ground far from the player start (~250 m) so it's a real drive,
+	# and away from the base. Try a spread of angles/distances; fall back to due north.
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77
+	var start := _player.global_position
+	var spot := Vector3.INF
+	for _try in range(48):
+		var ang := rng.randf() * TAU
+		var dist := rng.randf_range(220.0, 320.0)
+		var x := start.x + cos(ang) * dist
+		var z := start.z + sin(ang) * dist
+		# stay inside the world and off the installation pad
+		if absf(x) > env.world_size * 0.5 - 20.0 or absf(z) > env.world_size * 0.5 - 20.0:
+			continue
+		if Vector2(x, z).distance_to(Vector2(env.installation_pos.x, env.installation_pos.z)) < 60.0:
+			continue
+		if not env.is_walkable(x, z):
+			continue
+		var y := env.ground_height(x, z)
+		if is_nan(y):
+			continue
+		spot = Vector3(x, y, z)
+		break
+	if spot == Vector3.INF:
+		# guaranteed fallback: due north at a fixed range, clamped into the map
+		var fz: float = minf(start.z + 260.0, env.world_size * 0.5 - 20.0)
+		var fy := env.ground_height(start.x, fz)
+		spot = Vector3(start.x, (0.0 if is_nan(fy) else fy), fz)
+	_beacon = BEACON_SCENE.new()
+	add_child(_beacon)
+	_beacon.global_position = spot
+	_beacon.reached.connect(func(): _end(true))
+	_notice("OBJECTIVE: reach the ally beacon — follow the amber strobe on the horizon")
 
 func _on_poi_discovered(poi_name: String, description: String, index: int, total: int) -> void:
 	_discovery_text = "SITE SURVEYED %d/%d — %s\n%s" % [index, total, poi_name, description]
@@ -392,9 +435,11 @@ func _process(delta: float) -> void:
 	if _dmg_flash.color.a > 0.0:
 		_dmg_flash.color.a = maxf(0.0, _dmg_flash.color.a - delta * 1.2)
 
-	# enemies within range of the installation erode its armor
+	# enemies within range of the installation erode its armor — only meaningful on
+	# DEFEND missions. On a reach mission you're driving AWAY from the base, so its
+	# armor is irrelevant and mustn't fail you.
 	var attackers := 0
-	if env.installation:
+	if env.installation and _beacon == null:
 		var base_pos: Vector3 = env.installation.global_position
 		for e in get_tree().get_nodes_in_group("enemies"):
 			if e.global_position.distance_to(base_pos) < BASE_ATTACK_RANGE:
@@ -412,8 +457,16 @@ func _process(delta: float) -> void:
 			if _base_hp <= 0.0:
 				_on_base_destroyed()
 
-	_obj_label.text = "DEFEND THE INSTALLATION · %s · hostiles: %d\nBASE ARMOR: %d%%   ·   YOUR ARMOR: %d%%" % [
-		_wave_text, alive, int(_base_hp), _player.health]
+	# "reach" missions: run the beacon proximity check + show a distance readout so the
+	# player has a diegetic target (the amber strobe) plus a number, no floating marker.
+	if _beacon and is_instance_valid(_beacon):
+		_beacon.check(_player.global_position)
+		var dist := int(_beacon.distance_from(_player.global_position))
+		_obj_label.text = "REACH THE ALLY BEACON · %d m · hostiles: %d\nYOUR ARMOR: %d%%" % [
+			dist, alive, _player.health]
+	else:
+		_obj_label.text = "DEFEND THE INSTALLATION · %s · hostiles: %d\nBASE ARMOR: %d%%   ·   YOUR ARMOR: %d%%" % [
+			_wave_text, alive, int(_base_hp), _player.health]
 
 func _on_base_destroyed() -> void:
 	_end(false)
