@@ -26,8 +26,16 @@ The raw `.IMG`/`.obj` are gitignored (large, re-fetchable); the small `.xml`
 labels are kept here as provenance. The final GLB is a ~22×16 m patch of the
 actual ground Perseverance imaged on Sol 180.
 
+## Albedo (done — geometry-driven)
+The DFF/color products in this ops-stereo bundle are processed derived products, not a
+clean reflectance photo (the true ECM camera image lives in a separate raw bundle). So
+the albedo is derived HONESTLY from the real surface shape instead: baked ambient
+occlusion + slope drive a dust-tan (exposed up-faces) vs dark-basalt (crevices/steep)
+mix, baked to `mars_patch_albedo.png` and embedded in the GLB. Darker areas correspond
+to real cavities/shadowed rock faces in the Perseverance geometry.
+
 ## Still TODO (polish)
 - Crop the fan-shaped Navcam FOV to a clean rectangular tile.
 - Tighter edge filtering to remove residual stereo spikes on rock rims.
-- Bake the real Navcam image as a color/albedo texture (currently a flat Mars tint).
+- Optional: project the true ECM Navcam photo (separate raw bundle) for photographic color.
 - Blend the patch seam into the surrounding HiRISE-heightmap terrain in-game.
