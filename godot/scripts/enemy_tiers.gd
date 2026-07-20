@@ -11,12 +11,17 @@ class_name EnemyTiers
 const Specs := preload("res://scripts/hawc_specs.gd")
 
 const TIERS := {
-	# tier -> which roster vehicle fields it + pacing. AREX fields captured/franchised
-	# hulls from every faction, so the tint follows the vehicle's original faction.
-	"scout":   {"vehicle": "Talon",    "fire_cd": 1.8, "detect": 90.0},
-	"soldier": {"vehicle": "Stalker",  "fire_cd": 1.4, "detect": 80.0},
-	"heavy":   {"vehicle": "Minotaur", "fire_cd": 1.1, "detect": 85.0},
-	"boss":    {"vehicle": "Scorpion", "fire_cd": 0.8, "detect": 110.0},
+	# tier -> which roster vehicle fields it + pacing + combat ROLE (drives enemy_ai's
+	# behavior state machine). AREX fields captured/franchised hulls from every faction,
+	# so the tint follows the vehicle's original faction.
+	#   role:  "rusher"  — closes fast, fights at short range, aggressive
+	#          "sniper"  — hangs back at long range, repositions, avoids the player
+	#          "anchor"  — heavy, holds ground, doesn't chase, punishing up close
+	#          "flanker" — circles to attack from the side, strafes constantly
+	"scout":   {"vehicle": "Talon",    "fire_cd": 1.8, "detect": 90.0,  "role": "flanker"},
+	"soldier": {"vehicle": "Stalker",  "fire_cd": 1.4, "detect": 80.0,  "role": "sniper"},
+	"heavy":   {"vehicle": "Minotaur", "fire_cd": 1.1, "detect": 85.0,  "role": "anchor"},
+	"boss":    {"vehicle": "Scorpion", "fire_cd": 0.8, "detect": 110.0, "role": "rusher"},
 }
 
 # tier -> silhouette class, so any faction can field its own machine for a tier
@@ -42,6 +47,7 @@ static func get_tier(key: String, faction: String = "") -> Dictionary:
 		"move": Specs.move(v),
 		"fire_cd": t["fire_cd"],
 		"detect": t["detect"],
+		"role": t.get("role", "sniper"),
 		"tint": spec["faction"],
 		"arch": spec["arch"],
 		"name": v,

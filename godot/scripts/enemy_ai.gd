@@ -1,5 +1,9 @@
 extends CharacterBody3D
-## Scorp enemy AI: detect player, chase within range, fire back, take damage.
+## Rival HAWC AI — a role-driven combat brain, not a straight-line rusher. Each unit
+## picks a behavior from its role (set by EnemyTiers): rushers close in, snipers hold
+## long range and reposition, anchors stand their ground, flankers circle and strafe.
+## All of them strafe while shooting and RETREAT when badly hurt, so a fight has motion
+## and reads differently per machine type instead of a firing line marching at you.
 
 @export var hp: int = 3
 @export var move_speed: float = 6.0
@@ -8,11 +12,20 @@ extends CharacterBody3D
 @export var fire_range: float = 60.0
 @export var fire_cooldown: float = 1.4
 @export var gravity: float = 24.0
+@export var role: String = "sniper"       # rusher | sniper | anchor | flanker
 
 var _player: Node3D
 var _cool := 0.0
 var terrain: Node = null               # set by level for height (optional)
 var primary_target: Node3D = null      # the installation to assault (set by EnemyEngine)
+
+# --- behavior state ---
+var _max_hp := 3
+var _strafe_dir := 1.0                  # +1 / -1: which way this unit circles
+var _strafe_timer := 0.0                # time until it reverses strafe direction
+var _prefer_range := 22.0              # the standoff distance this role wants to hold
+var _repos_timer := 0.0                 # snipers/flankers pick a new spot periodically
+var _repos_offset := Vector3.ZERO       # current reposition nudge
 
 signal destroyed
 
@@ -21,6 +34,16 @@ const LaserScene := preload("res://scenes/laser.tscn")
 func _ready() -> void:
 	add_to_group("enemies")
 	_cool = randf() * fire_cooldown
+	_max_hp = maxi(hp, 1)
+	_strafe_dir = 1.0 if randf() < 0.5 else -1.0
+	_strafe_timer = randf_range(1.5, 3.0)
+	# role sets the standoff distance + how aggressively it moves
+	match role:
+		"rusher":  _prefer_range = 12.0; fire_range = 45.0
+		"sniper":  _prefer_range = 48.0; fire_range = 80.0
+		"anchor":  _prefer_range = 26.0; fire_range = 60.0
+		"flanker": _prefer_range = 20.0; fire_range = 55.0
+		_:         _prefer_range = stop_range
 
 func _current_target() -> Node3D:
 	# March on the installation, but if the player HAWC gets close, engage it instead.
@@ -50,25 +73,72 @@ func _physics_process(delta: float) -> void:
 		velocity.y = 0.0
 
 	if dist < detect_range and dist > 0.1:
-		# face the player
+		# always face the target while engaged (so shots and the model read correctly)
 		var look := global_position + to_player
 		look_at(Vector3(look.x, global_position.y, look.z), Vector3.UP)
-		# advance until within stop_range
-		if dist > stop_range:
-			var dir := to_player.normalized()
-			velocity.x = dir.x * move_speed
-			velocity.z = dir.z * move_speed
+
+		var dir := to_player.normalized()
+		# perpendicular, for strafing/circling around the target
+		var perp := Vector3(-dir.z, 0.0, dir.x)
+
+		# reverse strafe direction on a timer so units weave instead of orbiting forever
+		_strafe_timer -= delta
+		if _strafe_timer <= 0.0:
+			_strafe_dir *= -1.0
+			_strafe_timer = randf_range(1.4, 2.8)
+
+		# badly hurt units break contact and fall back (except anchors, who dig in)
+		var hurt := hp <= maxi(1, int(_max_hp * 0.35)) and role != "anchor"
+
+		var move := Vector3.ZERO
+		if hurt:
+			# RETREAT: back away while still facing/firing, with a little strafe jink
+			move = (-dir * 1.0 + perp * _strafe_dir * 0.5).normalized() * move_speed
 		else:
-			velocity.x = 0.0
-			velocity.z = 0.0
-		# fire
+			# hold the role's preferred standoff range: close if too far, back off if
+			# too close, and strafe once roughly in the pocket.
+			var err := dist - _prefer_range
+			var radial := 0.0
+			if err > 4.0:
+				radial = 1.0          # too far -> advance
+			elif err < -4.0:
+				radial = -0.7         # too close -> ease back
+			var strafe_amt := 0.9
+			if role == "anchor":
+				strafe_amt = 0.25     # heavies barely move, just shuffle
+				radial *= 0.5
+			elif role == "flanker":
+				strafe_amt = 1.15     # flankers circle hard
+			elif role == "sniper":
+				strafe_amt = 0.6
+			move = (dir * radial + perp * _strafe_dir * strafe_amt)
+			if move.length() > 0.01:
+				move = move.normalized() * move_speed * (0.6 if radial == 0.0 else 1.0)
+
+		velocity.x = move.x
+		velocity.z = move.z
+
+		# fire when in range and roughly facing — cadence from the tier
 		_cool = max(0.0, _cool - delta)
 		if dist < fire_range and _cool <= 0.0:
 			_fire()
-			_cool = fire_cooldown
+			# rushers/flankers fire a touch faster when close for pressure
+			_cool = fire_cooldown * (0.85 if dist < _prefer_range * 1.3 else 1.0)
 	else:
-		velocity.x = 0.0
-		velocity.z = 0.0
+		# out of detection: advance on the primary target (installation) so waves still assault
+		if primary_target and is_instance_valid(primary_target):
+			var tp := (primary_target.global_position - global_position); tp.y = 0.0
+			if tp.length() > 6.0:
+				var d2 := tp.normalized()
+				velocity.x = d2.x * move_speed
+				velocity.z = d2.z * move_speed
+				var lk := global_position + tp
+				look_at(Vector3(lk.x, global_position.y, lk.z), Vector3.UP)
+			else:
+				velocity.x = 0.0; velocity.z = 0.0
+		else:
+			velocity.x = 0.0
+			velocity.z = 0.0
 
 	move_and_slide()
 

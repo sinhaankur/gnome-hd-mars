@@ -81,7 +81,7 @@ func _next_wave() -> void:
 func _spawn_enemy(tier_key: String, fallback_hp: int) -> void:
 	# resolve the tier (data-driven stats + look). Empty key => a plain "soldier"-ish unit.
 	var tier: Dictionary = EnemyTiers.get_tier(tier_key, faction) if tier_key != "" else {
-		"hp": fallback_hp, "scale": 1.0, "move": 6.0, "fire_cd": 1.4, "detect": 80.0, "tint": "darken"}
+		"hp": fallback_hp, "scale": 1.0, "move": 6.0, "fire_cd": 1.4, "detect": 80.0, "tint": "darken", "role": "sniper"}
 
 	var e := CharacterBody3D.new()
 	e.name = "RivalHAWC"
@@ -90,6 +90,7 @@ func _spawn_enemy(tier_key: String, fallback_hp: int) -> void:
 	e.move_speed = tier["move"]
 	e.fire_cooldown = tier["fire_cd"]
 	e.detect_range = tier["detect"]
+	e.set("role", tier.get("role", "sniper"))   # drives the behavior state machine
 
 	var visual := Node3D.new()
 	var scene: PackedScene = load(ARCH_MODELS.get(tier.get("arch", ""), mech_path))
