@@ -13,6 +13,9 @@ signal all_discovered
 
 @export var discover_radius: float = 16.0
 
+# real probe model reused from the user's star-cleaver-assets repo (repo-first rule)
+const PROBE_PATH := "res://assets/imported/voyager.glb"
+
 var _env: EnvironmentEngine
 var _pois: Array = []          # {node, name, desc, found}
 var _found_count := 0
@@ -74,12 +77,21 @@ func _build_marker(poi_name: String, _color: Color) -> Node3D:
 
 	match poi_name:
 		"Crashed Recon Probe":
-			# tilted probe body dug into a dark scorch mark
-			var body := MeshInstance3D.new()
-			var cap := CapsuleMesh.new(); cap.radius = 1.1; cap.height = 5.0
-			body.mesh = cap; body.material_override = metal
-			body.rotation_degrees = Vector3(64, 30, 0); body.position.y = 0.9
-			root.add_child(body)
+			# a REAL probe model (Voyager, from the star-cleaver-assets repo) half-buried in a
+			# scorch mark, instead of the old plain capsule. Tilted like it hit and skidded.
+			var probe_scene: PackedScene = load(PROBE_PATH)
+			if probe_scene:
+				var probe := probe_scene.instantiate()
+				probe.scale = Vector3.ONE * 0.9
+				probe.rotation_degrees = Vector3(38, 30, -12)   # crashed, dug in nose-first
+				probe.position.y = 1.2
+				root.add_child(probe)
+			else:
+				var body := MeshInstance3D.new()
+				var cap := CapsuleMesh.new(); cap.radius = 1.1; cap.height = 5.0
+				body.mesh = cap; body.material_override = metal
+				body.rotation_degrees = Vector3(64, 30, 0); body.position.y = 0.9
+				root.add_child(body)
 			var scorch := MeshInstance3D.new()
 			var disc := CylinderMesh.new(); disc.top_radius = 4.5; disc.bottom_radius = 4.5; disc.height = 0.1
 			scorch.mesh = disc
