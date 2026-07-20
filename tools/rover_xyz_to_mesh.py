@@ -52,9 +52,29 @@ def build_mesh(img_path, xml_path, out_obj, stride=2, max_edge=0.30,
     WY = X      # world y  (horizontal)
     WZ = -Z     # world z  (up)
 
-    mx = np.median(WX[valid])
-    my = np.median(WY[valid])
-    # a clean square tile of side 2*half, centered on the dense middle of the cloud
+    # FLATTEST-WINDOW search: this frame has a raised bank in it, so a median-centered
+    # crop caught the ridge and read as a dark hill in-game. Instead, scan candidate
+    # window centers across the dense cloud and pick the one whose central tile has the
+    # LOWEST vertical relief — flat real ground that drops seamlessly into flat terrain.
+    vx, vy, vz = WX[valid], WY[valid], WZ[valid]
+    best = None
+    xs = np.linspace(np.percentile(vx, 10), np.percentile(vx, 90), 7)
+    ys = np.linspace(np.percentile(vy, 10), np.percentile(vy, 90), 7)
+    for cxw in xs:
+        for cyw in ys:
+            inbox = (np.abs(vx - cxw) < half) & (np.abs(vy - cyw) < half)
+            if inbox.sum() < 4000:
+                continue
+            zz = vz[inbox]
+            relief = np.percentile(zz, 92) - np.percentile(zz, 8)   # flatter = smaller
+            if best is None or relief < best[0]:
+                best = (relief, cxw, cyw, int(inbox.sum()))
+    if best is None:
+        mx, my = np.median(WX[valid]), np.median(WY[valid])
+    else:
+        _, mx, my, _ = best
+        print("flattest window: relief=%.2f m at (%.1f, %.1f), %d pts"
+              % (best[0], mx, my, best[3]))
     valid &= (np.abs(WX - mx) < half) & (np.abs(WY - my) < half)
 
     # ground floor from the cropped region, so z=0 sits on the surface
