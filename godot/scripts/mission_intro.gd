@@ -75,12 +75,17 @@ var _card: Control
 var _done := false
 
 # ---------------------------------------------------------------- dropship landing
+# Hover height for the deployment: high enough to lower a ~7 m mech clear beneath the
+# ship's belly (underside ≈ -3.3 in the model), low enough that the winch reads.
+const HOVER_Y := 15.0
+const CABLE_TOP_Y := -3.0    # bay floor / winch anchor, local to the ship
+
 func _run_landing() -> void:
-	# The player's mech arrives by dropship: descend from high altitude, dust-off at
-	# touchdown, release the mech, climb away. Connects the orbit DEPLOY click to the
-	# ground — you watch your own insertion.
+	# The player's mech arrives by dropship as a diegetic deployment you watch:
+	# descend -> hover -> BAY DOORS OPEN -> mech WINCHED DOWN on cables -> touchdown ->
+	# cables release -> ship climbs away. No more "mech pops into existence".
 	var ground: Vector3 = _player.global_position
-	# hide the mech until the ship sets it down
+	# hide the real gameplay mech; a stand-in visual rides the winch during the cinematic
 	var vis := _player.get_node_or_null("Visual")
 	if vis:
 		vis.visible = false
@@ -97,19 +102,30 @@ func _run_landing() -> void:
 	_cine_cam.look_at_from_position(ground + Vector3(26, 9, 26), _dropship.global_position, Vector3.UP)
 
 	var tw := create_tween()
-	# descent: fast then flaring to a hover just above the deck; camera follows the ship
-	tw.tween_property(_dropship, "global_position", ground + Vector3(0, 9.5, 0), 5.0)\
+	# 1) descent: fast then flaring to a hover; camera follows the ship
+	tw.tween_property(_dropship, "global_position", ground + Vector3(0, HOVER_Y, 0), 5.0)\
 		.set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_method(func(_t: float):
 		if _cine_cam and is_instance_valid(_cine_cam) and _dropship and is_instance_valid(_dropship):
-			_cine_cam.look_at(_dropship.global_position - Vector3(0, 2.0, 0), Vector3.UP),
+			_cine_cam.look_at(_dropship.global_position - Vector3(0, 3.0, 0), Vector3.UP),
 		0.0, 1.0, 5.0)
+	# 2) settle, then the bay doors swing open (dust puff of downwash on the deck)
+	tw.tween_callback(func(): _downwash(ground))
+	tw.tween_interval(0.4)
+	tw.tween_callback(_open_bay)
+	tw.tween_interval(0.9)   # let the doors finish opening
+	# 3) winch the mech down from the bay to the ground on cables
+	tw.tween_callback(_begin_winch.bind(vis, ground))
+	tw.tween_interval(2.4)   # matches the winch descent time below
+	# 4) touchdown: dust ring, cables detach, hand the real mech to the player
 	tw.tween_callback(func():
 		_touchdown_dust(ground)
+		_release_winch()
 		if vis:
-			vis.visible = true)   # mech released under the hovering ship
-	tw.tween_interval(0.9)
-	# climb-out and away
+			vis.visible = true)
+	tw.tween_interval(0.8)
+	# 5) doors close and the ship climbs out and away
+	tw.tween_callback(_close_bay)
 	tw.tween_property(_dropship, "global_position", ground + Vector3(60, 150, -40), 3.0)\
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tw.parallel().tween_method(func(t: float):
@@ -117,6 +133,72 @@ func _run_landing() -> void:
 			_cine_cam.look_at(_dropship.global_position.lerp(ground + Vector3.UP * 6, t), Vector3.UP),
 		0.0, 1.0, 3.0)
 	tw.tween_callback(_finish)
+
+# --- cargo bay + winch: parts parented to the ship so they move with it ---
+var _bay_door_l: Node3D
+var _bay_door_r: Node3D
+var _winch_rig: Node3D      # holds the lowered mech stand-in + cables
+var _winch_mech: Node3D
+
+func _open_bay() -> void:
+	if _bay_door_l == null or not is_instance_valid(_bay_door_l):
+		return
+	# doors swing down/outward on their hinges (rotation around local Z)
+	var t := create_tween(); t.set_parallel(true)
+	t.tween_property(_bay_door_l, "rotation:z", deg_to_rad(105), 0.8).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	t.tween_property(_bay_door_r, "rotation:z", deg_to_rad(-105), 0.8).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var sfx := get_node_or_null("/root/Sfx")
+	if sfx and sfx.has_method("ui"):
+		sfx.ui()
+
+func _close_bay() -> void:
+	if _bay_door_l == null or not is_instance_valid(_bay_door_l):
+		return
+	var t := create_tween(); t.set_parallel(true)
+	t.tween_property(_bay_door_l, "rotation:z", 0.0, 0.7).set_trans(Tween.TRANS_SINE)
+	t.tween_property(_bay_door_r, "rotation:z", 0.0, 0.7).set_trans(Tween.TRANS_SINE)
+
+func _begin_winch(gameplay_vis: Node3D, ground: Vector3) -> void:
+	# build a stand-in mech + a pair of cables under the bay, then lower the rig so the
+	# mech travels from the bay floor down to the ground. The rig is a child of the ship
+	# so it inherits the ship's tiny hover bob, but we drive its local Y down to ground.
+	if _dropship == null or not is_instance_valid(_dropship):
+		return
+	_winch_rig = Node3D.new()
+	_dropship.add_child(_winch_rig)
+	_winch_rig.position = Vector3(0, CABLE_TOP_Y, 0)   # start at the bay floor
+
+	# stand-in mech: clone the player's visual so it matches the hero model exactly
+	if gameplay_vis:
+		_winch_mech = gameplay_vis.duplicate()
+		_winch_mech.visible = true
+		_winch_mech.position = Vector3.ZERO
+		_winch_rig.add_child(_winch_mech)
+
+	# two cables from the bay roof down to the mech's shoulders
+	for sx in [-1.3, 1.3]:
+		var cable := MeshInstance3D.new()
+		var cc := CylinderMesh.new(); cc.top_radius = 0.06; cc.bottom_radius = 0.06; cc.height = 8.0
+		cable.mesh = cc
+		var cm := StandardMaterial3D.new(); cm.albedo_color = Color(0.1, 0.1, 0.1); cm.metallic = 0.3
+		cable.material_override = cm
+		# reaches from the rig up to the bay anchor (fixed length; the rig moves down)
+		cable.position = Vector3(sx, 4.0, 0)
+		cable.name = "Cable%d" % (0 if sx < 0 else 1)
+		_winch_rig.add_child(cable)
+
+	# lower the rig from the bay floor to ground level (local Y of the ship)
+	var drop := (ground.y) - (_dropship.global_position.y + CABLE_TOP_Y) + 0.2
+	var t := create_tween()
+	t.tween_property(_winch_rig, "position:y", CABLE_TOP_Y + drop, 2.3)\
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+func _release_winch() -> void:
+	# cables snap free; the stand-in mech + cables vanish as the real gameplay mech appears
+	if _winch_rig and is_instance_valid(_winch_rig):
+		_winch_rig.queue_free()
+	_winch_rig = null
+	_winch_mech = null
 
 const DROPSHIP_PATH := "res://assets/dropship.glb"
 
@@ -150,7 +232,62 @@ func _build_dropship() -> Node3D:
 			flame.material_override = fm
 			flame.position = Vector3(sx * 4.3, -3.2, sz * 4.9)
 			ship.add_child(flame)
+
+	# --- underside cargo BAY: a recessed dark opening + two hinged doors that swing
+	# open for the winch. The doors hinge along the ship's centreline (local X = ±0)
+	# so they open outward like belly cargo doors. Parented to the ship so they ride it.
+	var door_mat := StandardMaterial3D.new()
+	door_mat.albedo_color = Color(0.34, 0.33, 0.31); door_mat.metallic = 0.6; door_mat.roughness = 0.5
+	var bay_dark := MeshInstance3D.new()
+	var bd := BoxMesh.new()
+	bay_dark.mesh = bd; bay_dark.scale = Vector3(4.4, 0.4, 7.0)
+	var dm := StandardMaterial3D.new(); dm.albedo_color = Color(0.05, 0.05, 0.06); dm.roughness = 1.0
+	bay_dark.material_override = dm
+	bay_dark.position = Vector3(0, -3.15, 0)   # the dark bay interior, flush with the belly
+	ship.add_child(bay_dark)
+	# left + right doors: each pivots at the centreline via an offset child mesh
+	_bay_door_l = Node3D.new(); _bay_door_l.position = Vector3(0, -3.1, 0); ship.add_child(_bay_door_l)
+	var dlm := MeshInstance3D.new(); dlm.mesh = BoxMesh.new()
+	dlm.scale = Vector3(2.2, 0.25, 7.0); dlm.position = Vector3(-1.1, 0, 0)   # extends left of the hinge
+	dlm.material_override = door_mat; _bay_door_l.add_child(dlm)
+	_bay_door_r = Node3D.new(); _bay_door_r.position = Vector3(0, -3.1, 0); ship.add_child(_bay_door_r)
+	var drm := MeshInstance3D.new(); drm.mesh = BoxMesh.new()
+	drm.scale = Vector3(2.2, 0.25, 7.0); drm.position = Vector3(1.1, 0, 0)    # extends right of the hinge
+	drm.material_override = door_mat; _bay_door_r.add_child(drm)
 	return ship
+
+func _downwash(ground: Vector3) -> void:
+	# a lighter, continuous-feeling dust kick from the hovering engines (before the mech
+	# is lowered) — sells the ship holding station over the deck. Reuses the ring burst
+	# at a smaller scale than the touchdown blast.
+	var dust := GPUParticles3D.new()
+	dust.one_shot = true
+	dust.amount = 90
+	dust.lifetime = 1.8
+	dust.explosiveness = 0.7
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+	pm.emission_ring_radius = 3.0
+	pm.emission_ring_inner_radius = 1.5
+	pm.emission_ring_height = 0.4
+	pm.emission_ring_axis = Vector3(0, 1, 0)
+	pm.direction = Vector3(1, 0.1, 0)
+	pm.spread = 180.0
+	pm.initial_velocity_min = 6.0
+	pm.initial_velocity_max = 13.0
+	pm.gravity = Vector3(0, -2.0, 0)
+	pm.scale_min = 0.9; pm.scale_max = 2.2
+	pm.color = Color(0.68, 0.55, 0.42, 0.4)
+	dust.process_material = pm
+	var qm := QuadMesh.new(); qm.size = Vector2(1.6, 1.6)
+	dust.draw_pass_1 = qm
+	dust.material_override = Atoms.dust_material(Color(0.68, 0.55, 0.42, 0.38))
+	_env.add_child(dust)
+	dust.global_position = ground + Vector3.UP * 0.4
+	dust.emitting = true
+	get_tree().create_timer(3.5).timeout.connect(func():
+		if is_instance_valid(dust):
+			dust.queue_free())
 
 func _touchdown_dust(ground: Vector3) -> void:
 	# one-shot dust ring blasted out by the engines at touchdown
@@ -221,7 +358,9 @@ func _finish() -> void:
 		if vis:
 			vis.visible = true
 	if _dropship and is_instance_valid(_dropship):
-		_dropship.queue_free()
+		_dropship.queue_free()   # frees the winch rig too (it's a child)
+	_winch_rig = null
+	_winch_mech = null
 	if _game_cam and is_instance_valid(_game_cam):
 		_game_cam.current = true
 	if _cine_cam and is_instance_valid(_cine_cam):
