@@ -32,6 +32,10 @@ signal ready_built
 # sculpted rocks reused from the user's star-cleaver-assets repo (repo-first rule)
 const ASTEROID_STONY_PATH := "res://assets/imported/asteroid-stony.glb"
 const ASTEROID_CARBON_PATH := "res://assets/imported/asteroid-carbon.glb"
+# REAL Perseverance Sol 180 Mars ground (NASA/PDS, public domain) — see
+# mars_data/rover_xyz/PROVENANCE.md. A ~16 m hero tile you actually walk on.
+const LANDING_PATCH_PATH := "res://assets/imported/mars_patch_sol180.glb"
+@export var landing_zone_pos := Vector3(0, 0, 160)   # under the player deploy point
 @export var palette: Dictionary = {}           # territory terrain colors (low/mid/high/slope)
 
 var terrain: StaticBody3D
@@ -75,6 +79,7 @@ func _after_physics_ready() -> void:
 	place_on_ground(installation, 0.0)
 	_scatter_rocks()
 	_scatter_detail()      # pebbles, landmark formations, half-buried wreckage
+	_build_landing_zone()  # REAL Perseverance Mars ground at the deploy point
 	_build_outposts()      # small forward bases dotting the territory
 	_build_horizon()       # distant mountain/mesa silhouettes ringing the map
 	ready_built.emit()
@@ -517,6 +522,32 @@ func _build_outposts() -> void:
 		post.add_child(blink)
 		_blink_lights.append(blink)
 		placed += 1
+
+func _build_landing_zone() -> void:
+	# Drop the REAL Perseverance Sol 180 ground tile in as the hero landing zone: the
+	# actual Mars surface the player deploys onto, sunk flush into the surrounding
+	# procedural terrain so its edges blend rather than sit on a shelf. A collision
+	# body under it lets the mech walk on the real geometry.
+	var scene: PackedScene = load(LANDING_PATCH_PATH)
+	if scene == null:
+		return
+	var patch := scene.instantiate()
+	patch.name = "RealMarsLandingZone"
+	add_child(patch)
+	var gx := landing_zone_pos.x
+	var gz := landing_zone_pos.z
+	var gy := ground_height(gx, gz)
+	if is_nan(gy):
+		gy = 0.0
+	# seat the tile just below the local ground so its rim tucks under the regolith
+	patch.global_position = Vector3(gx, gy - 0.3, gz)
+	# a trimesh collider so the mech stands on the real surface
+	for mi in Atoms.all_mesh_instances(patch):
+		var body := StaticBody3D.new()
+		var col := CollisionShape3D.new()
+		col.shape = (mi as MeshInstance3D).mesh.create_trimesh_shape()
+		body.add_child(col)
+		mi.add_child(body)
 
 func _scatter_rocks() -> void:
 	var rng := RandomNumberGenerator.new()

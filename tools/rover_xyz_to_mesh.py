@@ -40,24 +40,46 @@ def load_xyz(img_path, xml_path):
     return X, Y, Z, valid, L, S
 
 
-def build_mesh(img_path, xml_path, out_obj, stride=2, max_edge=0.35, max_range=16.0):
+def build_mesh(img_path, xml_path, out_obj, stride=2, max_edge=0.30,
+               half=8.0, z_spike=1.2):
     X, Y, Z, valid, L, S = load_xyz(img_path, xml_path)
 
-    # CLIP to the near-to-mid ground: beyond ~16 m a single stereo viewpoint smears
-    # distant terrain into long "fan" spikes (unreliable + ugly). Keep only the dense,
-    # accurate near ground — that's the real walkable patch.
-    horiz = np.sqrt(X * X + Y * Y)   # distance from the rover on the ground plane
-    valid &= (horiz < max_range)
+    # rover-nav -> Z-up world. Z is the (near-flat) vertical here; X and Y are both
+    # horizontal ground axes. The terrain isn't straight ahead — it spreads to one
+    # side — so crop a square centered on the DATA's own horizontal median, not on a
+    # hardcoded forward box (which collapsed to nothing).
+    WX = Y      # world x  (horizontal)
+    WY = X      # world y  (horizontal)
+    WZ = -Z     # world z  (up)
 
-    # rover-nav (X fwd, Y right, Z down) -> Z-up world
-    WX = Y
-    WY = X
-    WZ = -Z
+    mx = np.median(WX[valid])
+    my = np.median(WY[valid])
+    # a clean square tile of side 2*half, centered on the dense middle of the cloud
+    valid &= (np.abs(WX - mx) < half) & (np.abs(WY - my) < half)
 
-    # center the footprint on origin, drop ground to ~z=0
-    gx, gy, gz = WX[valid], WY[valid], WZ[valid]
+    # ground floor from the cropped region, so z=0 sits on the surface
+    gz = WZ[valid]
+    z0 = np.percentile(gz, 2)
+
+    # SPIKE rejection: drop stereo outliers whose height jumps far above the local
+    # median — these are the noisy rock-rim slivers. Compare each valid pixel's WZ to
+    # a coarse block median and cull the ones that spike up.
+    from math import inf
+    block = 24
+    zc = WZ - z0
+    for r0 in range(0, L, block):
+        for c0 in range(0, S, block):
+            sub = valid[r0:r0+block, c0:c0+block]
+            if sub.sum() < 8:
+                continue
+            zz = zc[r0:r0+block, c0:c0+block][sub]
+            med = np.median(zz)
+            bad = (zc[r0:r0+block, c0:c0+block] - med > z_spike) & sub
+            valid[r0:r0+block, c0:c0+block] &= ~bad
+
+    # center the (now rectangular) footprint on origin
+    gx, gy = WX[valid], WY[valid]
     cx, cy = gx.mean(), gy.mean()
-    z0 = np.percentile(gz, 2)   # ground floor
 
     # per-pixel vertex index map (subsampled by stride for a game-weight mesh)
     idx = -np.ones((L, S), dtype=np.int64)
