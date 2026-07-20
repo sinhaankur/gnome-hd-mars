@@ -25,3 +25,7 @@ godot/.godot/
 
 # transient art-pass captures — regenerated every DEV_SHOTS run
 /reference/shots/
+
+# raw NASA/PDS rover XYZ downloads — re-fetch via tools (public domain, large)
+/mars_data/rover_xyz/*.IMG
+/mars_data/rover_xyz/*.obj
