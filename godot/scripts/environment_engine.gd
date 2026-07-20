@@ -28,6 +28,10 @@ signal ready_built
 @export var max_walkable_slope: float = 0.55   # ~33° — steeper than this is "cliff"
 @export var day_start: float = 0.32            # time-of-day the level begins (0..1)
 @export var region: String = ""                # which MOLA region heightmap to use
+
+# sculpted rocks reused from the user's star-cleaver-assets repo (repo-first rule)
+const ASTEROID_STONY_PATH := "res://assets/imported/asteroid-stony.glb"
+const ASTEROID_CARBON_PATH := "res://assets/imported/asteroid-carbon.glb"
 @export var palette: Dictionary = {}           # territory terrain colors (low/mid/high/slope)
 
 var terrain: StaticBody3D
@@ -718,6 +722,38 @@ func _scatter_detail() -> void:
 			# sunk deep so the cluster reads as bedrock breaking the surface
 			rock.position = Vector3(ox, oy - rock.scale.y * 0.35, oz)
 			add_child(rock)
+
+	# 2b) HERO BOULDERS — sculpted asteroid meshes from the user's star-cleaver-assets
+	# repo (repo-first rule). Real hand-sculpted geometry reads far better than the
+	# procedural rock_mesh for the few big landmark stones you walk right up to. Tinted
+	# to Mars basalt via a modulate/material override (the source mesh is pale cream).
+	var ast_scenes: Array = []
+	for p in [ASTEROID_STONY_PATH, ASTEROID_CARBON_PATH]:
+		var sc: PackedScene = load(p)
+		if sc:
+			ast_scenes.append(sc)
+	if not ast_scenes.is_empty():
+		var mars_rock := Atoms.rock_material(Color(0.46, 0.40, 0.35))
+		for i in range(10):
+			var x := rng.randf_range(-half * 0.92, half * 0.92)
+			var z := rng.randf_range(-half * 0.92, half * 0.92)
+			if Vector2(x, z).distance_to(Vector2(0, 160)) < 40.0:
+				continue
+			if Vector2(x, z).distance_to(Vector2(installation_pos.x, installation_pos.z)) < 70.0:
+				continue
+			var y := ground_height(x, z)
+			if is_nan(y):
+				continue
+			var boulder := (ast_scenes[rng.randi() % ast_scenes.size()] as PackedScene).instantiate()
+			var s := rng.randf_range(2.2, 5.0)   # source asteroid ~2 m -> 4–10 m boulders
+			boulder.scale = Vector3.ONE * s
+			boulder.rotation = Vector3(rng.randf() * TAU, rng.randf() * TAU, rng.randf() * TAU)
+			# Mars-tone every surface so it doesn't read as a pale space rock
+			for mi in Atoms.all_mesh_instances(boulder):
+				(mi as MeshInstance3D).material_override = mars_rock
+			# sunk a bit so it sits like a weathered surface boulder, not perched
+			boulder.position = Vector3(x, y - s * 0.35, z)
+			add_child(boulder)
 
 	# 3) HALF-BURIED WRECKAGE — a couple of dead hulks tilted into the regolith (story detail)
 	var wreck_mat := StandardMaterial3D.new()
