@@ -397,22 +397,19 @@ void fragment(){
 
 var _clouds: Node3D
 
-const INSTALLATION_PATH := "res://assets/installation.glb"
+# Procedural base built in-engine (scripts/installation.gd). The old installation.glb
+# was a bare cream dome + a lollipop dish that read as a placeholder; the procedural
+# compound (pad, dome, habs, tanks, comms mast, blast wall) holds up to the photo bar.
+# preload BY PATH so a bare -s run resolves it before the class-cache rescan.
+const INSTALLATION_BUILD := preload("res://scripts/installation.gd")
 
 func _build_installation(pos: Vector3) -> Node3D:
 	# the real Mars base (command dome, comms tower, habitats, tanks, landing pad, wall)
 	var base := Node3D.new()
 	base.name = "Installation"
-	var scene: PackedScene = load(INSTALLATION_PATH)
-	if scene:
-		var b := scene.instantiate()
-		base.add_child(b)
-	else:
-		# fallback: a simple marker if the model is missing
-		var mi := MeshInstance3D.new()
-		mi.mesh = BoxMesh.new()
-		mi.scale = Vector3(10, 6, 10)
-		base.add_child(mi)
+	var compound: Node = INSTALLATION_BUILD.new()
+	compound.set("pad_radius", installation_pad_radius)
+	base.add_child(compound)
 	# a modest warm work-light over the pad — real bases glow amber, not sci-fi blue
 	var light := OmniLight3D.new()
 	light.name = "GuideLight"
@@ -423,28 +420,30 @@ func _build_installation(pos: Vector3) -> Node3D:
 	base.add_child(light)
 	_base_light = light
 
-	# --- rotating radar dish on a mast (animated) ---
+	# --- rotating radar dish, mounted atop the compound's comms mast (x=10,z=6, ~20 m) ---
 	var mast := Node3D.new()
 	mast.name = "RadarMast"
-	mast.position = Vector3(6, 14, 6)
+	mast.position = Vector3(10, 20.0, 6)
 	var dish := MeshInstance3D.new()
-	var dm := CylinderMesh.new(); dm.top_radius = 3.0; dm.bottom_radius = 0.3; dm.height = 1.2
+	var dm := CylinderMesh.new(); dm.top_radius = 2.4; dm.bottom_radius = 0.3; dm.height = 1.0
 	dish.mesh = dm
 	dish.rotation_degrees = Vector3(60, 0, 0)
 	var dishmat := StandardMaterial3D.new()
-	dishmat.albedo_color = Color(0.8, 0.8, 0.82); dishmat.metallic = 0.6
+	# dusty dish, not bright white — matches the compound palette
+	dishmat.albedo_color = Color(0.60, 0.59, 0.56); dishmat.metallic = 0.55; dishmat.roughness = 0.5
 	dish.material_override = dishmat
 	mast.add_child(dish)
 	base.add_child(mast)
 	_radar_mast = mast
 
-	# --- blinking hazard/aircraft lights on top ---
-	for i in range(3):
+	# --- blinking hazard lights: one on the dome apex, one partway up the mast ---
+	var blink_pos := [Vector3(0, 5.0, 0), Vector3(10, 14.0, 6)]
+	for p in blink_pos:
 		var blink := OmniLight3D.new()
 		blink.light_color = Color(1.0, 0.2, 0.15)
 		blink.light_energy = 1.0   # aircraft-light subtle, not carnival
 		blink.omni_range = 6.0
-		blink.position = Vector3(cos(i*TAU/3.0)*5.0, 16.0 + i*2.0, sin(i*TAU/3.0)*5.0)
+		blink.position = p
 		base.add_child(blink)
 		_blink_lights.append(blink)
 
