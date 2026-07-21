@@ -3,6 +3,11 @@ extends Node
 ## progression. Each level is a thin DATA config that the mission composes with the three
 ## engines — no bespoke scenes. All on Mars, but each level varies region, terrain,
 ## objective, waves and mood so they feel distinct.
+##
+## FRAMING (see PREMISE): a war over CONTESTED Mars territory — rival nations seizing the
+## planet's international zones; you drop from orbit in a HAWC (the arrival cinematic) to
+## hold and retake them. The territory names/mission beats keep the G-Nome faction
+## structure; the premise recontextualizes them as the fronts of that territorial war.
 
 # --- level configs. terrain_seed picks a different MOLA-style region feel via height
 # scale + tint; objective is "defend" (survive waves) or "reach" (get to the beacon). ---
@@ -123,6 +128,16 @@ const LEVELS := [
 # --- TERRITORY MAP (planet layer). The globe now reads as RUHELEN: one territory
 # marker per campaign mission, tracing Gant's route Darken → Merc → Scorp → Shalten.
 # (Coordinates are real Mars features standing in for Ruhelen's regions.)
+# --- PREMISE: the war is over CONTESTED TERRITORY on Mars. Rival nations are seizing
+# international zones of the planet; you pilot a HAWC, dropped from orbit, to hold and
+# retake them. This frames the whole campaign and the orbital-arrival cinematic. ---
+const PREMISE := {
+	"title": "MARS — CONTESTED GROUND",
+	"line1": "Mars was meant to belong to no one. That treaty is dead.",
+	"line2": "Rival nations are seizing the international zones — one region at a time.",
+	"line3": "You drop from orbit in a HAWC. Hold the line. Take it back.",
+}
+
 const TERRITORY_INFO := [
 	{"latlon": Vector2(21.0, 6.0),     "place": "Darken Republic border"},
 	{"latlon": Vector2(46.7, 117.5),   "place": "Darken deep desert"},

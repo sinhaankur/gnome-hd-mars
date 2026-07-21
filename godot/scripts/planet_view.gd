@@ -226,6 +226,8 @@ func _play_arrival(target_point: Vector3) -> void:
 	var hud := get_node_or_null("HUDLayer")
 	if hud:
 		hud.visible = false
+	# a lower-third premise card during the descent — states WHY you're deploying
+	_show_arrival_card(target_point)
 	var arrival: Node = load("res://scripts/orbital_arrival.gd").new()
 	# parent under the globe's tilt so the target point is in the same space as the ship
 	_tilt.add_child(arrival)
@@ -235,6 +237,34 @@ func _play_arrival(target_point: Vector3) -> void:
 	# allow a key/click to skip straight to the mission
 	set_meta("arrival", arrival)
 	arrival.play(target_point, GLOBE_R, _cam)
+
+func _show_arrival_card(_target_point: Vector3) -> void:
+	# cinematic lower-third: the premise framing + the region being contested
+	var cmp := get_node_or_null("/root/Campaign")
+	var cl := CanvasLayer.new(); cl.name = "ArrivalCard"; cl.layer = 90
+	add_child(cl)
+	# letterbox bars
+	var top := ColorRect.new(); top.color = Color(0, 0, 0, 0.85)
+	top.anchor_right = 1.0; top.offset_bottom = 60; cl.add_child(top)
+	var bot := ColorRect.new(); bot.color = Color(0, 0, 0, 0.85)
+	bot.anchor_top = 1.0; bot.anchor_right = 1.0; bot.anchor_bottom = 1.0
+	bot.offset_top = -150; cl.add_child(bot)
+	var box := VBoxContainer.new(); box.position = Vector2(60, 520); cl.add_child(box)
+	if cmp:
+		var title := Label.new()
+		title.text = cmp.PREMISE["title"]
+		title.add_theme_font_size_override("font_size", 30)
+		title.add_theme_color_override("font_color", Color(1.0, 0.78, 0.35))
+		box.add_child(title)
+		for key in ["line1", "line2", "line3"]:
+			var l := Label.new(); l.text = cmp.PREMISE[key]
+			l.add_theme_font_size_override("font_size", 16)
+			l.add_theme_color_override("font_color", Color(0.85, 0.83, 0.78))
+			box.add_child(l)
+	var skip := Label.new(); skip.text = "▶ press any key to deploy"
+	skip.add_theme_font_size_override("font_size", 13)
+	skip.add_theme_color_override("font_color", Color(0.6, 0.6, 0.62))
+	skip.position = Vector2(60, 24); cl.add_child(skip)
 
 func _show_brief(index: int) -> void:
 	var cmp := get_node_or_null("/root/Campaign")
