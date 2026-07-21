@@ -26,6 +26,7 @@ var _info: Label
 var _brief: Control         # mission brief popup (blocks globe input while open)
 var _contested_mats: Array = []   # pulsing marker materials
 var _t := 0.0
+var _in_cinematic := false        # true while the arrival plays: globe input is locked
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -179,6 +180,7 @@ func _add_marker(pos: Vector3, color: Color, scale_mul: float, meta: Dictionary,
 # ---------------------------------------------------------------- HUD
 func _build_hud() -> void:
 	var cl := CanvasLayer.new()
+	cl.name = "HUDLayer"   # named so the arrival cinematic can hide it
 	add_child(cl)
 	var title := Label.new()
 	title.text = "MARS — TERRITORY CONTROL"
@@ -213,6 +215,26 @@ func _build_hud() -> void:
 	hint.add_theme_font_size_override("font_size", 12)
 	hint.add_theme_color_override("font_color", Color(0.7, 0.65, 0.6))
 	cl.add_child(hint)
+
+func _play_arrival(target_point: Vector3) -> void:
+	# lock the globe, drop the HUD, and play the orbit→ground cinematic to the picked
+	# territory, then load the mission. The target_point is the SAME point the marker
+	# sits on, so the ship logically travels to exactly where the player clicked.
+	if _in_cinematic:
+		return
+	_in_cinematic = true
+	var hud := get_node_or_null("HUDLayer")
+	if hud:
+		hud.visible = false
+	var arrival: Node = load("res://scripts/orbital_arrival.gd").new()
+	# parent under the globe's tilt so the target point is in the same space as the ship
+	_tilt.add_child(arrival)
+	# rotate the globe so the target faces the camera for a clean view of the descent
+	arrival.finished.connect(func():
+		get_tree().change_scene_to_file(MISSION))
+	# allow a key/click to skip straight to the mission
+	set_meta("arrival", arrival)
+	arrival.play(target_point, GLOBE_R, _cam)
 
 func _show_brief(index: int) -> void:
 	var cmp := get_node_or_null("/root/Campaign")
@@ -254,7 +276,10 @@ func _show_brief(index: int) -> void:
 	launch.custom_minimum_size = Vector2(200, 44)
 	launch.pressed.connect(func():
 		cmp.set_current(index)
-		get_tree().change_scene_to_file(MISSION))
+		# LOGICAL arrival: fly the mothership/sub-ship to THIS territory's point on the
+		# globe, then hand off to the ground mission — no hard cut from orbit to ground.
+		_close_brief()
+		_play_arrival(_latlon_to_point(info["latlon"])))
 	row.add_child(launch)
 	var back := Button.new()
 	back.text = "CANCEL"
@@ -271,6 +296,14 @@ func _close_brief() -> void:
 
 # ---------------------------------------------------------------- input / frame
 func _unhandled_input(event: InputEvent) -> void:
+	if _in_cinematic:
+		# during the arrival cinematic: any key/click skips straight to the mission
+		if (event is InputEventKey or event is InputEventMouseButton) and event.pressed:
+			var a: Node = get_meta("arrival", null)
+			if a and is_instance_valid(a):
+				a.skip()
+			get_viewport().set_input_as_handled()
+		return
 	if _brief != null and is_instance_valid(_brief):
 		return   # popup open: globe input paused
 	if event is InputEventMouseButton:
