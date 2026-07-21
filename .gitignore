@@ -29,3 +29,8 @@ godot/.godot/
 # raw NASA/PDS rover XYZ downloads — re-fetch via tools (public domain, large)
 /mars_data/rover_xyz/*.IMG
 /mars_data/rover_xyz/*.obj
+
+# Godot GLTF texture-extraction artifacts (regenerated on import)
+godot/assets/imported/*_mars.webp
+godot/assets/imported/*_mars_patch_albedo.png
+godot/mars_data/
