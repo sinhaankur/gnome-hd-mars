@@ -32,5 +32,4 @@ godot/.godot/
 
 # Godot GLTF texture-extraction artifacts (regenerated on import)
 godot/assets/imported/*_mars.webp
-godot/assets/imported/*_mars_patch_albedo.png
 godot/mars_data/

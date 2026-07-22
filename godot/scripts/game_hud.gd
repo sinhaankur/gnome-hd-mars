@@ -95,6 +95,28 @@ func _make_bar(col: Color) -> ProgressBar:
 func flash_hit() -> void:
 	_hit_time = 0.25
 
+func kill_confirm(machine_name: String = "") -> void:
+	# brief centered callout when you destroy a rival HAWC — real feedback that a
+	# target went down, naming the machine so kills read as meaningful, not anonymous.
+	if _kill_label == null:
+		_kill_label = Label.new()
+		_kill_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+		_kill_label.position = Vector2(-140, 120)
+		_kill_label.custom_minimum_size = Vector2(280, 0)
+		_kill_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_kill_label.add_theme_font_size_override("font_size", 22)
+		_kill_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.25))
+		add_child(_kill_label)
+	_kill_label.text = "TARGET DOWN" + ("  ·  " + machine_name if machine_name != "" else "")
+	_kill_label.modulate.a = 1.0
+	_kill_time = 1.6
+	var sfx := get_node_or_null("/root/Sfx")
+	if sfx and sfx.has_method("ui"):
+		sfx.ui()
+
+var _kill_label: Label
+var _kill_time := 0.0
+
 func _process(delta: float) -> void:
 	if _player == null or not is_instance_valid(_player):
 		return
@@ -115,6 +137,11 @@ func _process(delta: float) -> void:
 	if _hit_time > 0.0:
 		_hit_time -= delta
 		_hitmarker.modulate.a = clampf(_hit_time / 0.25, 0.0, 1.0)
+
+	# kill-confirm fade
+	if _kill_time > 0.0 and _kill_label:
+		_kill_time -= delta
+		_kill_label.modulate.a = clampf(_kill_time / 1.6, 0.0, 1.0)
 
 	_update_enemy_bars()
 	if _radar and _radar.has_method("refresh"):

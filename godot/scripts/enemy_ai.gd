@@ -188,9 +188,11 @@ func eject_pilot() -> void:
 
 func take_hit() -> void:
 	hp -= 1
-	scale *= 0.93
 	hit_registered.emit()
 	_flash_red()
+	# REAL damage state: as armor is stripped the hull darkens/scorches and (past half)
+	# trails smoke — an honest read of how hurt it is, not a fake shrink.
+	_apply_damage_state()
 	var sfx := get_node_or_null("/root/Sfx")
 	if hp <= 0:
 		if sfx:
@@ -201,6 +203,53 @@ func take_hit() -> void:
 		queue_free()
 	elif sfx:
 		sfx.hit()
+
+func _apply_damage_state() -> void:
+	# darken the armor toward scorched metal in proportion to damage taken, and start a
+	# smoke plume once it's below half integrity. Uses a persistent overlay so the damage
+	# STAYS (unlike the brief red hit flash).
+	var frac := 1.0 - clampf(float(hp) / float(_max_hp), 0.0, 1.0)   # 0 fresh -> 1 wrecked
+	for mi in Atoms.all_mesh_instances(self):
+		if mi.get_meta("dmg_overlay", false):
+			continue   # already has the persistent scorch overlay; tint updates below
+	# a shared scorch overlay whose darkness tracks damage
+	if _scorch_mat == null:
+		_scorch_mat = StandardMaterial3D.new()
+		_scorch_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		for mi in Atoms.all_mesh_instances(self):
+			mi.material_overlay = _scorch_mat
+			mi.set_meta("dmg_overlay", true)
+	_scorch_mat.albedo_color = Color(0.05, 0.04, 0.03, frac * 0.55)   # soot builds up
+	# smoke once badly hurt
+	if frac >= 0.5 and _smoke == null:
+		_start_smoke()
+
+var _scorch_mat: StandardMaterial3D
+var _smoke: GPUParticles3D
+
+func _start_smoke() -> void:
+	_smoke = GPUParticles3D.new()
+	_smoke.amount = 18
+	_smoke.lifetime = 1.6
+	var pm := ParticleProcessMaterial.new()
+	pm.direction = Vector3(0, 1, 0)
+	pm.spread = 25.0
+	pm.initial_velocity_min = 1.5
+	pm.initial_velocity_max = 3.0
+	pm.gravity = Vector3(0, 1.0, 0)          # smoke rises
+	pm.scale_min = 0.8; pm.scale_max = 2.2
+	pm.color = Color(0.15, 0.14, 0.13, 0.5)
+	_smoke.process_material = pm
+	var qm := QuadMesh.new(); qm.size = Vector2(1.2, 1.2)
+	_smoke.draw_pass_1 = qm
+	var sm := StandardMaterial3D.new()
+	sm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	sm.blend_mode = BaseMaterial3D.BLEND_MODE_MIX
+	sm.albedo_color = Color(0.12, 0.11, 0.10, 0.45)
+	sm.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	_smoke.material_override = sm
+	_smoke.position = Vector3(0, 4.0, 0)
+	add_child(_smoke)
 
 func _flash_red() -> void:
 	# briefly tint the mech red to show it took a hit (combat feedback)

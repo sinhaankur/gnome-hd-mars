@@ -96,7 +96,10 @@ func _ready() -> void:
 	enemies.wave_started.connect(_on_wave_started)
 	enemies.wave_cleared.connect(_on_wave_cleared)
 	enemies.mission_won.connect(_on_mission_won)
-	enemies.enemy_destroyed_signal.connect(func(): _kills += 1)
+	enemies.enemy_destroyed_signal.connect(func():
+		_kills += 1
+		if _hud and is_instance_valid(_hud):
+			_hud.kill_confirm())
 
 	_build_hud()
 
