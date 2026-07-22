@@ -150,3 +150,38 @@ camera_mode={
 "type": "InputEventKey"
 }]
 }
+secondary={
+"deadzone": 0.5,
+"events": [{
+"device": -1,
+"button_index": 2,
+"pressed": false,
+"type": "InputEventMouseButton"
+}, {
+"device": -1,
+"keycode": 82,
+"physical_keycode": 82,
+"pressed": false,
+"type": "InputEventKey"
+}]
+}
+gashr={
+"deadzone": 0.5,
+"events": [{
+"device": -1,
+"keycode": 81,
+"physical_keycode": 81,
+"pressed": false,
+"type": "InputEventKey"
+}]
+}
+interact={
+"deadzone": 0.5,
+"events": [{
+"device": -1,
+"keycode": 69,
+"physical_keycode": 69,
+"pressed": false,
+"type": "InputEventKey"
+}]
+}

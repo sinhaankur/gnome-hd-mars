@@ -13,9 +13,11 @@ extends CharacterBody3D
 @export var jetpack_thrust: float = 34.0    # upward accel while holding jump (unlimited)
 @export var jetpack_max_rise: float = 22.0  # max upward speed from the jetpack
 @export var fire_cooldown: float = 0.18
+@export var rocket_cooldown: float = 2.2   # secondary is deliberate, not spammable
 @export var max_health: int = 100
 
 var _cooldown := 0.0
+var _rocket_cool := 0.0
 var _gashr_cool := 0.0
 var health: int = 100
 var camera: Node3D = null
@@ -140,6 +142,12 @@ func _physics_process(delta: float) -> void:
 		_fire()
 		_cooldown = fire_cooldown
 
+	# --- secondary: rocket salvo (splash damage — clears grouped enemies) ---
+	_rocket_cool = max(0.0, _rocket_cool - delta)
+	if Input.is_action_just_pressed("secondary") and _rocket_cool <= 0.0:
+		_fire_rocket()
+		_rocket_cool = rocket_cooldown
+
 	# --- GASHR launcher (ejects an enemy HAWC's pilot — steal loop) ---
 	_gashr_cool = max(0.0, _gashr_cool - delta)
 	if Input.is_action_just_pressed("gashr") and _gashr_cool <= 0.0:
@@ -180,6 +188,29 @@ func _fire() -> void:
 	var sfx := get_node_or_null("/root/Sfx")
 	if sfx:
 		sfx.laser()
+
+const RocketScript := preload("res://scripts/rocket.gd")
+
+func _fire_rocket() -> void:
+	# a rocket from each muzzle, launched forward (+Z) — splash ordnance vs the single-
+	# target laser. From the roster loadouts (TCROCK/SAG5T-class), so it's real kit.
+	var forward := global_transform.basis.z
+	forward.y = 0.0
+	forward = forward.normalized()
+	for m in [muzzle_l, muzzle_r]:
+		if m == null:
+			continue
+		var rocket := Area3D.new()
+		rocket.set_script(RocketScript)
+		_spawn_parent().add_child(rocket)
+		rocket.global_transform = Transform3D(Basis.looking_at(forward, Vector3.UP), m.global_position)
+		_muzzle_flash(m)
+	_recoil = 0.6   # a heavier kick than the laser
+	if camera and camera.has_method("add_shake"):
+		camera.add_shake(0.22)
+	var sfx := get_node_or_null("/root/Sfx")
+	if sfx and sfx.has_method("explosion"):
+		sfx.explosion()
 
 const GashrScript := preload("res://scripts/gashr.gd")
 
