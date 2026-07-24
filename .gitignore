@@ -9,12 +9,20 @@
 /cinematics/
 /audio/
 /assets/
+# original 1997 game program files (G-NOME.EXE/BIN, RENDER.R32, LABTEXT.DAT)
+# © 7th Level, Inc. — not ours to redistribute
+/game/
 
 # ---- re-derivable bulk data ----
 # raw NASA HiRISE/MOLA downloads — re-fetch via tools/hirise_regions.py
 /mars_data/
 # user-supplied reference mechs, license unverified (do not distribute)
 /Glb/
+/w9231-combat-mech-rigged/
+/w9231_combat_mech_rigged-2.glb
+# raw CC-BY mech source dump (the game only ships the baked .glb in godot/assets/)
+/bot-mecha-warrior-3d-by-oscar-creativo/
+/design/bot_mecha_warrior_3d_by_oscar_creativo.glb
 # vendored MIT repo — re-clone from ra100/blender-claude-plugin
 tools/addons/blender-claude-plugin
 

@@ -34,15 +34,15 @@
 
   <!-- main wordmark -->
   <g font-family="Arial Black, Impact, sans-serif" font-weight="900" text-anchor="middle" filter="url(#shadow)">
-    <text x="512" y="292" font-size="200" letter-spacing="8" fill="url(#metal)"
-          stroke="#1c1810" stroke-width="6" paint-order="stroke">G-NOME</text>
+    <text x="512" y="288" font-size="128" letter-spacing="4" fill="url(#metal)"
+          stroke="#1c1810" stroke-width="5" paint-order="stroke">MARS HAWC</text>
   </g>
 
-  <!-- ember banner: HD REMASTERED (banner sized to fit the text) -->
+  <!-- ember banner (banner sized to fit the text) -->
   <g>
-    <polygon points="286,330 738,330 710,372 314,372" fill="url(#ember)"/>
+    <polygon points="330,330 694,330 668,372 356,372" fill="url(#ember)"/>
     <text x="512" y="363" font-family="Arial Black, Impact, sans-serif" font-weight="900"
-          font-size="38" letter-spacing="10" text-anchor="middle" fill="#160d04">HD  REMASTERED</text>
+          font-size="38" letter-spacing="10" text-anchor="middle" fill="#160d04">RED PLANET</text>
   </g>
 
   <!-- subtitle -->

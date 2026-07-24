@@ -1,6 +1,8 @@
-# Credits & Third-Party Attributions
+# Credits & Third-Party Attributions — Mars HAWC
 
-Original game code, design, story, and tools: **© 2026 Ankur Sinha** (see LICENSE).
+Original game code, design, story, and tools: **© 2026 Ankur Sinha**, released
+under the MIT License (see LICENSE). Third-party assets below keep their own
+licenses — retain these attributions in any distribution.
 
 ## Real-world data (public domain, attribution appreciated)
 - **Mars terrain heightmaps** — carved from HiRISE DTM `DTEEC_001918_1735`
@@ -12,14 +14,20 @@ Original game code, design, story, and tools: **© 2026 Ankur Sinha** (see LICEN
 ## Third-party assets (keep these attributions in any distribution)
 - **Mars globe texture** (`godot/assets/mars_globe.jpg`) — Solar System Scope,
   based on NASA Viking imagery — CC-BY 4.0. https://www.solarsystemscope.com/textures/
-- **Player/enemy mech** (`godot/assets/warrior.glb`) — "Bot Mecha Warrior" by
-  Oscar Creativo — CC-BY 4.0 (via Sketchfab). Credit required in game credits.
+- **Enemy mech** (`godot/assets/warrior.glb`) & **player hero mech**
+  (`godot/assets/hawc_hero.glb`) — "Bot Mecha Warrior" by **Oscar Creativo** —
+  CC-BY 4.0 (via Sketchfab). Credit required in game credits.
 - **Kenney assets** (`dust_cc0.glb`, `flag_cc0.glb`, `cloud_cc0.glb`) —
   Kenney.nl — CC0.
-- **Reference mechs** (`Glb/` — w9231, wr_hawk, combat_robot) — user-supplied;
-  license unverified. Do NOT distribute until verified.
-- **Original G-NOME disc content** (`extracted/`, `cinematics/`, disc textures)
-  — © 1997 7th Level, Inc. NOT distributable; personal study only.
+
+## Not distributed (kept out of this repo)
+These are excluded via `.gitignore` and are **not** part of the public release:
+- **Reference mechs** (`Glb/` — w9231, wr_hawk, combat_robot) — user-supplied,
+  license unverified.
+- **Original 1997 game** (`game/`, `G-NOME.bin/.cue`, `extracted/`,
+  `cinematics/`) — © 1997 7th Level, Inc. Used only as private study reference;
+  never redistributed. Mars HAWC is an independent game and is not affiliated
+  with, or endorsed by, the rights holders of G-NOME.
 
 ## Tools & skills
 - **Godot Engine 4** — MIT license (godotengine.org).

@@ -10,8 +10,8 @@ config_version=5
 
 [application]
 
-config/name="G-NOME HD"
-config/description="HD reimagining of G-NOME (1997). Mars — Operation Red Wall."
+config/name="Mars HAWC"
+config/description="Pilot a walking combat mech (HAWC) on the real Martian surface and defend your installation. A Mars mech-defense game."
 run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
