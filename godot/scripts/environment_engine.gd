@@ -541,8 +541,17 @@ func _build_landing_zone() -> void:
 		gy = 0.0
 	# seat the tile just below the local ground so its rim tucks under the regolith
 	patch.global_position = Vector3(gx, gy - 0.3, gz)
+	# RE-TINT to the Mars sand palette: the raw tile exports near-black (unbaked albedo),
+	# so untouched it read as a strange dark rectangle the mech "lands on" (user note).
+	# Override every surface with the same tan regolith the procedural terrain uses so the
+	# tile blends in instead of sitting there as a dark hole.
+	var lz_mat := StandardMaterial3D.new()
+	lz_mat.albedo_color = Color(0.70, 0.58, 0.44)   # matches the tan ground/horizon palette
+	lz_mat.roughness = 1.0
+	lz_mat.metallic = 0.0
 	# a trimesh collider so the mech stands on the real surface
 	for mi in Atoms.all_mesh_instances(patch):
+		(mi as MeshInstance3D).material_override = lz_mat
 		var body := StaticBody3D.new()
 		var col := CollisionShape3D.new()
 		col.shape = (mi as MeshInstance3D).mesh.create_trimesh_shape()
@@ -786,24 +795,10 @@ func _scatter_detail() -> void:
 			boulder.position = Vector3(x, y - s * 0.35, z)
 			add_child(boulder)
 
-	# 3) HALF-BURIED WRECKAGE — a couple of dead hulks tilted into the regolith (story detail)
-	var wreck_mat := StandardMaterial3D.new()
-	wreck_mat.albedo_color = Color(0.30, 0.30, 0.32); wreck_mat.metallic = 0.6; wreck_mat.roughness = 0.7
-	for i in range(3):
-		var x := rng.randf_range(-half * 0.8, half * 0.8)
-		var z := rng.randf_range(-half * 0.8, half * 0.8)
-		if Vector2(x, z).distance_to(Vector2(installation_pos.x, installation_pos.z)) < 60.0:
-			continue
-		var y := ground_height(x, z)
-		if is_nan(y):
-			continue
-		var hulk := MeshInstance3D.new()
-		hulk.mesh = BoxMesh.new()
-		hulk.material_override = wreck_mat
-		hulk.scale = Vector3(rng.randf_range(4, 7), rng.randf_range(2, 3), rng.randf_range(6, 10))
-		hulk.rotation = Vector3(rng.randf_range(0.2, 0.6), rng.randf() * TAU, rng.randf_range(-0.3, 0.3))
-		hulk.position = Vector3(x, y - 1.0, z)   # sunk into the ground
-		add_child(hulk)
+	# NOTE: the old "half-buried wreckage" was 3 plain grey BoxMesh hulks — featureless
+	# placeholder boxes that read as slop dropped on the terrain (user: "clean up useless
+	# things on Mars"). Removed. If wreckage returns it must be a real GLB (a dead mech),
+	# not a box — see the blender-asset pipeline.
 
 func _build_horizon() -> void:
 	# Distant mountain/mesa silhouettes ringing the map, far beyond the play area, so the
