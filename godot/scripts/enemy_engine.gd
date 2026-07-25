@@ -32,13 +32,19 @@ signal enemy_destroyed_signal   # relayed for scoring
 @export var mech_path: String = "res://assets/warrior.glb"
 @export var mech_scale: float = 2.8
 # archetype -> model. ACTUAL assets wherever one exists (user rule); kitbash
-# stand-ins only where none does yet (heavy quad / tank / hover — to replace).
+# ACTUAL detailed mechs only. Everything currently routes to the clean, detailed
+# warrior.glb (faction-tinted for identity) because the old variant assets were bad:
+#   - hawc_heavy/hover/support = crude primitive-box KITBASHES (cream boxes on pegs)
+#   - combat_robot.glb ships a junk textured DECK the mech stands on mid-body that
+#     can't be reliably stripped without risking real mech parts
+# Proper distinct variants will replace these via the blender-asset pipeline; until
+# then one good model tinted per-faction beats several broken ones.
 const ARCH_MODELS := {
 	"sentry": "res://assets/warrior.glb",
-	"tactical": "res://assets/combat_robot.glb",
-	"heavy": "res://assets/hawc_heavy.glb",
-	"support": "res://assets/hawc_support.glb",
-	"hover": "res://assets/hawc_hover.glb",
+	"tactical": "res://assets/warrior.glb",
+	"heavy": "res://assets/warrior.glb",
+	"support": "res://assets/warrior.glb",
+	"hover": "res://assets/warrior.glb",
 }
 var faction := ""   # territory's faction: its own machines get fielded (EnemyTiers)
 
