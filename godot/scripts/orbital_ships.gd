@@ -73,43 +73,36 @@ static func mothership() -> Node3D:
 	return root
 
 # ---------------------------------------------------------------- sub-ship (detaches, lands)
-static func subship() -> Node3D:
-	# The drop-lander: a compact lifting-body with an OPEN cradle underneath holding the
-	# HAWC, four descent thrusters, a stubby cockpit. This is what actually goes to ground.
-	var s := 0.035
-	var root := Node3D.new(); root.name = "SubShip"
-	var body := Node3D.new(); body.scale = Vector3.ONE * s
-	root.add_child(body)
-	var hull := _mat(HULL); var dark := _mat(DARK); var accent := _mat(ACCENT)
-	var glass := _mat(GLASS, 0.3, 0.15, true); var glow := _mat(GLOW, 0.0, 0.4, true)
+# Real paneled drop-lander GLB (tools/build_ships.py -> assets/subship.glb): tapered
+# lifting-body hull, recessed cockpit, 4 gimbaled descent thrusters, ventral cradle
+# rails. Replaces the old primitive-box kitbash that read as a flat grey slab. Built
+# +Z up in Blender, exported Y-up, so it drops in with Godot's Y-up convention.
+const SUBSHIP_PATH := "res://assets/subship.glb"
+const HAWC_POD_PATH := "res://assets/hawc_pod.glb"
 
-	# slab lifting-body hull
-	_box(body, Vector3(4.0, 1.2, 6.0), Vector3(0, 0, 0), hull)
-	# cockpit visor at the nose
-	_box(body, Vector3(2.2, 0.8, 1.4), Vector3(0, 0.5, -3.2), glass)
-	# accent stripe
-	_box(body, Vector3(4.1, 0.3, 1.0), Vector3(0, 0.4, 0), accent)
-	# four descent-thruster pods at the corners, with glow
-	for sx in [-1.0, 1.0]:
-		for sz in [-1.0, 1.0]:
-			_cyl(body, 0.5, 1.4, Vector3(sx * 1.7, -0.9, sz * 2.2), dark)
-			_cyl(body, 0.42, 0.3, Vector3(sx * 1.7, -1.7, sz * 2.2), glow)
-	# OPEN under-cradle holding the HAWC (arms only — the mech mounts separately)
-	for sx in [-1.0, 1.0]:
-		_box(body, Vector3(0.25, 2.0, 4.5), Vector3(sx * 1.4, -2.0, 0), dark)
-	_box(body, Vector3(3.0, 0.25, 0.4), Vector3(0, -3.0, -1.8), dark)   # cradle floor bar
+static func subship() -> Node3D:
+	var root := Node3D.new(); root.name = "SubShip"
+	var scene: PackedScene = load(SUBSHIP_PATH)
+	if scene:
+		var m := scene.instantiate()
+		# GLB hull is ~5 units; scale to the cinematic's tiny-near-a-2u-globe size.
+		# The model's nose is -Y and it's Y-up; the cinematic look_at() aims it.
+		m.scale = Vector3.ONE * 0.03
+		root.add_child(m)
+	else:
+		# fallback: a plain slab so the cinematic still runs if the GLB is missing
+		_box(root, Vector3(0.14, 0.04, 0.2), Vector3.ZERO, _mat(HULL))
 	return root
 
-# a small HAWC stand-in to ride the sub-ship cradle (silhouette only — real mech is in-mission)
+# The HAWC riding the sub-ship's cradle — a real carrier-pod GLB reading as a mech
+# clamped in a drop-frame (assets/hawc_pod.glb), not the old green box of cuboids.
 static func hawc_pod() -> Node3D:
-	var s := 0.02
 	var root := Node3D.new(); root.name = "HawcPod"
-	var body := Node3D.new(); body.scale = Vector3.ONE * s
-	root.add_child(body)
-	var hull := _mat(Color(0.34, 0.40, 0.30), 0.5, 0.6)
-	_box(body, Vector3(2.2, 2.4, 1.6), Vector3(0, 1.4, 0), hull)   # torso
-	_box(body, Vector3(1.4, 1.0, 1.2), Vector3(0, 3.0, 0), hull)   # head block
-	for sx in [-1.0, 1.0]:
-		_box(body, Vector3(0.8, 2.6, 0.8), Vector3(sx * 1.5, -0.6, 0), hull)  # legs
-		_box(body, Vector3(0.7, 1.8, 0.7), Vector3(sx * 1.9, 1.6, 0), hull)   # arms
+	var scene: PackedScene = load(HAWC_POD_PATH)
+	if scene:
+		var m := scene.instantiate()
+		m.scale = Vector3.ONE * 0.018
+		root.add_child(m)
+	else:
+		_box(root, Vector3(0.05, 0.08, 0.04), Vector3(0, 0.03, 0), _mat(Color(0.34, 0.40, 0.30), 0.5, 0.6))
 	return root
