@@ -32,9 +32,6 @@ signal ready_built
 # sculpted rocks reused from the user's star-cleaver-assets repo (repo-first rule)
 const ASTEROID_STONY_PATH := "res://assets/imported/asteroid-stony.glb"
 const ASTEROID_CARBON_PATH := "res://assets/imported/asteroid-carbon.glb"
-# REAL Perseverance Sol 180 Mars ground (NASA/PDS, public domain) — see
-# mars_data/rover_xyz/PROVENANCE.md. A ~16 m hero tile you actually walk on.
-const LANDING_PATCH_PATH := "res://assets/imported/mars_patch_sol180.glb"
 @export var landing_zone_pos := Vector3(0, 0, 160)   # under the player deploy point
 @export var palette: Dictionary = {}           # territory terrain colors (low/mid/high/slope)
 
@@ -524,39 +521,16 @@ func _build_outposts() -> void:
 		placed += 1
 
 func _build_landing_zone() -> void:
-	# Drop the REAL Perseverance Sol 180 ground tile in as the hero landing zone: the
-	# actual Mars surface the player deploys onto, sunk flush into the surrounding
-	# procedural terrain so its edges blend rather than sit on a shelf. A collision
-	# body under it lets the mech walk on the real geometry.
-	var scene: PackedScene = load(LANDING_PATCH_PATH)
-	if scene == null:
-		return
-	var patch := scene.instantiate()
-	patch.name = "RealMarsLandingZone"
-	add_child(patch)
-	var gx := landing_zone_pos.x
-	var gz := landing_zone_pos.z
-	var gy := ground_height(gx, gz)
-	if is_nan(gy):
-		gy = 0.0
-	# seat the tile just below the local ground so its rim tucks under the regolith
-	patch.global_position = Vector3(gx, gy - 0.3, gz)
-	# RE-TINT to the Mars sand palette: the raw tile exports near-black (unbaked albedo),
-	# so untouched it read as a strange dark rectangle the mech "lands on" (user note).
-	# Override every surface with the same tan regolith the procedural terrain uses so the
-	# tile blends in instead of sitting there as a dark hole.
-	var lz_mat := StandardMaterial3D.new()
-	lz_mat.albedo_color = Color(0.70, 0.58, 0.44)   # matches the tan ground/horizon palette
-	lz_mat.roughness = 1.0
-	lz_mat.metallic = 0.0
-	# a trimesh collider so the mech stands on the real surface
-	for mi in Atoms.all_mesh_instances(patch):
-		(mi as MeshInstance3D).material_override = lz_mat
-		var body := StaticBody3D.new()
-		var col := CollisionShape3D.new()
-		col.shape = (mi as MeshInstance3D).mesh.create_trimesh_shape()
-		body.add_child(col)
-		mi.add_child(body)
+	# INTENTIONALLY EMPTY. The old "real Perseverance Sol 180" tile (mars_patch_sol180.glb)
+	# was dropped here as a hero landing patch, but it exports with an unbaked, near-black
+	# albedo and a jagged rim — in-game it read as a dark torn rectangle the mech stood on,
+	# nothing like the surrounding ground (user: "lands on something strange, not a landing
+	# spot" / "such errors are bad for game development"). Now that the terrain itself carries
+	# real scanned regolith detail (see mars_terrain.gd), the patch added only that defect, so
+	# it's removed. The mech deploys straight onto the real HiRISE terrain (which already has
+	# its own collision from MarsTerrain). Kept as a named no-op so _after_physics_ready and
+	# any future "hero landing detail" hook still have a clear place to live.
+	pass
 
 func _scatter_rocks() -> void:
 	var rng := RandomNumberGenerator.new()

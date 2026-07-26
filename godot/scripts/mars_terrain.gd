@@ -145,7 +145,22 @@ uniform vec3 mid_col  = vec3(0.66, 0.57, 0.49);   // butterscotch mid-tones
 uniform vec3 high_col = vec3(0.74, 0.66, 0.57);   // pale dust drifts
 uniform vec3 slope_col= vec3(0.42, 0.36, 0.31);   // exposed basalt: grey-brown, never black
 uniform float height_span = 22.0;                 // matches terrain height_scale
+// REAL scanned regolith (Gravel Ground Module Scan, Pers Scans CC-BY) — extracted by
+// tools/extract_ground_textures.py. Blended triplanar over the procedural base so the
+// ground is grounded in genuine photogrammetry, strongest up close where grit reads.
+uniform sampler2D ground_albedo : source_color, hint_default_white, repeat_enable, filter_linear;
+uniform sampler2D ground_normal : hint_normal, repeat_enable, filter_linear;
+uniform float ground_tile = 0.9;      // texture repeats per metre (bigger = smaller rocks; ~1.1 m repeat)
+uniform float ground_blend = 0.7;     // how much the scan replaces the procedural color up close
 varying vec3 v_world; varying vec3 v_nrm; varying float v_h;
+// triplanar sample of a color texture in world space (no UVs needed on the terrain mesh)
+vec3 triplanar(sampler2D tex, vec3 wp, vec3 n, float scale){
+	vec3 bw = pow(abs(n), vec3(4.0)); bw /= (bw.x+bw.y+bw.z);
+	vec3 x = texture(tex, wp.zy*scale).rgb;
+	vec3 y = texture(tex, wp.xz*scale).rgb;
+	vec3 z = texture(tex, wp.xy*scale).rgb;
+	return x*bw.x + y*bw.y + z*bw.z;
+}
 void vertex(){
 	v_world = (MODEL_MATRIX * vec4(VERTEX,1.0)).xyz;
 	v_nrm = normalize((MODEL_MATRIX * vec4(NORMAL,0.0)).xyz);
@@ -203,6 +218,31 @@ void fragment(){
 	float stain = fbm(w*0.05 + vec2(7.0, 3.0));
 	col = mix(col, col*vec3(1.06, 0.97, 0.90), smoothstep(0.5, 0.75, stain)*0.45);
 
+	// REAL SCANNED REGOLITH BLEND — sample the photogrammetry ground triplanar and mix it
+	// into the procedural color. The scan has some Earthly green (moss); we desaturate it
+	// and warm-tint to the Mars caramel palette so only its rocky STRUCTURE/VALUE carries
+	// through, not its color. Strongest near the camera (where grit detail matters), fading
+	// out with distance so the far plain keeps the clean calibrated palette + no tiling.
+	// REAL SCANNED REGOLITH — two scales (coarse rock layout + fine grit) so it neither
+	// tiles obviously nor blurs out. The scan carries some Earthly green (moss): we take its
+	// LUMINANCE PATTERN (the real rock light/dark) and its de-greened fine chroma, and apply
+	// them AS MODULATION over the calibrated Mars palette col — so genuine photographed rock
+	// texture shows, but the hue stays Martian. Detail is strongest near the camera.
+	vec3 scan  = triplanar(ground_albedo, v_world, v_nrm, ground_tile);
+	vec3 scan2 = triplanar(ground_albedo, v_world, v_nrm, ground_tile * 0.23);
+	vec3 scan_mix = scan * 0.55 + scan2 * 0.45;
+	float scan_lum = dot(scan_mix, vec3(0.299, 0.587, 0.114));
+	// de-green: pull the green channel toward the r/b average so moss reads as rock
+	float rb = (scan_mix.r + scan_mix.b) * 0.5;
+	scan_mix.g = min(scan_mix.g, rb * 1.05);
+	// modulate the Mars color by the scan's value (centered on its ~mean 0.45 so it darkens
+	// AND lightens), and let the de-greened chroma tint each grain warm/cool a touch
+	vec3 scan_ground = col * (0.55 + scan_lum * 1.15);
+	scan_ground *= mix(vec3(1.0), scan_mix / max(scan_lum, 0.001), 0.35);
+	float dist2 = length(v_world - CAMERA_POSITION_WORLD);
+	float scan_near = 1.0 - smoothstep(40.0, 260.0, dist2);
+	col = mix(col, scan_ground, ground_blend * scan_near);
+
 	// steep slopes = darker exposed basalt
 	float slope = 1.0 - clamp(v_nrm.y, 0.0, 1.0);
 	col = mix(col, slope_col, smoothstep(0.35,0.7,slope));
@@ -212,6 +252,10 @@ void fragment(){
 	float nx = fbm(w*3.0+vec2(1.0,0.0)) - fbm(w*3.0-vec2(1.0,0.0));
 	float nz = fbm(w*3.0+vec2(0.0,1.0)) - fbm(w*3.0-vec2(0.0,1.0));
 	n = normalize(n + vec3(nx, 0.0, nz)*(0.35 + near_d*0.45));   // grittier bump up close
+	// add the REAL scanned normal map's micro-relief near the camera so lit rocks/gravel
+	// catch highlights like true photographed ground (decoded from tangent-space RG)
+	vec3 sn = triplanar(ground_normal, v_world, v_nrm, ground_tile) * 2.0 - 1.0;
+	n = normalize(n + vec3(sn.x, 0.0, sn.y) * 0.6 * scan_near);
 	NORMAL = (VIEW_MATRIX * vec4(n,0.0)).xyz;
 
 	ALBEDO = col;
@@ -221,4 +265,17 @@ void fragment(){
 """
 	var m := ShaderMaterial.new()
 	m.shader = sh
+	# bind the real scanned regolith textures (extracted by tools/extract_ground_textures.py)
+	# so the terrain blends genuine photogrammetry over its procedural detail. Guarded: if a
+	# texture is missing the shader's hint_default_white keeps the procedural look intact.
+	var alb := load("res://assets/mars_ground_albedo.png") as Texture2D
+	if alb:
+		m.set_shader_parameter("ground_albedo", alb)
+	var nrm := load("res://assets/mars_ground_normal.png") as Texture2D
+	if nrm:
+		m.set_shader_parameter("ground_normal", nrm)
+	# explicitly set the scalar uniforms — relying on the shader's in-source defaults left
+	# ground_tile reading 0 at runtime (triplanar then sampled pixel 0,0 = flat color).
+	m.set_shader_parameter("ground_tile", 0.9)
+	m.set_shader_parameter("ground_blend", 0.7)
 	return m

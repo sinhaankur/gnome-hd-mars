@@ -1,0 +1,32 @@
+{
+  "ground_scan": {
+    "name": "Gravel Ground Module Scan Dry 2",
+    "author": "Pers Scans",
+    "license": "CC Attribution",
+    "url": "https://sketchfab.com/3d-models/gravel-ground-module-scan-dry-2-6ef549171a894560ad5d70cfad87343e"
+  },
+  "rockpile": {
+    "name": "Rock Pile Scan Dry 1",
+    "author": "Pers Scans",
+    "license": "CC Attribution",
+    "url": "https://sketchfab.com/3d-models/rock-pile-scan-dry-1-5206d4d96c2d428b9c1f7ee0e13bcffb"
+  },
+  "rocks_pack": {
+    "name": "Free Pack - Rocks Stylized",
+    "author": "PolyOne Studio",
+    "license": "CC Attribution",
+    "url": "https://sketchfab.com/3d-models/free-pack-rocks-stylized-7c60b4d1b8ab4187965f30c5e0212fc0"
+  },
+  "boulder": {
+    "name": "Cliff Rock Boulder Field",
+    "author": "Pers Scans",
+    "license": "CC Attribution",
+    "url": "https://sketchfab.com/3d-models/cliff-rock-boulder-field-d1f2ce6f71aa4c19adbdc541cc888194"
+  },
+  "rover": {
+    "name": "NASA Curiosity (Clean)",
+    "author": "Thomas Flynn",
+    "license": "CC Attribution",
+    "url": "https://sketchfab.com/3d-models/nasa-curiosity-clean-0696a383f3e841d2b5c7636ee8a58aba"
+  }
+}
