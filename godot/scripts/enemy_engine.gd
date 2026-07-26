@@ -31,20 +31,26 @@ signal enemy_destroyed_signal   # relayed for scoring
 @export var time_between_waves: float = 6.0
 @export var mech_path: String = "res://assets/warrior.glb"
 @export var mech_scale: float = 2.8
-# archetype -> model. ACTUAL assets wherever one exists (user rule); kitbash
-# ACTUAL detailed mechs only. Everything currently routes to the clean, detailed
-# warrior.glb (faction-tinted for identity) because the old variant assets were bad:
-#   - hawc_heavy/hover/support = crude primitive-box KITBASHES (cream boxes on pegs)
-#   - combat_robot.glb ships a junk textured DECK the mech stands on mid-body that
-#     can't be reliably stripped without risking real mech parts
-# Proper distinct variants will replace these via the blender-asset pipeline; until
-# then one good model tinted per-faction beats several broken ones.
+# archetype -> model. Five GENUINELY DISTINCT class silhouettes — real detailed Sketchfab
+# CC-BY mechs (credited in CREDITS.md), sourced + normalized by tools/sketchfab_download.py
+# + tools/normalize_enemy_mechs.py (per design/HAWC_VARIETY_SPEC.md: silhouette=class,
+# color=faction). Godot's Faction.tint recolors each per faction at spawn. These replaced
+# the old all-warrior.glb routing (one 243 MB model tinted 5 ways = zero variety); a player
+# can now tell a Sentry from a Heavy at a glance, and each carries real paneling/greebles.
 const ARCH_MODELS := {
-	"sentry": "res://assets/warrior.glb",
-	"tactical": "res://assets/warrior.glb",
-	"heavy": "res://assets/warrior.glb",
-	"support": "res://assets/warrior.glb",
-	"hover": "res://assets/warrior.glb",
+	"sentry":   "res://assets/enemy_sentry.glb",     # Bipedal Mech (Nabo, CC-BY)
+	"tactical": "res://assets/enemy_tactical.glb",   # Magnetar Assault Combat Mech (Treva, CC-BY)
+	"heavy":    "res://assets/enemy_heavy.glb",      # Quadruped Mech walker (Jungle Jim, CC-BY)
+	"support":  "res://assets/enemy_support.glb",    # MBT-70 battle tank (_Muzaev, CC-BY)
+	"hover":    "res://assets/enemy_hover.glb",      # Duster 46 Sci-Fi Hovercraft (mgfxer, CC-BY)
+}
+# The models are NORMALIZED to their real-meter class height by normalize_enemy_mechs.py
+# (sentry 6.8 / tactical 8.5 / heavy 10 / support 3.6 / hover 3.2 m), so the base
+# multiplier is ~1.0 — each is already the right in-game size. tier["scale"] then varies
+# size within the class. Small nudge on the low vehicles keeps them readable on the plain.
+# Fallback mech_scale keeps warrior.glb (mech_path) working if an archetype ever misses.
+const ARCH_BASE_SCALE := {
+	"sentry": 1.0, "tactical": 1.0, "heavy": 1.0, "support": 1.15, "hover": 1.15,
 }
 var faction := ""   # territory's faction: its own machines get fielded (EnemyTiers)
 
@@ -99,13 +105,21 @@ func _spawn_enemy(tier_key: String, fallback_hp: int) -> void:
 	e.set("role", tier.get("role", "sniper"))   # drives the behavior state machine
 
 	var visual := Node3D.new()
-	var scene: PackedScene = load(ARCH_MODELS.get(tier.get("arch", ""), mech_path))
+	var arch: String = tier.get("arch", "")
+	# distinct archetype model if we have one; else the shared warrior fallback
+	var model_path: String = ARCH_MODELS.get(arch, mech_path)
+	var scene: PackedScene = load(model_path)
 	var mech_model: Node = null
 	if scene:
 		var m := scene.instantiate()
-		m.scale = Vector3.ONE * mech_scale * float(tier["scale"])   # tier sizes the mech
+		# archetype models are real-meter scale -> use their per-class base multiplier;
+		# the warrior fallback keeps the old mech_scale. tier["scale"] varies within class.
+		var base: float = ARCH_BASE_SCALE.get(arch, mech_scale)
+		m.scale = Vector3.ONE * base * float(tier["scale"])
 		# VERIFIED BY RENDER (from the target's view): the flipped model shows its FACE
 		# toward the target, the unflipped shows its back. So enemies need the flip too.
+		# The new archetypes are built facing +Y (= forward), so PI still turns the face
+		# toward the target the same way the warrior model did.
 		m.rotation.y = PI
 		visual.add_child(m)
 		Faction.tint(m, tier["tint"])   # tier picks the faction color scheme

@@ -1,0 +1,37 @@
+{
+  "sentry": {
+    "name": "Bipedal Mech",
+    "author": "Nabo",
+    "author_url": "https://sketchfab.com/nabonilo",
+    "license": "CC Attribution",
+    "url": "https://sketchfab.com/3d-models/bipedal-mech-9271b28473454a53bf037963a2878338"
+  },
+  "tactical": {
+    "name": "Magnetar / Assault Combat Mech",
+    "author": "Treva",
+    "author_url": "https://sketchfab.com/hakankaraten54443",
+    "license": "CC Attribution",
+    "url": "https://sketchfab.com/3d-models/magnetar-assault-combat-mech-c3a05b54da27477089aeff3cff226c9e"
+  },
+  "heavy": {
+    "name": "Quadruped Mech walker",
+    "author": "Jungle Jim",
+    "author_url": "https://sketchfab.com/jungle_jim",
+    "license": "CC Attribution",
+    "url": "https://sketchfab.com/3d-models/quadruped-mech-walker-5a8a1d83d1674c3982340c38bf52f069"
+  },
+  "support": {
+    "name": "MBT-70",
+    "author": "_Muzaev",
+    "author_url": "https://sketchfab.com/_Muzaev",
+    "license": "CC Attribution",
+    "url": "https://sketchfab.com/3d-models/mbt-70-6aebe7926d954a21b1abd0ca8fbfd5d5"
+  },
+  "hover": {
+    "name": "Duster 46 - Sci-Fi Hovercraft",
+    "author": "mgfxer",
+    "author_url": "https://sketchfab.com/mgfxer",
+    "license": "CC Attribution",
+    "url": "https://sketchfab.com/3d-models/duster-46-sci-fi-hovercraft-25376ae6a4674c21b164ebc7b84fd80f"
+  }
+}

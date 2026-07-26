@@ -41,3 +41,10 @@ godot/.godot/
 # Godot GLTF texture-extraction artifacts (regenerated on import)
 godot/assets/imported/*_mars.webp
 godot/mars_data/
+
+# secrets
+sketchfab_token
+*.token
+
+# raw Sketchfab source downloads (large; re-fetch via tools/sketchfab_download.py)
+blender_assets/sketchfab_src/*.glb
