@@ -15,6 +15,8 @@ signal all_discovered
 
 # real probe model reused from the user's star-cleaver-assets repo (repo-first rule)
 const PROBE_PATH := "res://assets/imported/voyager.glb"
+# real NASA Curiosity rover (Thomas Flynn, CC-BY) — normalized by normalize_env_assets.py
+const ROVER_PATH := "res://assets/nasa_rover.glb"
 
 var _env: EnvironmentEngine
 var _pois: Array = []          # {node, name, desc, found}
@@ -119,19 +121,32 @@ func _build_marker(poi_name: String, _color: Color) -> Node3D:
 				chunk.rotation.y = irng.randf() * TAU
 				root.add_child(chunk)
 		"Derelict Rover":
-			# boxy rover hull on six wheels, long dead and dust-caked
-			var hull := MeshInstance3D.new()
-			hull.mesh = BoxMesh.new(); hull.scale = Vector3(2.4, 1.1, 3.6)
-			hull.material_override = dusty_metal; hull.position.y = 1.5
-			root.add_child(hull)
-			for sx in [-1.3, 1.3]:
-				for z in [-1.4, 0.0, 1.4]:
-					var wheel := MeshInstance3D.new()
-					var wc := CylinderMesh.new(); wc.top_radius = 0.55; wc.bottom_radius = 0.55; wc.height = 0.4
-					wheel.mesh = wc; wheel.material_override = metal
-					wheel.rotation_degrees = Vector3(0, 0, 90)
-					wheel.position = Vector3(sx, 0.55, z)
-					root.add_child(wheel)
+			# the REAL NASA Curiosity rover (CC-BY), long dead and dust-caked, instead of the
+			# old box-on-cylinders. Scaled up a touch so it reads as a landmark from the mech;
+			# a light dust modulate over its own textures without hiding the detail.
+			var rover_scene: PackedScene = load(ROVER_PATH)
+			if rover_scene:
+				var rover := rover_scene.instantiate()
+				rover.scale = Vector3.ONE * 1.6          # ~3 m real -> ~4.8 m landmark
+				rover.rotation.y = 0.6                   # angled so it reads in 3/4, half-abandoned
+				for mi in Atoms.all_mesh_instances(rover):
+					var rm := (mi as MeshInstance3D).get_active_material(0)
+					if rm is StandardMaterial3D:
+						var dm := (rm as StandardMaterial3D).duplicate() as StandardMaterial3D
+						dm.albedo_color = Color(0.82, 0.72, 0.60)   # dust film over the real texture
+						mi.material_override = dm
+				root.add_child(rover)
+				# the GLB origin isn't at the wheels (base ~0.33 m up in model space after
+				# export) — drop the rover so its lowest point rests on the ground, no float.
+				# Use the LOCAL mesh AABB * scale (root isn't in the world tree yet here, so
+				# global transforms aren't valid).
+				rover.position.y -= _lowest_local_y(rover) * rover.scale.y
+			else:
+				# fallback: the old boxy rover if the model is missing
+				var hull := MeshInstance3D.new()
+				hull.mesh = BoxMesh.new(); hull.scale = Vector3(2.4, 1.1, 3.6)
+				hull.material_override = dusty_metal; hull.position.y = 1.5
+				root.add_child(hull)
 		"Anomaly Signal":
 			# a half-buried dark monolith — the one site allowed a faint unnatural hum
 			var slab := MeshInstance3D.new()
@@ -227,6 +242,28 @@ func _mark_found(node: Node3D) -> void:
 		mat.emission = Color(0.35, 1.0, 0.5)
 		mat.albedo_color = Color(0.1, 0.4, 0.15)
 		mat.emission_energy_multiplier = 1.2
+
+func _lowest_local_y(node: Node3D) -> float:
+	# lowest mesh vertex Y in the node's LOCAL space (relative to node origin), for a
+	# base-to-ground snap that doesn't need the node to be in the world tree yet.
+	var lowest := INF
+	for mi in Atoms.all_mesh_instances(node):
+		var a: AABB = (mi as MeshInstance3D).get_aabb()
+		# mesh instance transform relative to the rover root
+		var rel: Transform3D = (mi as MeshInstance3D).transform
+		var p: Node = (mi as MeshInstance3D).get_parent()
+		while p != null and p != node:
+			if p is Node3D:
+				rel = (p as Node3D).transform * rel
+			p = p.get_parent()
+		var min_y: float = (rel * a.position).y
+		# check all 8 corners for the true min under the relative transform
+		for i in range(8):
+			var corner: Vector3 = a.position + Vector3(
+				a.size.x * float(i & 1), a.size.y * float((i >> 1) & 1), a.size.z * float((i >> 2) & 1))
+			min_y = minf(min_y, (rel * corner).y)
+		lowest = minf(lowest, min_y)
+	return 0.0 if lowest == INF else lowest
 
 func found_count() -> int:
 	return _found_count

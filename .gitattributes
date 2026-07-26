@@ -2,3 +2,5 @@
 godot/assets/enemy_*_Image_*.png filter=lfs diff=lfs merge=lfs -text
 godot/assets/enemy_*_Image_*.jpg filter=lfs diff=lfs merge=lfs -text
 godot/assets/mars_ground_*.png filter=lfs diff=lfs merge=lfs -text
+godot/assets/*_Image_*.png filter=lfs diff=lfs merge=lfs -text
+godot/assets/*_Image_*.jpg filter=lfs diff=lfs merge=lfs -text

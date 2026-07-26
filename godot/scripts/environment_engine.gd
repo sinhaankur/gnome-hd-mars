@@ -29,9 +29,14 @@ signal ready_built
 @export var day_start: float = 0.32            # time-of-day the level begins (0..1)
 @export var region: String = ""                # which MOLA region heightmap to use
 
-# sculpted rocks reused from the user's star-cleaver-assets repo (repo-first rule)
-const ASTEROID_STONY_PATH := "res://assets/imported/asteroid-stony.glb"
-const ASTEROID_CARBON_PATH := "res://assets/imported/asteroid-carbon.glb"
+# REAL rock meshes: the CC-BY 'Free Pack - Rocks Stylized' (PolyOne), normalized by
+# tools/normalize_env_assets.py to ~2 m centered/based GLBs. Genuine sculpted geometry +
+# their own textures read far better than the old pale space-asteroids for the landmark
+# stones you walk up to. Scattered + slightly Mars-warmed below.
+const MARS_ROCK_PATHS := [
+	"res://assets/mars_rock_1.glb", "res://assets/mars_rock_2.glb",
+	"res://assets/mars_rock_3.glb", "res://assets/mars_rock_4.glb",
+]
 @export var landing_zone_pos := Vector3(0, 0, 160)   # under the player deploy point
 @export var palette: Dictionary = {}           # territory terrain colors (low/mid/high/slope)
 
@@ -737,18 +742,17 @@ func _scatter_detail() -> void:
 			rock.position = Vector3(ox, oy - rock.scale.y * 0.35, oz)
 			add_child(rock)
 
-	# 2b) HERO BOULDERS — sculpted asteroid meshes from the user's star-cleaver-assets
-	# repo (repo-first rule). Real hand-sculpted geometry reads far better than the
-	# procedural rock_mesh for the few big landmark stones you walk right up to. Tinted
-	# to Mars basalt via a modulate/material override (the source mesh is pale cream).
-	var ast_scenes: Array = []
-	for p in [ASTEROID_STONY_PATH, ASTEROID_CARBON_PATH]:
+	# 2b) HERO BOULDERS — REAL scanned rock meshes (Free Pack - Rocks Stylized, CC-BY).
+	# Genuine sculpted geometry with their own rock textures; we keep those textures (only a
+	# faint Mars-warm modulate) so they read as real stone, not the old pale space-asteroids.
+	# The rocks are ~2 m base (normalized), scattered upright and sunk slightly into the soil.
+	var rock_scenes: Array = []
+	for p in MARS_ROCK_PATHS:
 		var sc: PackedScene = load(p)
 		if sc:
-			ast_scenes.append(sc)
-	if not ast_scenes.is_empty():
-		var mars_rock := Atoms.rock_material(Color(0.46, 0.40, 0.35))
-		for i in range(10):
+			rock_scenes.append(sc)
+	if not rock_scenes.is_empty():
+		for i in range(14):
 			var x := rng.randf_range(-half * 0.92, half * 0.92)
 			var z := rng.randf_range(-half * 0.92, half * 0.92)
 			if Vector2(x, z).distance_to(Vector2(0, 160)) < 40.0:
@@ -758,15 +762,24 @@ func _scatter_detail() -> void:
 			var y := ground_height(x, z)
 			if is_nan(y):
 				continue
-			var boulder := (ast_scenes[rng.randi() % ast_scenes.size()] as PackedScene).instantiate()
-			var s := rng.randf_range(2.2, 5.0)   # source asteroid ~2 m -> 4–10 m boulders
+			var boulder := (rock_scenes[rng.randi() % rock_scenes.size()] as PackedScene).instantiate()
+			var s := rng.randf_range(1.4, 3.6)   # 2 m base -> ~3–7 m landmark boulders
 			boulder.scale = Vector3.ONE * s
-			boulder.rotation = Vector3(rng.randf() * TAU, rng.randf() * TAU, rng.randf() * TAU)
-			# Mars-tone every surface so it doesn't read as a pale space rock
+			boulder.rotation.y = rng.randf() * TAU   # yaw only — keep them sitting upright
+			# faint Mars-warm tint over the scan's own texture (kills any Earthy grey/green,
+			# keeps the real rock detail) — modulate, not a flat material override
 			for mi in Atoms.all_mesh_instances(boulder):
-				(mi as MeshInstance3D).material_override = mars_rock
-			# sunk a bit so it sits like a weathered surface boulder, not perched
-			boulder.position = Vector3(x, y - s * 0.35, z)
+				var rmat := (mi as MeshInstance3D).get_active_material(0)
+				if rmat is StandardMaterial3D:
+					var dm := (rmat as StandardMaterial3D).duplicate() as StandardMaterial3D
+					# darker grey-brown basalt multiplier — the stylized pack is near-white,
+					# so a light tan tint left them chalky; Mars surface rocks read DARKER
+					# than the soil (per the rover panoramas)
+					dm.albedo_color = Color(0.50, 0.42, 0.36)
+					dm.roughness = 1.0
+					mi.material_override = dm
+			# sunk a little so it sits like a weathered surface boulder, not perched
+			boulder.position = Vector3(x, y - s * 0.18, z)
 			add_child(boulder)
 
 	# NOTE: the old "half-buried wreckage" was 3 plain grey BoxMesh hulks — featureless
