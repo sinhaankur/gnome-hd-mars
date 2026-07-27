@@ -17,6 +17,9 @@ signal all_discovered
 const PROBE_PATH := "res://assets/imported/voyager.glb"
 # real NASA Curiosity rover (Thomas Flynn, CC-BY) — normalized by normalize_env_assets.py
 const ROVER_PATH := "res://assets/nasa_rover.glb"
+# real supply crate (TahmidTauz, CC-BY) + alien monolith (barbodoji, CC-BY) — POI props
+const CRATE_PATH := "res://assets/mars_crate.glb"
+const MONOLITH_PATH := "res://assets/mars_monolith.glb"
 
 var _env: EnvironmentEngine
 var _pois: Array = []          # {node, name, desc, found}
@@ -148,26 +151,64 @@ func _build_marker(poi_name: String, _color: Color) -> Node3D:
 				hull.material_override = dusty_metal; hull.position.y = 1.5
 				root.add_child(hull)
 		"Anomaly Signal":
-			# a half-buried dark monolith — the one site allowed a faint unnatural hum
-			var slab := MeshInstance3D.new()
-			slab.mesh = BoxMesh.new(); slab.scale = Vector3(0.9, 5.5, 2.2)
-			var am := StandardMaterial3D.new()
-			am.albedo_color = Color(0.16, 0.15, 0.17); am.roughness = 0.3; am.metallic = 0.5
-			am.emission_enabled = true; am.emission = Color(0.35, 0.9, 0.6)
-			am.emission_energy_multiplier = 0.25   # faint — a hum, not a lamp
-			slab.material_override = am
-			slab.rotation_degrees = Vector3(8, 25, -6); slab.position.y = 1.8
-			root.add_child(slab)
+			# a REAL alien monolith artifact (barbodoji, CC-BY) — a standing dark pillar with
+			# cyan glowing energy panels, instead of the old plain box slab. Its own emission
+			# supplies the "unnatural" glow; a slight lean sells the ancient, buried-for-eons feel.
+			var mono_scene: PackedScene = load(MONOLITH_PATH)
+			if mono_scene:
+				var mono := mono_scene.instantiate()
+				mono.scale = Vector3.ONE * 1.3          # ~5 m base -> ~6.5 m looming artifact
+				mono.rotation = Vector3(0.06, 0.5, -0.04)   # slight lean + yaw, like it settled
+				root.add_child(mono)
+				mono.position.y -= _lowest_local_y(mono) * mono.scale.y   # base to ground
+			else:
+				var slab := MeshInstance3D.new()
+				slab.mesh = BoxMesh.new(); slab.scale = Vector3(0.9, 5.5, 2.2)
+				var am := StandardMaterial3D.new()
+				am.albedo_color = Color(0.16, 0.15, 0.17); am.roughness = 0.3; am.metallic = 0.5
+				am.emission_enabled = true; am.emission = Color(0.35, 0.9, 0.6)
+				am.emission_energy_multiplier = 0.25
+				slab.material_override = am
+				slab.rotation_degrees = Vector3(8, 25, -6); slab.position.y = 1.8
+				root.add_child(slab)
 		"AREX Supply Cache":
-			# stacked drop crates under a torn tarp line
-			for i in range(3):
-				var crate := MeshInstance3D.new()
-				crate.mesh = BoxMesh.new()
-				crate.scale = Vector3.ONE * (1.6 - i * 0.25)
-				crate.material_override = dusty_metal
-				crate.position = Vector3(i * 0.8 - 0.8, 0.8 + i * 1.1, i * 0.3)
-				crate.rotation.y = i * 0.4
-				root.add_child(crate)
+			# REAL locked supply crates (Tactical Supply Box, TahmidTauz CC-BY) instead of
+			# plain boxes — dust-tinted from their bright yellow to a weathered field-drab, and
+			# stacked/scattered like an air-dropped cache.
+			var crate_scene: PackedScene = load(CRATE_PATH)
+			if crate_scene:
+				var placements := [
+					{"p": Vector3(0, 0, 0), "yaw": 0.2, "s": 1.3},
+					{"p": Vector3(1.7, 0, 0.6), "yaw": -0.5, "s": 1.1},
+					{"p": Vector3(0.3, 1.35, 0.1), "yaw": 0.9, "s": 1.0},   # one stacked on top
+				]
+				for pl in placements:
+					var crate := crate_scene.instantiate()
+					crate.scale = Vector3.ONE * float(pl["s"])
+					crate.rotation.y = float(pl["yaw"])
+					for mi in Atoms.all_mesh_instances(crate):
+						var cmat := (mi as MeshInstance3D).get_active_material(0)
+						if cmat is StandardMaterial3D:
+							var dm := (cmat as StandardMaterial3D).duplicate() as StandardMaterial3D
+							# the crate's YELLOW is baked into its albedo texture, so a plain
+							# color multiply still reads yellow. Desaturate hard: drop the texture
+							# and paint a flat weathered field-drab (keep normal/roughness detail).
+							dm.albedo_texture = null
+							dm.albedo_color = Color(0.42, 0.40, 0.30)   # military drab, no yellow
+							dm.roughness = 0.9
+							mi.material_override = dm
+					root.add_child(crate)
+					crate.position = pl["p"]
+					crate.position.y += -_lowest_local_y(crate) * crate.scale.y
+			else:
+				for i in range(3):
+					var crate := MeshInstance3D.new()
+					crate.mesh = BoxMesh.new()
+					crate.scale = Vector3.ONE * (1.6 - i * 0.25)
+					crate.material_override = dusty_metal
+					crate.position = Vector3(i * 0.8 - 0.8, 0.8 + i * 1.1, i * 0.3)
+					crate.rotation.y = i * 0.4
+					root.add_child(crate)
 		"Ancient Riverbed":
 			# water-rounded cobbles half-buried along the old channel — irregular rock
 			# meshes in terrain tones (bright smooth spheres read as golf balls in a row)

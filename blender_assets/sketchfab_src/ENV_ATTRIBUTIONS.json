@@ -28,5 +28,17 @@
     "author": "Thomas Flynn",
     "license": "CC Attribution",
     "url": "https://sketchfab.com/3d-models/nasa-curiosity-clean-0696a383f3e841d2b5c7636ee8a58aba"
+  },
+  "crate": {
+    "name": "High-Poly Tactical Supply Box - Game Asset",
+    "author": "TahmidTauz",
+    "license": "CC Attribution",
+    "url": "https://sketchfab.com/3d-models/high-poly-tactical-supply-box-game-asset-a11c5537fcff4f179ffea58194092004"
+  },
+  "monolith": {
+    "name": "monolith",
+    "author": "barbodoji",
+    "license": "CC Attribution",
+    "url": "https://sketchfab.com/3d-models/monolith-47ea90af1f9c4893b42f06cb790857f4"
   }
 }

@@ -20,13 +20,16 @@ PICKS = {
     "rocks_pack":  ("7c60b4d1b8ab4187965f30c5e0212fc0", "src_rocks_pack.glb"),   # Free Pack - Rocks Stylized (PolyOne) — light multi-rock
     "boulder":     ("d1f2ce6f71aa4c19adbdc541cc888194", "src_boulder.glb"),      # Cliff Rock Boulder Field (Pers Scans)
     "rover":       ("0696a383f3e841d2b5c7636ee8a58aba", "src_rover.glb"),        # NASA Curiosity (Clean) (Thomas Flynn)
+    "crate":       ("a11c5537fcff4f179ffea58194092004", "src_crate.glb"),        # Tactical Supply Box (TahmidTauz) — AREX cache POI
+    "monolith":    ("47ea90af1f9c4893b42f06cb790857f4", "src_monolith.glb"),     # Monolith (barbodoji) — Anomaly Signal POI
 }
 
 
 def _get_json(url):
     req = urllib.request.Request(url, headers={"Authorization": "Token " + TOKEN})
     with urllib.request.urlopen(req) as r:
-        return json.load(r)
+        # strict=False: some model descriptions contain raw control chars that break json.load
+        return json.loads(r.read().decode("utf-8", "replace"), strict=False)
 
 
 def download(uid, dest):

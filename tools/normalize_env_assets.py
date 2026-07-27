@@ -126,10 +126,44 @@ def build_rover():
     return [("nasa_rover", len(o.data.polygons), _export(o, "nasa_rover.glb"))]
 
 
+def _simple_normalize(src, out_name, target_h, rot_deg=(0, 0, 0)):
+    """Import -> drop armature -> join -> orient -> scale to target height -> base -> export."""
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.ops.import_scene.gltf(filepath=os.path.join(SRC, src))
+    for o in list(bpy.context.scene.objects):
+        if o.type == 'ARMATURE':
+            bpy.data.objects.remove(o, do_unlink=True)
+    meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH']
+    _deselect()
+    for m in meshes:
+        m.select_set(True)
+    bpy.context.view_layer.objects.active = meshes[0]
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    bpy.ops.object.join()
+    o = bpy.context.active_object
+    o.name = out_name
+    if rot_deg != (0, 0, 0):
+        o.rotation_euler = tuple(math.radians(d) for d in rot_deg)
+        _deselect(); o.select_set(True); bpy.context.view_layer.objects.active = o
+        bpy.ops.object.transform_apply(rotation=True)
+    lo, hi = _obj_bounds(o)
+    h = hi.z - lo.z
+    if h > 1e-4:
+        s = target_h / h
+        o.scale = (s, s, s)
+        _deselect(); o.select_set(True); bpy.context.view_layer.objects.active = o
+        bpy.ops.object.transform_apply(scale=True)
+    _center_and_base(o)
+    return [(out_name, len(o.data.polygons), _export(o, out_name + ".glb"))]
+
+
 results = []
 results += build_rocks()
 results += build_outcrop()
 results += build_rover()
+# supply crate ~1.2 m tall; monolith a ~5 m standing artifact
+results += _simple_normalize("src_crate.glb", "mars_crate", 1.2)
+results += _simple_normalize("src_monolith.glb", "mars_monolith", 5.0)
 
 print("ENV_NORMALIZE_OK")
 for name, tris, sz in results:

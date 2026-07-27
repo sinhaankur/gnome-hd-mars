@@ -29,6 +29,10 @@ licenses — retain these attributions in any distribution.
   Stylized" by **PolyOne Studio** — CC-BY 4.0 (Sketchfab). Scattered as landmark boulders.
 - **Derelict rover POI** (`godot/assets/nasa_rover.glb`) — "NASA Curiosity (Clean)" by
   **Thomas Flynn** — CC-BY 4.0 (Sketchfab).
+- **Supply cache POI** (`godot/assets/mars_crate.glb`) — "High-Poly Tactical Supply Box"
+  by **TahmidTauz** — CC-BY 4.0 (Sketchfab).
+- **Anomaly monolith POI** (`godot/assets/mars_monolith.glb`) — "monolith" by
+  **barbodoji** — CC-BY 4.0 (Sketchfab).
 - **Scanned regolith ground textures** (`godot/assets/mars_ground_*.png`) — extracted from
   "Gravel Ground Module Scan" by **Pers Scans** — CC-BY 4.0 (Sketchfab).
 - **Kenney assets** (`dust_cc0.glb`, `flag_cc0.glb`, `cloud_cc0.glb`) —
