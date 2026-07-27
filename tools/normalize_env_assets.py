@@ -159,7 +159,9 @@ def _simple_normalize(src, out_name, target_h, rot_deg=(0, 0, 0)):
 
 results = []
 results += build_rocks()
-results += build_outcrop()
+# NOTE: build_outcrop() (Cliff Boulder Field) is intentionally NOT called — it scaled to a
+# thin useless sliver; the mars_rock_* pack covers landmark stones. Kept as a function in
+# case a better source arrives.
 results += build_rover()
 # supply crate ~1.2 m tall; monolith a ~5 m standing artifact
 results += _simple_normalize("src_crate.glb", "mars_crate", 1.2)
