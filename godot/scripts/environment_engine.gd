@@ -192,16 +192,21 @@ func _build_sky_and_sun() -> void:
 	env.background_mode = Environment.BG_SKY
 	var sky := Sky.new()
 	var mat := ProceduralSkyMaterial.new()
-	# REAL Mars daytime sky, calibrated to the Perseverance Mastcam-Z panoramas in
-	# reference/real_mars/ — butterscotch-grey zenith, brighter peach-tan horizon.
-	# Mars' sky is never blue: the dust scatters red light, the reverse of Earth.
-	mat.sky_top_color = Color(0.55, 0.47, 0.38)      # butterscotch-grey zenith
-	mat.sky_horizon_color = Color(0.78, 0.68, 0.55)  # pale dusty-peach horizon band
-	mat.ground_horizon_color = Color(0.66, 0.52, 0.40)
-	mat.ground_bottom_color = Color(0.48, 0.36, 0.27)
+	# REAL Mars daytime sky, MEASURED from reference/real_mars/PIA24765.jpg (a Perseverance
+	# Mastcam-Z panorama): zenith avg sRGB(107,93,76)=0.42,0.37,0.30; horizon band
+	# sRGB(192,164,132)=0.75,0.64,0.52. Mars' sky is never blue — dust scatters red light,
+	# the reverse of Earth. Key look: a DARKER warm zenith with a much BRIGHTER dusty-peach
+	# horizon glow (the strong top→horizon gradient is what reads as "Mars air").
+	mat.sky_top_color = Color(0.42, 0.36, 0.29)      # measured warm zenith (was too pale/bright)
+	mat.sky_horizon_color = Color(0.80, 0.67, 0.53)  # bright dusty-peach horizon glow
+	mat.ground_horizon_color = Color(0.72, 0.58, 0.45)
+	mat.ground_bottom_color = Color(0.50, 0.38, 0.28)
+	# a wide, soft horizon band so the peach glow feathers up into the zenith like the photo
+	mat.sky_curve = 0.18
+	mat.ground_curve = 0.10
 	# in the reference photos soil is nearly as bright as the sky (0.88:1)
-	mat.sky_energy_multiplier = 0.95
-	mat.sun_angle_max = 10.0
+	mat.sky_energy_multiplier = 1.0
+	mat.sun_angle_max = 12.0
 	sky.sky_material = mat
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
@@ -212,9 +217,15 @@ func _build_sky_and_sun() -> void:
 	# density-style value (0.004) made the fog invisible — no aerial perspective at all,
 	# dark ground running to a hard horizon line. Exponential restores the tan dust wash.
 	env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
-	env.fog_light_color = Color(0.74, 0.66, 0.56)
-	env.fog_density = 0.002                           # dusty air: strong aerial perspective —
-	env.fog_sky_affect = 0.15                         # distant relief fades to tan like the photos
+	# warm dusty-peach fog matched to the horizon glow, so distant relief fades INTO the sky
+	# rather than ending on a hard line (the real panoramas show heavy aerial perspective —
+	# mesas a few km out are washed nearly to the sky color).
+	env.fog_light_color = Color(0.80, 0.68, 0.55)
+	env.fog_density = 0.0045                           # heavier dust haze -> soft, hazy horizon
+	env.fog_sky_affect = 0.35                          # blend the far relief up into the sky band
+	env.fog_aerial_perspective = 0.6                   # tint distant geometry toward the sky color
+	# a faint global dust glow so the air itself carries light (thin CO2+dust atmosphere)
+	env.fog_light_energy = 1.0
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES   # nicer contrast than filmic here
 	env.tonemap_white = 2.4                           # headroom for the bright sun
 	env.tonemap_exposure = 1.0
@@ -274,7 +285,7 @@ func _build_wind_dust() -> void:
 	# the camera so dust is always around the player. Gives the thin Mars air motion.
 	var dust := GPUParticles3D.new()
 	dust.name = "WindDust"
-	dust.amount = 220
+	dust.amount = 320                      # a touch denser so blowing dust reads in motion
 	dust.lifetime = 6.0
 	dust.preprocess = 3.0
 	dust.visibility_aabb = AABB(Vector3(-200, -10, -200), Vector3(400, 60, 400))
@@ -289,11 +300,12 @@ func _build_wind_dust() -> void:
 	# FINE haze, not floating chunks: real blowing dust reads as soft specks
 	pm.scale_min = 0.12
 	pm.scale_max = 0.4
-	pm.color = Color(0.75, 0.6, 0.5, 0.13)
+	# warmed to match the new dusty-peach atmosphere (was cooler 0.75,0.6,0.5)
+	pm.color = Color(0.82, 0.66, 0.52, 0.14)
 	dust.process_material = pm
 	var qm := QuadMesh.new(); qm.size = Vector2(0.5, 0.5)
 	dust.draw_pass_1 = qm
-	dust.material_override = Atoms.dust_material(Color(0.78, 0.62, 0.5, 0.16))
+	dust.material_override = Atoms.dust_material(Color(0.84, 0.68, 0.54, 0.17))  # warm dusty-peach
 	dust.position = Vector3(0, 15, 0)
 	add_child(dust)
 	_wind_dust = dust
