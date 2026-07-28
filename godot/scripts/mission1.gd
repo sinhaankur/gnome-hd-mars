@@ -11,10 +11,13 @@ extends Node3D
 # 57 textures, rigged with a "Motion" walk anim. Stands at identity rotation,
 # native ~2.5u tall, feet at y=0. The user prefers this over any custom mech.
 const MECH_PATH := "res://assets/warrior.glb"        # enemy HAWCs
-# player's hero HAWC: user-supplied detailed PBR mech ("Bot Mecha Warrior" by
-# Oscar Creativo, CC — credit in story screen), optimized from 254MB to 48MB
-# (textures 4K->1K) via Blender; rigged, same "Motion" walk anim as warrior.
-const HERO_PATH := "res://assets/hawc_hero.glb"
+# player's hero HAWC: the "Walker mech" by Kai Xiang (CC-BY, credited in CREDITS.md) —
+# a detailed bipedal combat mech (twin shoulder cannons, red sensor eyes, sleek black
+# armor), 68k tris, rigged with a full-config animation. Normalized to ~2.5u tall by
+# tools/normalize_hero_mech.py. Replaced the old hawc_hero.glb (46 MB, rendered near-black
+# and needed a runtime metallic/roughness rescue) — the Walker's materials are already
+# metal=0/rough=0.5, so NO material fix is needed.
+const HERO_PATH := "res://assets/hawc_walker.glb"
 # Loaded by path (not class_name) so it resolves even before the editor rescans
 # the global class cache — a bare `-s` script run won't register new class_names.
 const HERO_FIX := preload("res://scripts/hero_material_fix.gd")
@@ -314,11 +317,9 @@ func _build_hawc(pos: Vector3) -> CharacterBody3D:
 		# 0.0 is correct. Exposed as a constant so it's a one-line fix if a model ever
 		# reads backward in-game.
 		hawk.rotation.y = MECH_FACE_FLIP
-		# The hero GLB exports every surface as metallic=1/roughness=1 with no ORM
-		# map, so it renders near-black under the Mars sun. Correct the PBR values
-		# (keeps all baked textures) so the hero mech is actually legible.
-		if is_hero:
-			HERO_FIX.apply(hawk)
+		# The Walker hero's materials are already correct (metal=0/rough=0.5), so it does
+		# NOT need the metallic/roughness rescue the old hawc_hero required. HERO_FIX is kept
+		# available for any future model that exports metal=1/rough=1 (renders near-black).
 		visual.add_child(hawk)
 		mech_model = hawk
 	visual.position.y = MECH_FOOT_LIFT
