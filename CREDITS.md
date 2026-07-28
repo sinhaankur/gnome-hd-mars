@@ -14,8 +14,9 @@ licenses — retain these attributions in any distribution.
 ## Third-party assets (keep these attributions in any distribution)
 - **Mars globe texture** (`godot/assets/mars_globe.jpg`) — Solar System Scope,
   based on NASA Viking imagery — CC-BY 4.0. https://www.solarsystemscope.com/textures/
-- **Player hero mech** (`godot/assets/hawc_walker.glb`) — "Walker mech" by
-  **Kai Xiang** — CC-BY 4.0 (Sketchfab). A rigged bipedal combat mech; the player HAWC.
+- **HAWC mech** (`godot/assets/warrior.glb`) — "Bot Mecha Warrior" by **Oscar Creativo**
+  — CC-BY 4.0 (Sketchfab). Used for both the player HAWC (union/tan tint) and the enemy
+  HAWCs (faction-tinted), via Faction.tint.
 - **Enemy HAWC archetypes** (`godot/assets/enemy_*.glb`) — five distinct class
   silhouettes, each a real CC-BY model sourced from Sketchfab and normalized for the
   game (`tools/sketchfab_download.py` + `tools/normalize_enemy_mechs.py`).

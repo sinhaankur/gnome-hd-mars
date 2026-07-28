@@ -11,13 +11,13 @@ extends Node3D
 # 57 textures, rigged with a "Motion" walk anim. Stands at identity rotation,
 # native ~2.5u tall, feet at y=0. The user prefers this over any custom mech.
 const MECH_PATH := "res://assets/warrior.glb"        # enemy HAWCs
-# player's hero HAWC: the "Walker mech" by Kai Xiang (CC-BY, credited in CREDITS.md) —
-# a detailed bipedal combat mech (twin shoulder cannons, red sensor eyes, sleek black
-# armor), 68k tris, rigged with a full-config animation. Normalized to ~2.5u tall by
-# tools/normalize_hero_mech.py. Replaced the old hawc_hero.glb (46 MB, rendered near-black
-# and needed a runtime metallic/roughness rescue) — the Walker's materials are already
-# metal=0/rough=0.5, so NO material fix is needed.
-const HERO_PATH := "res://assets/hawc_walker.glb"
+# player's hero HAWC: the SAME warrior.glb the enemies use, but UNION-tinted (warm tan/gold)
+# so the player mech is instantly distinct from the red enemy HAWCs. The user rejected the
+# sourced hero mechs (hawc_hero was dark; the Walker was the wrong style / not G-NOME) and
+# chose to go back to warrior.glb — the mech they prefer — for the player too.
+const HERO_PATH := "res://assets/warrior.glb"
+# Faction library: applies the player's union (tan) palette to the hero mech.
+const FactionLib := preload("res://scripts/faction.gd")
 # Loaded by path (not class_name) so it resolves even before the editor rescans
 # the global class cache — a bare `-s` script run won't register new class_names.
 const HERO_FIX := preload("res://scripts/hero_material_fix.gd")
@@ -301,11 +301,9 @@ func _build_hawc(pos: Vector3) -> CharacterBody3D:
 
 	var visual := Node3D.new()
 	visual.name = "Visual"   # hawc.gd applies recoil to this node
-	var is_hero := true
 	var scene: PackedScene = load(HERO_PATH)
 	if scene == null:
 		scene = load(MECH_PATH)   # fall back to the shared mech model
-		is_hero = false
 	var mech_model: Node = null
 	if scene:
 		var hawk := scene.instantiate()
@@ -316,10 +314,13 @@ func _build_hawc(pos: Vector3) -> CharacterBody3D:
 		# (tools/render_facing.gd, 2026-07-19): face leads movement on both +X and +Z, so
 		# 0.0 is correct. Exposed as a constant so it's a one-line fix if a model ever
 		# reads backward in-game.
-		hawk.rotation.y = MECH_FACE_FLIP
-		# The Walker hero's materials are already correct (metal=0/rough=0.5), so it does
-		# NOT need the metallic/roughness rescue the old hawc_hero required. HERO_FIX is kept
-		# available for any future model that exports metal=1/rough=1 (renders near-black).
+		# warrior.glb's face is its local -Z, and the body's movement dir is +Z (atan2 in
+		# hawc.gd), so the model needs a PI flip to face where it walks (same as the enemy
+		# engine does for warrior). MECH_FACE_FLIP is the single tuning knob.
+		hawk.rotation.y = MECH_FACE_FLIP + PI
+		# UNION tint: warm tan/gold so the player HAWC reads as friendly and stands out from
+		# the red enemy mechs (both are warrior.glb). Recolors over the baked textures.
+		FactionLib.tint(hawk, "union")
 		visual.add_child(hawk)
 		mech_model = hawk
 	visual.position.y = MECH_FOOT_LIFT
