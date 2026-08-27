@@ -56,6 +56,7 @@ var _dmg_flash: ColorRect             # red screen flash on player hit
 var _warn_label: Label                # "UNDER ATTACK" warning
 var _discovery_label: Label           # exploration discovery notice
 var _last_health := 100               # to detect when the player takes damage
+var _objective := "defend"            # this level's objective type (defend/reach/hijack)
 
 func _ready() -> void:
 	# --- read the current level config from the Campaign (thin data drives everything) ---
@@ -64,6 +65,7 @@ func _ready() -> void:
 		"name": "Operation Red Wall", "subtitle": "Northern Plains",
 		"height_scale": 34.0, "day_start": 0.32, "objective": "defend",
 		"waves": [ {"count": 2, "hp": 5}, {"count": 3, "hp": 6}, {"count": 4, "hp": 7} ] }
+	_objective = _level.get("objective", "defend")
 
 	# --- ambient wind + atmospheric music (night levels = tenser mood) ---
 	var audio := get_node_or_null("/root/Audio")
@@ -85,10 +87,22 @@ func _ready() -> void:
 	add_child(env)
 
 	# --- HAWC Engine: the player mech + camera ---
-	_player = _build_hawc(Vector3(0, 30, 160))
-	_cam = _build_camera(_player)
-	_player.camera = _cam
-	_player.exit_requested.connect(_dismount)   # E: step out on foot (G-NOME loop)
+	# HIJACK missions start you ON FOOT with no mech of your own — the signature loop
+	# taught in one level: GASHR a patrol, board the vacant hull. Everything downstream
+	# reads the CURRENT body via _active_body(), so both starts share one code path.
+	if _objective == "hijack":
+		_ensure_pilot()
+		_pilot.position = Vector3(0, 30, -80)   # snapped to the ground once terrain is live
+		_pilot.add_to_group("player")
+		_pilot.set_physics_process(false)       # parked until the intro hands over control
+		_cam = _build_camera(_pilot)
+		_pilot.camera = _cam
+		_cam.set_target(_pilot, 7.0, 2.6, 1.8)
+	else:
+		_player = _build_hawc(Vector3(0, 30, 160))
+		_cam = _build_camera(_player)
+		_player.camera = _cam
+		_player.exit_requested.connect(_dismount)   # E: step out on foot (G-NOME loop)
 
 	# --- Enemy Engine: the wave director, loaded with THIS level's wave script ---
 	enemies = EnemyEngine.new()
@@ -96,8 +110,9 @@ func _ready() -> void:
 	if _level.has("waves"):
 		enemies.waves = _level["waves"]
 	add_child(enemies)
-	enemies.configure(env, _player, MECH_PATH, MECH_SCALE)
+	enemies.configure(env, _active_body(), MECH_PATH, MECH_SCALE)
 	enemies.faction = _level.get("faction", "")   # territory fields its own machines
+	enemies.hunt_player = _objective == "hijack"  # the outpost is THEIRS — they hunt you
 	enemies.wave_started.connect(_on_wave_started)
 	enemies.wave_cleared.connect(_on_wave_cleared)
 	enemies.mission_won.connect(_on_mission_won)
@@ -111,7 +126,7 @@ func _ready() -> void:
 	# --- combat HUD: crosshair, armor bars, enemy health bars, hit markers, radar ---
 	_hud = GameHUD.new()
 	add_child(_hud)
-	_hud.setup(_player, env, func(): return _base_hp)
+	_hud.setup(_active_body(), env, func(): return _base_hp, _objective == "defend")
 
 	# --- pause menu (ESC): Resume / Restart / Settings / Quit to menu ---
 	var pause := CanvasLayer.new()
@@ -143,21 +158,34 @@ func _on_env_ready() -> void:
 	if _env_setup_done:
 		return
 	_env_setup_done = true
-	env.place_on_ground(_player, 1.0)
+	var body := _active_body()
+	if body:
+		env.place_on_ground(body, 1.0 if body == _player else 0.5)
 	explore.populate()   # scatter points of interest on the walkable surface
 	# "reach" missions get a PHYSICAL beacon outpost to drive to (diegetic landmark,
-	# not a floating marker); reaching it wins. "defend" missions skip this entirely.
-	if _level.get("objective", "defend") == "reach":
+	# not a floating marker); reaching it wins. "hijack" missions garrison the outpost
+	# with idle patrols — your steal targets. "defend" missions skip both.
+	if _objective == "reach":
 		_spawn_beacon()
+	elif _objective == "hijack":
+		_setup_hijack()
 	# play the intro cinematic (dropship delivers the mech) + briefing card, THEN assault.
 	# The mech is parked during the cinematic so E/Q/fire can't trigger mid-landing.
 	var intro := MissionIntro.new()
 	add_child(intro)
-	_player.controlled = false
-	intro.finished.connect(func():
-		_player.controlled = true
-		enemies.start())
-	intro.play(_level, env, _cam, _player)
+	if _objective == "hijack":
+		# no mech to deliver — the intro sweeps the ENEMY outpost instead (that's your
+		# ride down there). Waves hold until a hull is stolen (_on_hull_stolen).
+		intro.finished.connect(func():
+			if _pilot and is_instance_valid(_pilot):
+				_pilot.set_physics_process(true))
+		intro.play(_level, env, _cam, null)
+	else:
+		_player.controlled = false
+		intro.finished.connect(func():
+			_player.controlled = true
+			enemies.start())
+		intro.play(_level, env, _cam, _player)
 
 func _spawn_beacon() -> void:
 	# find walkable ground far from the player start (~250 m) so it's a real drive,
@@ -231,16 +259,29 @@ const PilotScript := preload("res://scripts/pilot.gd")
 var _pilot: CharacterBody3D
 const BOARD_REACH := 7.0   # how close the pilot must be to board a hull
 
+# whichever body the player is currently driving: the pilot on foot, or the mech.
+# Group membership is the single source of truth (possession moves it between bodies).
+func _active_body() -> CharacterBody3D:
+	if _pilot and is_instance_valid(_pilot) and _pilot.is_in_group("player"):
+		return _pilot
+	if _player and is_instance_valid(_player):
+		return _player
+	return null
+
+func _ensure_pilot() -> void:
+	if _pilot != null:
+		return
+	_pilot = PilotScript.new()
+	_pilot.name = "PilotGant"
+	add_child(_pilot)
+	_pilot.enter_requested.connect(_try_enter)
+	_pilot.died.connect(_on_player_died)
+	_pilot.camera = _cam
+
 func _dismount() -> void:
 	if _over or not _env_setup_done:
 		return
-	if _pilot == null:
-		_pilot = PilotScript.new()
-		_pilot.name = "PilotGant"
-		add_child(_pilot)
-		_pilot.enter_requested.connect(_try_enter)
-		_pilot.died.connect(_on_player_died)
-		_pilot.camera = _cam
+	_ensure_pilot()
 	_pilot.visible = true
 	_pilot.set_physics_process(true)
 	# step out beside the mech's flank, snapped to the ground
@@ -276,11 +317,15 @@ func _mount(mech: CharacterBody3D) -> void:
 		sfx.ui()
 
 func _steal(hull: Node3D) -> void:
-	# commandeer: swap the vacant enemy hull for a fresh player-controlled HAWC
-	# (both use the same warrior model, so the silhouette carries over)
+	# commandeer: swap the vacant enemy hull for a player-controlled HAWC rebuilt from
+	# the SAME model + faction paint (silhouette continuity — you keep what you stole;
+	# the metas are set by EnemyEngine at spawn)
 	var xf: Transform3D = hull.global_transform
+	var model: String = hull.get_meta("model_path", HERO_PATH)
+	var tint: String = hull.get_meta("tint", "union")
+	var vehicle: String = hull.get_meta("vehicle", "HAWC")
 	hull.queue_free()
-	var m := _build_hawc(xf.origin + Vector3.UP * 0.5)
+	var m := _build_hawc(xf.origin + Vector3.UP * 0.5, model, tint)
 	m.rotation.y = xf.basis.get_euler().y
 	m.camera = _cam
 	m.exit_requested.connect(_dismount)
@@ -288,7 +333,32 @@ func _steal(hull: Node3D) -> void:
 	if _hud:
 		_hud.retarget(m)
 	_mount(m)
-	_notice("HAWC COMMANDEERED — enemy hull is yours")
+	_notice("%s COMMANDEERED — the hull is yours" % vehicle.to_upper())
+	_on_hull_stolen()
+
+# ---------------------------------------------------------------- HIJACK (prologue)
+# The vertical-slice tutorial: you own NOTHING. A small garrison idles at the outpost;
+# get close on foot, GASHR a pilot out, board the hull — then the region wakes up.
+var _hijack_done := false          # flips when the player boards a stolen hull
+var _garrison_respawn := 3.0       # countdown before the outpost scrambles a replacement
+
+func _setup_hijack() -> void:
+	var post: Vector3 = env.installation_pos
+	var guards: Array = enemies.spawn_garrison(int(_level.get("garrison", 2)), "scout",
+		post, env.installation_pad_radius + 10.0, 14.0)
+	for e in guards:
+		if e.has_signal("hit_registered") and not e.hit_registered.is_connected(_on_enemy_hit):
+			e.hit_registered.connect(_on_enemy_hit)
+	_notice("ON FOOT — sneak up on the patrol. Q: GASHR ejects the pilot · E: board the empty hull")
+
+func _on_hull_stolen() -> void:
+	# hijack phase 2: the theft is noticed — the garrison wakes, reinforcements scramble
+	if _objective != "hijack" or _hijack_done:
+		return
+	_hijack_done = true
+	enemies.alert_all()
+	enemies.start()
+	_notice("THEY KNOW — reinforcements inbound. Clear the zone.")
 
 func _notice(text: String) -> void:
 	# reuse the exploration notice slot (bottom-left telemetry tone)
@@ -296,14 +366,16 @@ func _notice(text: String) -> void:
 	_discovery_timer = 6.0
 
 # ---------------------------------------------------------------- HAWC (player)
-func _build_hawc(pos: Vector3) -> CharacterBody3D:
+# model_path/tint default to the hero loadout; a commandeered hull passes ITS model +
+# faction paint so the machine you board is the machine you emptied.
+func _build_hawc(pos: Vector3, model_path: String = HERO_PATH, tint: String = "union") -> CharacterBody3D:
 	var body := CharacterBody3D.new()
 	body.name = "PlayerHAWC"
 	body.set_script(load("res://scripts/hawc.gd"))
 
 	var visual := Node3D.new()
 	visual.name = "Visual"   # hawc.gd applies recoil to this node
-	var scene: PackedScene = load(HERO_PATH)
+	var scene: PackedScene = load(model_path)
 	if scene == null:
 		scene = load(MECH_PATH)   # fall back to the shared mech model
 	var mech_model: Node = null
@@ -315,9 +387,9 @@ func _build_hawc(pos: Vector3) -> CharacterBody3D:
 		# flip. hero_striker was normalized facing -Z (Godot forward), which matches +Z after
 		# the standard flip below. If it ever reads backward in-game, toggle MECH_FACE_FLIP.
 		hawk.rotation.y = MECH_FACE_FLIP + PI
-		# UNION tint: warm tan/gold so the player HAWC reads as friendly and stands out from
-		# the red enemy mechs. Recolors over the baked textures.
-		FactionLib.tint(hawk, "union")
+		# faction paint over the baked textures: union tan for the hero loadout, or the
+		# stolen hull's original colors (you fly false colors after a hijack).
+		FactionLib.tint(hawk, tint)
 		visual.add_child(hawk)
 		mech_model = hawk
 	visual.position.y = MECH_FOOT_LIFT
@@ -364,7 +436,10 @@ func _build_hud() -> void:
 	var title := Label.new()
 	var lvl_name: String = _level.get("name", "Operation Red Wall")
 	var lvl_sub: String = _level.get("subtitle", "")
-	var obj: String = "Defend the installation" if _level.get("objective", "defend") == "defend" else "Reach the beacon"
+	var obj: String = "Defend the installation"
+	match _objective:
+		"reach": obj = "Reach the beacon"
+		"hijack": obj = "Steal an enemy HAWC — Q GASHR · E board"
 	title.text = "MARS — %s · %s\n%s   ·   CLICK look · WASD move · SHIFT jetpack · SPACE fire · V camera · TAB cursor · ESC pause" % [
 		lvl_name.to_upper(), lvl_sub, obj]
 	title.position = Vector2(16, 12)
@@ -415,14 +490,15 @@ func _build_hud() -> void:
 	add_child(cl)
 
 func _process(delta: float) -> void:
-	if _over or _player == null or not is_instance_valid(_player) or env == null:
+	var body := _active_body()
+	if _over or body == null or env == null:
 		return
 	_elapsed += delta
 	var alive: int = enemies.enemies_alive() if enemies else 0
 
 	# exploration: discover nearby points of interest, show the notice, then fade it
 	if explore:
-		explore.check(_player.global_position)
+		explore.check(body.global_position)
 	if _discovery_timer > 0.0:
 		_discovery_timer -= delta
 		_discovery_label.text = _discovery_text
@@ -431,17 +507,34 @@ func _process(delta: float) -> void:
 			explore.found_count(), explore.total()] if explore else ""
 
 	# player-damage screen flash: trigger when health drops, then fade out
-	if _player.health < _last_health:
+	if body.health < _last_health:
 		_dmg_flash.color.a = 0.45
-	_last_health = _player.health
+	_last_health = body.health
 	if _dmg_flash.color.a > 0.0:
 		_dmg_flash.color.a = maxf(0.0, _dmg_flash.color.a - delta * 1.2)
 
+	# hijack phase 1 can't dead-end: if the player guns down every patrol instead of
+	# stealing one (or wrecks the vacant hull), the outpost scrambles a replacement.
+	if _objective == "hijack" and not _hijack_done and _env_setup_done:
+		var stealable: int = alive + get_tree().get_nodes_in_group("hijackable").size()
+		if stealable > 0:
+			_garrison_respawn = 3.0
+		else:
+			_garrison_respawn -= delta
+			if _garrison_respawn <= 0.0:
+				_garrison_respawn = 3.0
+				var g: Array = enemies.spawn_garrison(1, "scout", env.installation_pos,
+					env.installation_pad_radius + 10.0, 14.0)
+				for e in g:
+					if e.has_signal("hit_registered") and not e.hit_registered.is_connected(_on_enemy_hit):
+						e.hit_registered.connect(_on_enemy_hit)
+				_notice("Another patrol powers up at the outpost")
+
 	# enemies within range of the installation erode its armor — only meaningful on
-	# DEFEND missions. On a reach mission you're driving AWAY from the base, so its
-	# armor is irrelevant and mustn't fail you.
+	# DEFEND missions. On reach/hijack the base is irrelevant (or the ENEMY's), so it
+	# must never fail you — and the enemy garrison mustn't erode its own outpost.
 	var attackers := 0
-	if env.installation and _beacon == null:
+	if _objective == "defend" and env.installation:
 		var base_pos: Vector3 = env.installation.global_position
 		for e in get_tree().get_nodes_in_group("enemies"):
 			if e.global_position.distance_to(base_pos) < BASE_ATTACK_RANGE:
@@ -462,13 +555,27 @@ func _process(delta: float) -> void:
 	# "reach" missions: run the beacon proximity check + show a distance readout so the
 	# player has a diegetic target (the amber strobe) plus a number, no floating marker.
 	if _beacon and is_instance_valid(_beacon):
-		_beacon.check(_player.global_position)
-		var dist := int(_beacon.distance_from(_player.global_position))
+		_beacon.check(body.global_position)
+		var dist := int(_beacon.distance_from(body.global_position))
 		_obj_label.text = "REACH THE ALLY BEACON · %d m · hostiles: %d\nYOUR ARMOR: %d%%" % [
-			dist, alive, _player.health]
+			dist, alive, body.health]
+	elif _objective == "hijack":
+		if not _hijack_done:
+			# phase 1: guide the infiltration — range to the nearest steal target
+			var near := INF
+			for e in get_tree().get_nodes_in_group("enemies"):
+				near = minf(near, body.global_position.distance_to(e.global_position))
+			for h in get_tree().get_nodes_in_group("hijackable"):
+				near = minf(near, body.global_position.distance_to(h.global_position))
+			var range_txt := ("%d m" % int(near)) if near < INF else "—"
+			_obj_label.text = "STEAL A HAWC · patrol %s · Q: GASHR eject · E: board\nSUIT: %d%%" % [
+				range_txt, body.health]
+		else:
+			_obj_label.text = "CLEAR THE ZONE · %s · hostiles: %d\nYOUR ARMOR: %d%%" % [
+				_wave_text, alive, body.health]
 	else:
 		_obj_label.text = "DEFEND THE INSTALLATION · %s · hostiles: %d\nBASE ARMOR: %d%%   ·   YOUR ARMOR: %d%%" % [
-			_wave_text, alive, int(_base_hp), _player.health]
+			_wave_text, alive, int(_base_hp), body.health]
 
 func _on_base_destroyed() -> void:
 	_end(false)

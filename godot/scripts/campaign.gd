@@ -20,6 +20,21 @@ const LEVELS := [
 	# fields ITS faction's real machines (HawcSpecs) and carries its environmental
 	# theme via a terrain palette. Machines first; look-and-feel polish comes later.
 	{
+		# PROLOGUE — the hijack vertical slice: the whole signature loop taught in one
+		# level. You start ON FOOT with no mech; a small Darken garrison idles at the
+		# forward post. GASHR a pilot out, board the hull, then fight off the response.
+		"id": 0, "name": "Empty Hands",
+		"subtitle": "Prologue — Darken forward post",
+		"region": "plains", "height_scale": 24.0, "day_start": 0.24,
+		"objective": "hijack", "faction": "darken",
+		"garrison": 2,   # idle patrol HAWCs guarding the post — your steal targets
+		"waves": [       # the response, scrambled only AFTER a hull is stolen
+			{"count": 2, "tier": "scout"},
+			{"count": 2, "tier": "soldier"},
+		],
+		"brief": "Your insertion shuttle burned up on entry — you walked away with a rifle, a GASHR launcher, and nothing else. A Darken patrol idles at the forward post ahead. Get close, eject a pilot, take his machine. It isn't stealing. It's reenlistment.",
+	},
+	{
 		"id": 1, "name": "Reenlistment",
 		"subtitle": "Darken Republic border — Phygos crisis",
 		"region": "plains", "height_scale": 30.0, "day_start": 0.32,
@@ -139,6 +154,7 @@ const PREMISE := {
 }
 
 const TERRITORY_INFO := [
+	{"latlon": Vector2(19.5, 2.5),     "place": "Darken forward post"},
 	{"latlon": Vector2(21.0, 6.0),     "place": "Darken Republic border"},
 	{"latlon": Vector2(46.7, 117.5),   "place": "Darken deep desert"},
 	{"latlon": Vector2(83.0, 313.0),   "place": "Merc ice fields"},

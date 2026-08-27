@@ -53,6 +53,9 @@ const ARCH_BASE_SCALE := {
 	"sentry": 1.0, "tactical": 1.0, "heavy": 1.0, "support": 1.15, "hover": 1.15,
 }
 var faction := ""   # territory's faction: its own machines get fielded (EnemyTiers)
+# HIJACK missions: wave units hunt the PLAYER instead of marching on the installation
+# (the installation is the ENEMY's outpost there — they won't assault their own base).
+var hunt_player := false
 
 var _env: EnvironmentEngine
 var _player: Node3D
@@ -90,7 +93,9 @@ func _next_wave() -> void:
 		_spawn_enemy(tier_key, int(w.get("hp", 6)))
 	wave_started.emit(_wave_index, waves.size(), count)
 
-func _spawn_enemy(tier_key: String, fallback_hp: int) -> void:
+# opts (all optional): "pos" = exact spawn point (else a random map edge);
+# "detect" = sensor-range override; "idle" = hold post, no march target (garrison guards).
+func _spawn_enemy(tier_key: String, fallback_hp: int, opts: Dictionary = {}) -> CharacterBody3D:
 	# resolve the tier (data-driven stats + look). Empty key => a plain "soldier"-ish unit.
 	var tier: Dictionary = EnemyTiers.get_tier(tier_key, faction) if tier_key != "" else {
 		"hp": fallback_hp, "scale": 1.0, "move": 6.0, "fire_cd": 1.4, "detect": 80.0, "tint": "darken", "role": "sniper"}
@@ -101,13 +106,18 @@ func _spawn_enemy(tier_key: String, fallback_hp: int) -> void:
 	e.hp = tier["hp"]
 	e.move_speed = tier["move"]
 	e.fire_cooldown = tier["fire_cd"]
-	e.detect_range = tier["detect"]
+	e.detect_range = opts.get("detect", tier["detect"])
 	e.set("role", tier.get("role", "sniper"))   # drives the behavior state machine
 
 	var visual := Node3D.new()
 	var arch: String = tier.get("arch", "")
 	# distinct archetype model if we have one; else the shared warrior fallback
 	var model_path: String = ARCH_MODELS.get(arch, mech_path)
+	# steal continuity: the possession loop rebuilds a commandeered hull from these,
+	# so the machine you board is the machine you emptied (same model, same paint)
+	e.set_meta("model_path", model_path)
+	e.set_meta("tint", tier["tint"])
+	e.set_meta("vehicle", tier.get("name", "HAWC"))
 	var scene: PackedScene = load(model_path)
 	var mech_model: Node = null
 	if scene:
@@ -139,19 +149,52 @@ func _spawn_enemy(tier_key: String, fallback_hp: int) -> void:
 	e.add_child(col)
 
 	# spawn at a walkable map edge (Environment decides where), march at the installation
-	var spawn := Vector3(120, 10, 120)
-	if _env:
+	var spawn: Vector3 = opts.get("pos", Vector3(120, 10, 120))
+	if not opts.has("pos") and _env:
 		spawn = _env.random_edge_spawn(_rng)
 	e.position = spawn
-	# tell the AI what to attack: the installation is the primary target, player secondary
-	if _env and _env.installation:
-		e.set("primary_target", _env.installation)
+	# tell the AI what to attack. Idle guards hold their post (no march target); wave
+	# units either assault the installation or — on hijack missions — hunt the player.
+	if not opts.get("idle", false):
+		if hunt_player:
+			e.set("primary_target", get_tree().get_first_node_in_group("player"))
+		elif _env and _env.installation:
+			e.set("primary_target", _env.installation)
 	add_child(e)
 	# GLB origin isn't at the feet — align the model's lowest point to the capsule bottom
 	Atoms.align_foot(visual, e)
 	# clean up + wave tracking when it dies
 	if e.has_signal("destroyed"):
 		e.destroyed.connect(_on_enemy_destroyed)
+	return e
+
+# Pre-battle garrison: idle guard units posted in a ring around a point (the outpost).
+# They spawn OUTSIDE the wave sequence (before start()), hold their post, and only engage
+# what wanders inside their short detect radius — the GASHR infiltration targets.
+func spawn_garrison(count: int, tier_key: String, center: Vector3, radius: float, detect: float) -> Array:
+	var placed: Array = []
+	for i in range(count):
+		var ang := (TAU / maxf(count, 1.0)) * i + _rng.randf_range(-0.4, 0.4)
+		var dir := Vector3(cos(ang), 0.0, sin(ang))
+		var pos := center + dir * radius
+		# if the ring point isn't walkable, step outward until it is (else take it as-is)
+		if _env and not _env.is_walkable(pos.x, pos.z):
+			for step in range(1, 5):
+				var p2: Vector3 = center + dir * (radius + 6.0 * step)
+				if _env.is_walkable(p2.x, p2.z):
+					pos = p2
+					break
+		var e := _spawn_enemy(tier_key, 5, {"pos": pos, "detect": detect, "idle": true})
+		if _env:
+			_env.place_on_ground(e, 2.0)
+		placed.append(e)
+	return placed
+
+# Battle stations: every live enemy gets full sensor range — used the moment the outpost
+# is compromised (nobody keeps dozing after a hull gets stolen next to them).
+func alert_all(detect: float = 140.0) -> void:
+	for e in get_tree().get_nodes_in_group("enemies"):
+		e.set("detect_range", detect)
 
 func _on_enemy_destroyed() -> void:
 	enemy_destroyed_signal.emit()   # relay for scoring

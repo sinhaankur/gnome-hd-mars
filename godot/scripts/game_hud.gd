@@ -9,6 +9,7 @@ const RADAR_RANGE := 220.0   # world units the radar covers (half-map)
 var _player: Node
 var _env: Node
 var _get_base_hp: Callable
+var _show_base := true
 
 # UI nodes
 var _crosshair: Control
@@ -21,10 +22,13 @@ var _hit_time := 0.0
 var _enemy_bars := {}   # enemy node -> {bar, holder}
 var _bars_layer: Control
 
-func setup(player: Node, env: Node, get_base_hp: Callable) -> void:
+# show_base: defend missions track the installation's armor; on reach/hijack the base
+# is irrelevant (or the ENEMY's), so the friendly base bar would be a lie — hide it.
+func setup(player: Node, env: Node, get_base_hp: Callable, show_base: bool = true) -> void:
 	_player = player
 	_env = env
 	_get_base_hp = get_base_hp
+	_show_base = show_base
 	layer = 10
 	_build()
 
@@ -57,15 +61,16 @@ func _build() -> void:
 	_armor_label = Label.new(); _armor_label.add_theme_font_size_override("font_size", 13)
 	pcol.add_child(_armor_label)
 
-	# --- base armor bar (bottom-center) ---
-	var bcol := VBoxContainer.new()
-	bcol.position = Vector2(520, 620)
-	add_child(bcol)
-	var bl := Label.new(); bl.text = "INSTALLATION"; bl.add_theme_font_size_override("font_size", 14)
-	bl.add_theme_color_override("font_color", Color(0.6, 0.85, 1.0))
-	bcol.add_child(bl)
-	_base_bar = _make_bar(Color(0.4, 0.7, 1.0))
-	bcol.add_child(_base_bar)
+	# --- base armor bar (bottom-center) — defend missions only ---
+	if _show_base:
+		var bcol := VBoxContainer.new()
+		bcol.position = Vector2(520, 620)
+		add_child(bcol)
+		var bl := Label.new(); bl.text = "INSTALLATION"; bl.add_theme_font_size_override("font_size", 14)
+		bl.add_theme_color_override("font_color", Color(0.6, 0.85, 1.0))
+		bcol.add_child(bl)
+		_base_bar = _make_bar(Color(0.4, 0.7, 1.0))
+		bcol.add_child(_base_bar)
 
 	# --- radar (top-right) ---
 	_radar = Control.new()
@@ -130,7 +135,7 @@ func _process(delta: float) -> void:
 	_armor_bar.add_theme_stylebox_override("fill", fill)
 
 	# base armor
-	if _get_base_hp.is_valid():
+	if _base_bar and _get_base_hp.is_valid():
 		_base_bar.value = _get_base_hp.call()
 
 	# hit marker fade
