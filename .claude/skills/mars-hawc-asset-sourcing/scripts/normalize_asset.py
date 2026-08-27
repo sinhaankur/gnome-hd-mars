@@ -79,59 +79,116 @@ def _center_and_base(o):
     o.location = (0, 0, 0)
 
 
+def _world_mesh_bounds():
+    """World-space bounds over ALL mesh objects (for rigged hierarchies)."""
+    lo = mathutils.Vector((1e18,) * 3); hi = -lo
+    for o in bpy.context.scene.objects:
+        if o.type != 'MESH':
+            continue
+        for c in o.bound_box:
+            w = o.matrix_world @ mathutils.Vector(c)
+            lo = mathutils.Vector((min(lo[i], w[i]) for i in range(3)))
+            hi = mathutils.Vector((max(hi[i], w[i]) for i in range(3)))
+    return lo, hi
+
+
+def _normalize_rigged(a):
+    """Rig-preserving path: keep armature + meshes + actions. Scale/base the hierarchy
+    ROOT so skinning and all animations survive (do NOT join or apply on the meshes)."""
+    arm = next((o for o in bpy.context.scene.objects if o.type == 'ARMATURE'), None)
+    if not arm:
+        raise SystemExit("--keep-rig set but no armature found")
+    root = arm
+    while root.parent is not None:
+        root = root.parent
+
+    # scale to real metres via world mesh bounds
+    lo, hi = _world_mesh_bounds()
+    if a.target_h > 0:
+        d = hi.z - lo.z; s = a.target_h / d if d > 1e-5 else 1.0
+    elif a.target_len > 0:
+        d = max(hi.x - lo.x, hi.y - lo.y); s = a.target_len / d if d > 1e-5 else 1.0
+    else:
+        s = 1.0
+    root.scale = (root.scale.x * s, root.scale.y * s, root.scale.z * s)
+    bpy.context.view_layer.update()
+
+    # center X/Y, base to Z=0 by moving the root
+    lo, hi = _world_mesh_bounds()
+    cx = (lo.x + hi.x) / 2; cy = (lo.y + hi.y) / 2
+    root.location = (root.location.x - cx, root.location.y - cy, root.location.z - lo.z)
+    bpy.context.view_layer.update()
+
+    out = a.out if os.path.isabs(a.out) else os.path.join(PROJECT, a.out)
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    for o in bpy.context.scene.objects:
+        o.select_set(True)
+    # export_apply=False keeps the armature; animations+skins on
+    bpy.ops.export_scene.gltf(filepath=out, export_format='GLB', use_selection=True,
+                              export_yup=True, export_apply=False,
+                              export_animations=True, export_skins=True)
+    tris = sum(len(m.data.polygons) for m in bpy.context.scene.objects if m.type == 'MESH')
+    print("NORMALIZE_OK  %s (rigged)  tris=%d  actions=%d  %.2f MB  -> %s"
+          % (a.name, tris, len(bpy.data.actions), os.path.getsize(out) / 1e6, out))
+
+
 def normalize(a):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     _import(a.src)
 
-    # 1) clean: remove cameras/lights/empties (+ armatures unless keeping a rig)
-    drop = {'CAMERA', 'LIGHT', 'EMPTY'}
-    if not a.keep_rig:
-        drop.add('ARMATURE')
+    # 1) clean: always drop cameras/lights + common uploader junk; keep armature if --keep-rig
+    JUNK_NAMES = {"Cube", "Icosphere", "Light", "Camera", "Sphere", "Plane"}
     for o in list(bpy.context.scene.objects):
-        if o.type in drop:
+        if o.type in {'CAMERA', 'LIGHT'} or o.name in JUNK_NAMES:
             bpy.data.objects.remove(o, do_unlink=True)
 
+    # 1b) apply optional facing fix to the whole scene root(s) before measuring
+    fx, fy, fz = (float(v) for v in a.facing.split(","))
+
+    if a.keep_rig:
+        if (fx, fy, fz) != (0, 0, 0):
+            arm = next((o for o in bpy.context.scene.objects if o.type == 'ARMATURE'), None)
+            root = arm
+            while root and root.parent is not None:
+                root = root.parent
+            if root:
+                root.rotation_euler = (math.radians(fx), math.radians(fy), math.radians(fz))
+        _normalize_rigged(a)
+        return
+
+    # --- static path: drop armatures/empties, join into one mesh ---
+    for o in list(bpy.context.scene.objects):
+        if o.type in {'ARMATURE', 'EMPTY'}:
+            bpy.data.objects.remove(o, do_unlink=True)
     meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH']
     if not meshes:
         raise SystemExit("no mesh found in source")
-
-    # 2) join into one object (skip if keeping a rig — parenting would break)
-    if a.keep_rig:
-        o = meshes[0]
-    else:
-        _deselect()
-        for m in meshes:
-            m.select_set(True)
-        bpy.context.view_layer.objects.active = meshes[0]
-        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-        bpy.ops.object.join()
-        o = bpy.context.active_object
+    _deselect()
+    for m in meshes:
+        m.select_set(True)
+    bpy.context.view_layer.objects.active = meshes[0]
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    bpy.ops.object.join()
+    o = bpy.context.active_object
     o.name = a.name
 
-    # 3) fix forward (-Z in Godot) before applying
-    fx, fy, fz = (float(v) for v in a.facing.split(","))
     if (fx, fy, fz) != (0, 0, 0):
         o.rotation_euler = (math.radians(fx), math.radians(fy), math.radians(fz))
         _activate(o); bpy.ops.object.transform_apply(rotation=True)
 
-    # 4) scale to real-world metres
     lo, hi = _bounds(o)
     if a.target_h > 0:
-        d = hi.z - lo.z
-        s = a.target_h / d if d > 1e-5 else 1.0
+        d = hi.z - lo.z; s = a.target_h / d if d > 1e-5 else 1.0
     elif a.target_len > 0:
-        d = max(hi.x - lo.x, hi.y - lo.y)
-        s = a.target_len / d if d > 1e-5 else 1.0
+        d = max(hi.x - lo.x, hi.y - lo.y); s = a.target_len / d if d > 1e-5 else 1.0
     else:
         s = 1.0
     if abs(s - 1.0) > 1e-4:
         o.scale = (s, s, s)
         _activate(o); bpy.ops.object.transform_apply(scale=True)
 
-    # 5) center X/Y, base to Z=0, origin to bounds
     _center_and_base(o)
 
-    # 6) export Y-up GLB
     out = a.out if os.path.isabs(a.out) else os.path.join(PROJECT, a.out)
     os.makedirs(os.path.dirname(out), exist_ok=True)
     _activate(o)
