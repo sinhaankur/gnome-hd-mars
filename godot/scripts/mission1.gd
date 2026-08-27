@@ -7,10 +7,10 @@ extends Node3D
 ##   - Enemies           : rival-nation mechs (enemy_ai.gd)
 ## The level asks the Environment where the ground is; it doesn't raycast itself.
 
-# User-chosen mech: Oscar Creativo "Bot Mecha Warrior" (warrior.glb) — 50k tris,
-# 57 textures, rigged with a "Motion" walk anim. Stands at identity rotation,
-# native ~2.5u tall, feet at y=0. The user prefers this over any custom mech.
-const MECH_PATH := "res://assets/warrior.glb"        # enemy HAWCs (until roster rebuild)
+# Enemy HAWCs are routed per-archetype by enemy_engine.gd (ARCH_MODELS). MECH_PATH is only
+# the FALLBACK model used if an archetype key is ever missing — a lean enemy mech, not the
+# retired 243 MB warrior.glb (removed 2026-08-27; player now uses hero_striker.glb).
+const MECH_PATH := "res://assets/enemy_sentry.glb"
 # player's hero HAWC: sourced "Medium Mech Striker" (MSGDI, CC-BY), normalized to a real
 # ~7 m HAWC (tools: mars-hawc-asset-sourcing skill). 10.8k tris / 4.8 MB — a ~50x cut from
 # the old 243 MB warrior.glb, with a proper HAWC silhouette (cockpit, missile pods, gun-arm,

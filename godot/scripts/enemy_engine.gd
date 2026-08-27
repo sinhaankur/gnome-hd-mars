@@ -29,7 +29,7 @@ signal enemy_destroyed_signal   # relayed for scoring
 	{"count": 5, "hp": 8},
 ]
 @export var time_between_waves: float = 6.0
-@export var mech_path: String = "res://assets/warrior.glb"
+@export var mech_path: String = "res://assets/hero_striker.glb"
 @export var mech_scale: float = 2.8
 # archetype -> model. Five GENUINELY DISTINCT class silhouettes — real detailed Sketchfab
 # CC-BY mechs (credited in CREDITS.md), sourced + normalized by tools/sketchfab_download.py
