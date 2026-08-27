@@ -22,7 +22,7 @@ licenses — retain these attributions in any distribution.
   - Tactical — "Magnetar / Assault Combat Mech" by **Treva** — https://sketchfab.com/3d-models/magnetar-assault-combat-mech-c3a05b54da27477089aeff3cff226c9e
   - Heavy — "Quadruped Mech walker" by **Jungle Jim** — https://sketchfab.com/3d-models/quadruped-mech-walker-5a8a1d83d1674c3982340c38bf52f069
   - Support — "MBT-70" by **_Muzaev** — https://sketchfab.com/3d-models/mbt-70-6aebe7926d954a21b1abd0ca8fbfd5d5
-  - Hover — "Duster 46 - Sci-Fi Hovercraft" by **mgfxer** — https://sketchfab.com/3d-models/duster-46-sci-fi-hovercraft-25376ae6a4674c21b164ebc7b84fd80f
+  - Hover — "Stormbringer-H4 / Armored Hover Tank" by **Treva** — https://sketchfab.com/3d-models/ae42b017d4084503824746c770220a6d
 - **Mars surface rocks** (`godot/assets/mars_rock_*.glb`) — from "Free Pack - Rocks
   Stylized" by **PolyOne Studio** — CC-BY 4.0 (Sketchfab). Scattered as landmark boulders.
 - **Derelict rover POI** (`godot/assets/nasa_rover.glb`) — "NASA Curiosity (Clean)" by

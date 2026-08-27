@@ -42,7 +42,7 @@ const ARCH_MODELS := {
 	"tactical": "res://assets/enemy_tactical.glb",   # Magnetar Assault Combat Mech (Treva, CC-BY)
 	"heavy":    "res://assets/enemy_heavy.glb",      # Quadruped Mech walker (Jungle Jim, CC-BY)
 	"support":  "res://assets/enemy_support.glb",    # MBT-70 battle tank (_Muzaev, CC-BY)
-	"hover":    "res://assets/enemy_hover.glb",      # Duster 46 Sci-Fi Hovercraft (mgfxer, CC-BY)
+	"hover":    "res://assets/enemy_hover.glb",      # Stormbringer-H4 Armored Hover Tank (Treva, CC-BY)
 }
 # The models are NORMALIZED to their real-meter class height by normalize_enemy_mechs.py
 # (sentry 6.8 / tactical 8.5 / heavy 10 / support 3.6 / hover 3.2 m), so the base
