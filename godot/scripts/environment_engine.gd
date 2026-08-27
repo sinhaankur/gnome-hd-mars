@@ -563,7 +563,9 @@ func _scatter_rocks() -> void:
 	# MULTIMESH scatter (one draw call per rock-mesh variant, per-instance color tint)
 	# lets density approach the rover photos — the ground there is LITTERED with rocks.
 	# count scales with map area so density holds as world_size grows.
-	var rock_count := int(1600.0 * (world_size * world_size) / (800.0 * 800.0))
+	# Bumped 2026-08-27: PIA24765 shows the ground LITTERED with rocks; 1600 read sparse.
+	# 2800 base (~1.75x) via MultiMesh keeps one draw call per variant, so perf holds.
+	var rock_count := int(2800.0 * (world_size * world_size) / (800.0 * 800.0))
 	# neutral grey multipliers, all <= 1: in the rover photos rocks read DARKER than
 	# the dusty soil — pale/HDR tints turned the plain into white confetti
 	var tints := [Color(0.62, 0.60, 0.58), Color(0.80, 0.77, 0.74), Color(1.0, 0.96, 0.92)]
@@ -659,7 +661,7 @@ func _scatter_detail() -> void:
 	peb_mesh.radius = 1.0; peb_mesh.height = 2.0
 	peb_mesh.radial_segments = 6; peb_mesh.rings = 3   # tiny on screen: low poly is plenty
 	peb_mesh.material = pebble_mat
-	var count := int(12000.0 * (world_size * world_size) / (800.0 * 800.0))
+	var count := int(18000.0 * (world_size * world_size) / (800.0 * 800.0))  # denser rubble field (was 12000)
 	var xforms: Array[Transform3D] = []
 	for i in range(count):
 		var x := rng.randf_range(-half, half)
