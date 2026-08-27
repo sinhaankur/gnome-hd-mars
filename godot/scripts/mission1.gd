@@ -10,12 +10,12 @@ extends Node3D
 # User-chosen mech: Oscar Creativo "Bot Mecha Warrior" (warrior.glb) — 50k tris,
 # 57 textures, rigged with a "Motion" walk anim. Stands at identity rotation,
 # native ~2.5u tall, feet at y=0. The user prefers this over any custom mech.
-const MECH_PATH := "res://assets/warrior.glb"        # enemy HAWCs
-# player's hero HAWC: the SAME warrior.glb the enemies use, but UNION-tinted (warm tan/gold)
-# so the player mech is instantly distinct from the red enemy HAWCs. The user rejected the
-# sourced hero mechs (hawc_hero was dark; the Walker was the wrong style / not G-NOME) and
-# chose to go back to warrior.glb — the mech they prefer — for the player too.
-const HERO_PATH := "res://assets/warrior.glb"
+const MECH_PATH := "res://assets/warrior.glb"        # enemy HAWCs (until roster rebuild)
+# player's hero HAWC: sourced "Medium Mech Striker" (MSGDI, CC-BY), normalized to a real
+# ~7 m HAWC (tools: mars-hawc-asset-sourcing skill). 10.8k tris / 4.8 MB — a ~50x cut from
+# the old 243 MB warrior.glb, with a proper HAWC silhouette (cockpit, missile pods, gun-arm,
+# reverse-jointed legs). UNION-tinted so it reads distinct from the red enemy mechs.
+const HERO_PATH := "res://assets/hero_striker.glb"
 # Faction library: applies the player's union (tan) palette to the hero mech.
 const FactionLib := preload("res://scripts/faction.gd")
 # Loaded by path (not class_name) so it resolves even before the editor rescans
@@ -24,7 +24,9 @@ const HERO_FIX := preload("res://scripts/hero_material_fix.gd")
 # preload by path (not class_name) so a bare -s run resolves it before the editor
 # rescans the global class cache — same reason as HERO_FIX above.
 const BEACON_SCENE := preload("res://scripts/beacon.gd")
-const MECH_SCALE := 2.8           # ~2.5u model -> ~7m tall
+const MECH_SCALE := 2.8           # enemy warrior.glb: ~2.5u model -> ~7m tall
+# hero_striker.glb is already normalized to 7 m at identity, so it needs no up-scaling.
+const HERO_SCALE := 1.0
 const MECH_FOOT_LIFT := 0.0
 # Model face orientation vs movement. 0 = faces forward (model +Z = body +Z = movement dir).
 # Flip to PI if it ever reads backward. Single source of truth so it's one edit to fix.
@@ -307,19 +309,14 @@ func _build_hawc(pos: Vector3) -> CharacterBody3D:
 	var mech_model: Node = null
 	if scene:
 		var hawk := scene.instantiate()
-		hawk.scale = Vector3.ONE * MECH_SCALE
-		# MECH_FACE_FLIP tunes which way the model faces relative to movement. The hero
-		# model's face is its local +Z; the body's +Z is the movement direction (atan2 in
-		# hawc.gd), so at identity the face already points forward. VERIFIED by render
-		# (tools/render_facing.gd, 2026-07-19): face leads movement on both +X and +Z, so
-		# 0.0 is correct. Exposed as a constant so it's a one-line fix if a model ever
-		# reads backward in-game.
-		# warrior.glb's face is its local -Z, and the body's movement dir is +Z (atan2 in
-		# hawc.gd), so the model needs a PI flip to face where it walks (same as the enemy
-		# engine does for warrior). MECH_FACE_FLIP is the single tuning knob.
+		hawk.scale = Vector3.ONE * HERO_SCALE
+		# MECH_FACE_FLIP tunes which way the model faces relative to movement. hawc.gd yaws
+		# the body so movement dir is local +Z; a model whose face is local -Z needs a PI
+		# flip. hero_striker was normalized facing -Z (Godot forward), which matches +Z after
+		# the standard flip below. If it ever reads backward in-game, toggle MECH_FACE_FLIP.
 		hawk.rotation.y = MECH_FACE_FLIP + PI
 		# UNION tint: warm tan/gold so the player HAWC reads as friendly and stands out from
-		# the red enemy mechs (both are warrior.glb). Recolors over the baked textures.
+		# the red enemy mechs. Recolors over the baked textures.
 		FactionLib.tint(hawk, "union")
 		visual.add_child(hawk)
 		mech_model = hawk

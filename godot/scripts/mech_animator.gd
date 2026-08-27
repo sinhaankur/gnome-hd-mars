@@ -30,13 +30,23 @@ func setup(visual_root: Node) -> void:
 	if visual_root is Node3D:
 		_model = visual_root
 		_model_base_y = _model.position.y
-	# resolve the walk clip: prefer the named one ("Motion" on the warrior), but fall back to
-	# the model's FIRST animation if that name is absent — so any rigged GLB (e.g. the Walker
-	# hero, whose clip is "Mesh_Mech_Full_Config") animates without needing a matching name.
+	# resolve the walk clip. Order of preference:
+	#   1) the exact configured name ("Motion" on the warrior);
+	#   2) any clip whose name looks like a walk cycle (e.g. striker's "a5WalkCycle") — but
+	#      NOT a crippled/back/root-motion variant, which we don't want as the default gait;
+	#   3) the first clip, as a last resort (keeps any rigged GLB animating).
 	if _ap and not _ap.has_animation(walk_anim):
 		var list := _ap.get_animation_list()
-		if list.size() > 0:
-			walk_anim = list[0]
+		var chosen := ""
+		for n in list:
+			var ln := (n as String).to_lower()
+			if "walk" in ln and not ("cripple" in ln or "back" in ln or "rootmotion" in ln):
+				chosen = n
+				break
+		if chosen == "" and list.size() > 0:
+			chosen = list[0]
+		if chosen != "":
+			walk_anim = chosen
 	if _ap and _ap.has_animation(walk_anim):
 		var a := _ap.get_animation(walk_anim)
 		a.loop_mode = Animation.LOOP_LINEAR
