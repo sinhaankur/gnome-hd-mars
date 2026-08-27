@@ -140,3 +140,11 @@ Modular kit first (walls/pillars/panels/doors), then assemble named buildings.
 - **Export:** one Blender call → `.glb` into `godot/assets/`; +Y up, real-world metres, origin at feet/base.
 - **Materials:** rough PBR in Blender, final tint/emissive via Godot shader (Blender is unstable).
 - **Judge quality** only against NASA photos via `godot-art-pass`; don't fuss edges before breadth.
+
+## Dead prototype scenes (found 2026-08-27 — user's call to remove)
+
+`scenes/level1.tscn` + `scripts/level1.gd` and `scenes/tune.tscn` + `scripts/tune.gd` are
+NOT reachable from the game (menu only routes to mission1 + planet). They're the only things
+referencing `wr_hawk.glb` (2.5 MB) and `gnome_assets.glb` (1.2 MB). Safe to retire the scenes +
+scripts + those two GLBs together (~3.7 MB) if you don't want them as prototype reference.
+Left in place pending your decision — they're harmless dead code.
