@@ -1,0 +1,146 @@
+"""Generic asset normalizer for Mars HAWC — enforces the orientation/axis/layout contract.
+
+Turns any downloaded source model into a game-ready GLB:
+  clean (drop cameras/lights/empties; optionally armatures) -> join -> face -Z ->
+  scale to a real-world size in metres -> center X/Z, base to Y=0, origin to bounds ->
+  apply all transforms -> export Y-up GLB into godot/assets/.
+
+Run headless (never touches a GUI scene), e.g.:
+  blender --background --python normalize_asset.py -- \
+      --src blender_assets/sketchfab_src/src_dropship.glb \
+      --out godot/assets/dropship.glb --name Dropship \
+      --target-h 8.0 --facing 0,180,0
+
+Or drive the functions directly via the Blender MCP connector.
+
+Axis/layout contract (see SKILL.md):
+  * export_yup=True  -> glTF Y-up (Godot convention). Blender stays Z-up internally.
+  * forward = -Z in Godot; use --facing to rotate the source's forward before apply.
+  * center X/Z on origin; base sits at Y=0 (Blender Z=0) so spawn at ground_point works.
+  * 1 unit = 1 m; normalize to real height (--target-h) or longest footprint (--target-len).
+  * apply location+rotation+scale before export.
+"""
+import bpy, os, sys, math, argparse, mathutils
+
+PROJECT = "/Users/sinhaankur/Downloads/G-Nome_ISO"
+
+
+def _argv():
+    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    p = argparse.ArgumentParser()
+    p.add_argument("--src", required=True, help="source model (glb/gltf/fbx/obj)")
+    p.add_argument("--out", required=True, help="output .glb (relative to project or absolute)")
+    p.add_argument("--name", default="Asset")
+    p.add_argument("--target-h", type=float, default=0.0, help="scale so height (Z) = this many metres")
+    p.add_argument("--target-len", type=float, default=0.0, help="…or so longest X/Y footprint = this")
+    p.add_argument("--facing", default="0,0,0", help="pre-apply rotation degrees 'x,y,z' to fix forward")
+    p.add_argument("--keep-rig", action="store_true", help="keep armature+anim (hero mechs)")
+    return p.parse_args(argv)
+
+
+def _deselect():
+    for o in bpy.context.scene.objects:
+        o.select_set(False)
+
+
+def _activate(o):
+    _deselect(); o.select_set(True); bpy.context.view_layer.objects.active = o
+
+
+def _bounds(o):
+    lo = mathutils.Vector((1e18,) * 3); hi = -lo
+    for c in o.bound_box:
+        w = o.matrix_world @ mathutils.Vector(c)
+        lo = mathutils.Vector((min(lo[i], w[i]) for i in range(3)))
+        hi = mathutils.Vector((max(hi[i], w[i]) for i in range(3)))
+    return lo, hi
+
+
+def _import(src):
+    path = src if os.path.isabs(src) else os.path.join(PROJECT, src)
+    ext = os.path.splitext(path)[1].lower()
+    if ext in (".glb", ".gltf"):
+        bpy.ops.import_scene.gltf(filepath=path)
+    elif ext == ".fbx":
+        bpy.ops.import_scene.fbx(filepath=path)
+    elif ext == ".obj":
+        bpy.ops.wm.obj_import(filepath=path)
+    else:
+        raise SystemExit("unsupported source: " + ext)
+
+
+def _center_and_base(o):
+    lo, hi = _bounds(o)
+    cx = (lo.x + hi.x) / 2; cy = (lo.y + hi.y) / 2
+    o.location = (o.location.x - cx, o.location.y - cy, o.location.z - lo.z)
+    _activate(o)
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
+    o.location = (0, 0, 0)
+
+
+def normalize(a):
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    _import(a.src)
+
+    # 1) clean: remove cameras/lights/empties (+ armatures unless keeping a rig)
+    drop = {'CAMERA', 'LIGHT', 'EMPTY'}
+    if not a.keep_rig:
+        drop.add('ARMATURE')
+    for o in list(bpy.context.scene.objects):
+        if o.type in drop:
+            bpy.data.objects.remove(o, do_unlink=True)
+
+    meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH']
+    if not meshes:
+        raise SystemExit("no mesh found in source")
+
+    # 2) join into one object (skip if keeping a rig — parenting would break)
+    if a.keep_rig:
+        o = meshes[0]
+    else:
+        _deselect()
+        for m in meshes:
+            m.select_set(True)
+        bpy.context.view_layer.objects.active = meshes[0]
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+        bpy.ops.object.join()
+        o = bpy.context.active_object
+    o.name = a.name
+
+    # 3) fix forward (-Z in Godot) before applying
+    fx, fy, fz = (float(v) for v in a.facing.split(","))
+    if (fx, fy, fz) != (0, 0, 0):
+        o.rotation_euler = (math.radians(fx), math.radians(fy), math.radians(fz))
+        _activate(o); bpy.ops.object.transform_apply(rotation=True)
+
+    # 4) scale to real-world metres
+    lo, hi = _bounds(o)
+    if a.target_h > 0:
+        d = hi.z - lo.z
+        s = a.target_h / d if d > 1e-5 else 1.0
+    elif a.target_len > 0:
+        d = max(hi.x - lo.x, hi.y - lo.y)
+        s = a.target_len / d if d > 1e-5 else 1.0
+    else:
+        s = 1.0
+    if abs(s - 1.0) > 1e-4:
+        o.scale = (s, s, s)
+        _activate(o); bpy.ops.object.transform_apply(scale=True)
+
+    # 5) center X/Y, base to Z=0, origin to bounds
+    _center_and_base(o)
+
+    # 6) export Y-up GLB
+    out = a.out if os.path.isabs(a.out) else os.path.join(PROJECT, a.out)
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    _activate(o)
+    bpy.ops.export_scene.gltf(filepath=out, export_format='GLB',
+                              use_selection=True, export_apply=True, export_yup=True)
+    tris = sum(len(m.data.polygons) for m in bpy.context.scene.objects if m.type == 'MESH')
+    print("NORMALIZE_OK  %s  tris=%d  %.2f MB  -> %s"
+          % (a.name, tris, os.path.getsize(out) / 1e6, out))
+
+
+if __name__ == "__main__":
+    normalize(_argv())

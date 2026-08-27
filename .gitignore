@@ -48,3 +48,7 @@ sketchfab_token
 
 # raw Sketchfab source downloads (large; re-fetch via tools/sketchfab_download.py)
 blender_assets/sketchfab_src/*.glb
+
+# Python bytecode
+__pycache__/
+*.pyc
