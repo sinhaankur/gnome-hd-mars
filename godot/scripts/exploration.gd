@@ -20,6 +20,8 @@ const ROVER_PATH := "res://assets/nasa_rover.glb"
 # real supply crate (TahmidTauz, CC-BY) + alien monolith (barbodoji, CC-BY) — POI props
 const CRATE_PATH := "res://assets/mars_crate.glb"
 const MONOLITH_PATH := "res://assets/mars_monolith.glb"
+# real suited figure ("Dark Astronaut", Charles Cloutier, CC-BY) — memorial POI
+const ASTRONAUT_PATH := "res://assets/astronaut_fallen.glb"
 
 var _env: EnvironmentEngine
 var _pois: Array = []          # {node, name, desc, found}
@@ -33,6 +35,7 @@ const CATALOG := [
 	{"name": "Anomaly Signal", "desc": "A faint repeating transmission from beneath the surface. Origin unknown.", "color": Color(0.5, 1.0, 0.5)},
 	{"name": "AREX Supply Cache", "desc": "A corporate supply drop, still sealed. Salvageable munitions.", "color": Color(1.0, 0.5, 0.3)},
 	{"name": "Ancient Riverbed", "desc": "A dry channel carved by water billions of years ago. Scientifically priceless.", "color": Color(0.8, 0.6, 0.4)},
+	{"name": "Fallen Astronaut", "desc": "A first-wave explorer, still suited. The dust has nearly claimed him.", "color": Color(0.75, 0.75, 0.8)},
 ]
 
 func configure(env: EnvironmentEngine) -> void:
@@ -209,6 +212,36 @@ func _build_marker(poi_name: String, _color: Color) -> Node3D:
 					crate.position = Vector3(i * 0.8 - 0.8, 0.8 + i * 1.1, i * 0.3)
 					crate.rotation.y = i * 0.4
 					root.add_child(crate)
+		"Fallen Astronaut":
+			# a REAL suited figure on his back in the regolith, half-buried — a quiet
+			# memorial site, the same tone as the real "Fallen Astronaut" on the Moon
+			var ast_scene: PackedScene = load(ASTRONAUT_PATH)
+			if ast_scene:
+				var ast := ast_scene.instantiate()
+				ast.rotation_degrees = Vector3(-84, 35, 0)   # on his back, propped by a drift
+				root.add_child(ast)
+				# origin is at the FEET (base-normalized); tipped back he lies just above
+				# the plane — a slight lift keeps the shoulders on the drift, not clipping
+				ast.position.y = 0.12
+				# dust drift banked against the body
+				var drng := RandomNumberGenerator.new()
+				drng.seed = 3117
+				var drift_mat := Atoms.rock_material(Color(0.50, 0.38, 0.28))
+				for i in range(3):
+					var mound := MeshInstance3D.new()
+					mound.mesh = Atoms.rock_mesh(drng)
+					mound.material_override = drift_mat
+					mound.scale = Vector3(1.4, 0.25, 1.0) * drng.randf_range(0.8, 1.2)
+					mound.position = Vector3(i * 0.7 - 0.7, -0.05, 0.5 - i * 0.35)
+					mound.rotation.y = drng.randf() * TAU
+					root.add_child(mound)
+			else:
+				# fallback: a simple suited capsule lying in the dust
+				var suit := MeshInstance3D.new()
+				var sc := CapsuleMesh.new(); sc.radius = 0.35; sc.height = 1.8
+				suit.mesh = sc; suit.material_override = dusty_metal
+				suit.rotation_degrees = Vector3(0, 25, 90); suit.position.y = 0.3
+				root.add_child(suit)
 		"Ancient Riverbed":
 			# water-rounded cobbles half-buried along the old channel — irregular rock
 			# meshes in terrain tones (bright smooth spheres read as golf balls in a row)

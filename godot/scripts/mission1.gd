@@ -341,6 +341,8 @@ func _steal(hull: Node3D) -> void:
 # get close on foot, GASHR a pilot out, board the hull — then the region wakes up.
 var _hijack_done := false          # flips when the player boards a stolen hull
 var _garrison_respawn := 3.0       # countdown before the outpost scrambles a replacement
+# your burned insertion shuttle (sourced "Sci-fi Dropship", Pascal T. Monette, CC-BY)
+const WRECK_PATH := "res://assets/shuttle_wreck.glb"
 
 func _setup_hijack() -> void:
 	var post: Vector3 = env.installation_pos
@@ -349,7 +351,61 @@ func _setup_hijack() -> void:
 	for e in guards:
 		if e.has_signal("hit_registered") and not e.hit_registered.is_connected(_on_enemy_hit):
 			e.hit_registered.connect(_on_enemy_hit)
+	_spawn_crash_site()
 	_notice("ON FOOT — sneak up on the patrol. Q: GASHR ejects the pilot · E: board the empty hull")
+
+func _spawn_crash_site() -> void:
+	# the brief's downed insertion shuttle, physically behind your start point — the
+	# thing you WALKED AWAY from. A diegetic anchor for why you own nothing.
+	var scene: PackedScene = load(WRECK_PATH)
+	if scene == null:
+		return
+	var site := Node3D.new()
+	site.name = "CrashSite"
+	add_child(site)
+	var y := env.ground_height(14.0, -52.0)
+	site.global_position = Vector3(14.0, 0.0 if is_nan(y) else y, -52.0)
+	var wreck: Node3D = scene.instantiate()
+	# gentle tilt only — big pitch/roll about the base origin lifts the ends of a 14 m
+	# hull clear off the ground (verified by render); sunk 0.5 m so it reads dug-in
+	wreck.rotation_degrees = Vector3(3, 132, -4)
+	wreck.position.y = -0.5
+	# entry burn: kill the showroom-blue gloss with a soot/dust film (rover-POI treatment)
+	for mi in Atoms.all_mesh_instances(wreck):
+		var wm := (mi as MeshInstance3D).get_active_material(0)
+		if wm is StandardMaterial3D:
+			var dm := (wm as StandardMaterial3D).duplicate() as StandardMaterial3D
+			dm.albedo_color = Color(0.38, 0.32, 0.27)   # scorched, dust-caked
+			dm.metallic = 0.2
+			dm.roughness = 0.95
+			mi.material_override = dm
+	site.add_child(wreck)
+	# scorched ground under the hull
+	var scorch := MeshInstance3D.new()
+	var disc := CylinderMesh.new(); disc.top_radius = 10.0; disc.bottom_radius = 10.0; disc.height = 0.1
+	scorch.mesh = disc
+	var sm := StandardMaterial3D.new(); sm.albedo_color = Color(0.28, 0.23, 0.19); sm.roughness = 1.0
+	scorch.material_override = sm
+	scorch.position.y = 0.04
+	site.add_child(scorch)
+	# a thin smoke plume still rising off the burned hull (recent crash, not a ruin)
+	var smoke := GPUParticles3D.new()
+	smoke.amount = 14
+	smoke.lifetime = 2.4
+	var pm := ParticleProcessMaterial.new()
+	pm.direction = Vector3(0, 1, 0)
+	pm.spread = 18.0
+	pm.initial_velocity_min = 1.0
+	pm.initial_velocity_max = 2.2
+	pm.gravity = Vector3(0.6, 0.8, 0)          # rises, drifts with the wind
+	pm.scale_min = 1.0; pm.scale_max = 2.6
+	pm.color = Color(0.14, 0.13, 0.12, 0.4)
+	smoke.process_material = pm
+	var qm := QuadMesh.new(); qm.size = Vector2(1.6, 1.6)
+	smoke.draw_pass_1 = qm
+	smoke.material_override = Atoms.dust_material(Color(0.14, 0.13, 0.12, 0.4))
+	smoke.position = Vector3(-2.0, 2.5, 0)
+	site.add_child(smoke)
 
 func _on_hull_stolen() -> void:
 	# hijack phase 2: the theft is noticed — the garrison wakes, reinforcements scramble

@@ -73,7 +73,7 @@ Modular kit first (walls/pillars/panels/doors), then assemble named buildings.
 | # | Asset | Current | State |
 |---|-------|---------|-------|
 | 10 | **Installation / HQ** (the thing you defend) | `installation.glb` | 🟡 borrowed/placeholder |
-| 11 | Modular base kit (wall/pillar/door/panel) | — | ⬜ |
+| 11 | Modular base kit (wall/pillar/door/panel) | staged kits (see note) | ⬜ |
 | 12 | Meson Tower | — | ⬜ |
 | 13 | Shield Generator | — | ⬜ |
 | 14 | Electro-chemical Power Plant | — | ⬜ |
@@ -82,6 +82,15 @@ Modular kit first (walls/pillars/panels/doors), then assemble named buildings.
 | 17 | Comms Array (LATLON) | — | ⬜ |
 | 18 | Bridge + Bridge Control | — | ⬜ |
 | 19 | The Citadel (campaign finale) | — | ⬜ |
+
+> **Staged kit finding (2026-08-27).** The sourced CC-BY kits in
+> `blender_assets/sketchfab_src/world_library/` — `station_modules.glb` (14 meshes over
+> 54×212×231 m), `terminal_kit.glb` (42 meshes), `pipes_modular.glb` (16 meshes) — are
+> **display grids** of separate modules, so the single-mesh normalizer would produce a
+> scattered archipelago. Proper treatment = a per-piece splitter (each module → its own
+> normalized GLB) when the structures phase starts; until then they stay staged, NOT in
+> `godot/assets/` (no 0-ref orphans). The two coherent singles WERE normalized + wired:
+> `shuttle_wreck.glb` (prologue crash site) and `astronaut_fallen.glb` (exploration POI).
 
 ---
 

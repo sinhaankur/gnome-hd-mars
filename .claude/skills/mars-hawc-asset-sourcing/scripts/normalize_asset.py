@@ -78,8 +78,9 @@ def _center_and_base(o):
     o.location = (o.location.x - cx, o.location.y - cy, o.location.z - lo.z)
     _activate(o)
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-    bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
-    o.location = (0, 0, 0)
+    # origin stays at the WORLD origin: centered X/Y, base at Z=0. Do NOT origin_set to
+    # bounds center here — that re-centers the mesh vertically, so tall assets spawned at
+    # ground level in Godot end up buried to the waist (found via shuttle_wreck AABB).
 
 
 def _world_mesh_bounds():

@@ -41,6 +41,12 @@ licenses — retain these attributions in any distribution.
 - **Player hero HAWC** (`hero_striker.glb`) — "Medium Mech Striker" by **MSGDI**
   — CC-BY 4.0 (Sketchfab). Normalized to 7 m + Union-tinted as the player mech.
   https://sketchfab.com/3d-models/27ba717c173a40b7841d2f2c6a89d823
+- **Crashed insertion shuttle** (`shuttle_wreck.glb`) — "Sci-fi Dropship" by
+  **Pascal T. Monette** — CC-BY 4.0 (Sketchfab). Normalized to 14 m as the prologue
+  crash-site wreck. https://sketchfab.com/3d-models/709a1916c0cc4cbebe197e7ef26964cb
+- **Fallen astronaut POI** (`astronaut_fallen.glb`) — "Dark Astronaut" by
+  **Charles Cloutier** — CC-BY 4.0 (Sketchfab). Normalized to 1.9 m, laid to rest as
+  a memorial site. https://sketchfab.com/3d-models/1b2d325edc814d068e920add2ecc8a32
 
 ### Mech reference library (`blender_assets/sketchfab_src/mech_library/`, not shipped in-game)
 Sourced as candidates/reference for the hero + roster; each CC-BY 4.0 (Sketchfab). Only
