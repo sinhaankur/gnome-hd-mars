@@ -8,14 +8,14 @@ extends Camera3D
 enum Mode { THIRD, FIRST, FAR }
 
 @export var target_path: NodePath
-@export var distance: float = 17.0        # how far behind the mech
-@export var height: float = 8.0           # pivot height on the mech
+@export var distance: float = 12.0        # how far behind the mech (tighter = hero mech fills frame)
+@export var height: float = 6.0           # pivot height on the mech
 @export var min_pitch: float = -0.5       # look up limit (radians)
 @export var max_pitch: float = 1.1        # look down limit (radians)
 @export var mouse_sens: float = 0.005
 @export var pos_smooth: float = 12.0      # position follow damping
 @export var aim_smooth: float = 14.0      # look-target damping
-@export var look_height: float = 5.5      # aim point height on the mech
+@export var look_height: float = 4.5      # aim point height on the mech
 @export var base_fov: float = 62.0
 @export var speed_fov: float = 8.0        # extra FOV at full speed
 @export var speed_pullback: float = 3.0   # extra distance at full speed
@@ -28,7 +28,7 @@ var _target: Node3D
 var yaw: float = 0.0
 var _pitch: float = 0.35
 var _look_at: Vector3 = Vector3.ZERO
-var _cur_dist: float = 17.0
+var _cur_dist: float = 12.0
 var _shake: float = 0.0        # current shake trauma (0..1), decays over time
 var _mode: Mode = Mode.THIRD
 var _zoom: float = 0.0         # wheel zoom offset on top of base distance

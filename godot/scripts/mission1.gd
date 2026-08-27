@@ -270,7 +270,7 @@ func _mount(mech: CharacterBody3D) -> void:
 	_pilot.set_physics_process(false)
 	mech.controlled = true
 	mech.add_to_group("player")
-	_cam.set_target(mech, 17.0, 8.0, 5.5)
+	_cam.set_target(mech, 12.0, 6.0, 4.5)
 	var sfx := get_node_or_null("/root/Sfx")
 	if sfx:
 		sfx.ui()
