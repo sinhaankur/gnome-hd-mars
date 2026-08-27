@@ -16,6 +16,25 @@ signal finished
 
 const Ships := preload("res://scripts/orbital_ships.gd")
 
+## look_at() but safe when the look direction is colinear with `up_ref`
+## (which happens constantly here, since ships descend straight down the
+## radial axis toward a target that lies along that same `up_ref`). When
+## forward ~= up_ref we fall back to a perpendicular reference so the basis
+## can still resolve roll instead of spamming a per-frame warning.
+static func _safe_look_at(node: Node3D, target: Vector3, up_ref: Vector3) -> void:
+	if not is_instance_valid(node):
+		return
+	var fwd := target - node.global_position
+	if fwd.length() < 0.0001:
+		return
+	var u := up_ref
+	if absf(fwd.normalized().dot(up_ref.normalized())) > 0.999:
+		# forward is (nearly) parallel to up_ref — pick any perpendicular axis
+		u = up_ref.cross(Vector3.UP).normalized()
+		if u.length() < 0.1:
+			u = up_ref.cross(Vector3.RIGHT).normalized()
+	node.look_at(target, u)
+
 var _cam: Camera3D
 var _target: Vector3          # the territory point ON the globe surface (local)
 var _globe_r: float
@@ -86,10 +105,10 @@ func _run() -> void:
 			# ease the sub-ship out and slightly down, peeling off the carrier
 			var p := sub_start.lerp(up * (orbit_h * 0.82) - up.cross(Vector3.UP).normalized() * _globe_r * 0.3, t)
 			_sub.global_position = p
-			_sub.look_at(surface, up)
+			_safe_look_at(_sub, surface, up)
 		if is_instance_valid(_cam) and is_instance_valid(_sub):
 			_cam.global_position = _cam.global_position.lerp(_sub.global_position + up * 0.5 + Vector3(0.3,0,0.3), 0.12)
-			_cam.look_at(_sub.global_position, up),
+			_safe_look_at(_cam, _sub.global_position, up),
 		0.0, 1.0, 1.0)
 
 	# 3) BEAT — DESCENT: sub-ship burns down toward the territory, camera chases it in (2.4 s)
@@ -100,12 +119,12 @@ func _run() -> void:
 			# ease-in so it accelerates into the atmosphere
 			var e := t * t
 			_sub.global_position = from.lerp(to, e)
-			_sub.look_at(surface, up)
+			_safe_look_at(_sub, surface, up)
 			# spin up thruster glow as it brakes near the end (visual only)
 		if is_instance_valid(_cam) and is_instance_valid(_sub):
 			var behind := (_sub.global_position - surface).normalized()
 			_cam.global_position = _sub.global_position + behind * 0.35 + Vector3(0.05, 0.05, 0.05)
-			_cam.look_at(surface, up),
+			_safe_look_at(_cam, surface, up),
 		0.0, 1.0, 2.4).set_ease(Tween.EASE_IN)
 
 	# 4) hand off to the ground mission
