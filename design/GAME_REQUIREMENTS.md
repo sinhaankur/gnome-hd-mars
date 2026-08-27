@@ -24,8 +24,8 @@ Legend: 🟢 DONE(ours) · 🟡 HAVE(placeholder) · 🔵 FIND · 🟠 REBUILD-i
 
 | Item | Purpose | State | Find plan (CC0>CC-BY) | Rebuild target |
 |------|---------|-------|-----------------------|----------------|
-| **Hero HAWC** (Union Sentry — Prowler) | the mech you pilot; most-seen asset | 🟡 warrior.glb (243 MB — bad) | search "mech", "walker", "bipedal robot"; want rigged, <40k tris | Blender hard-surface, 4K PBR, auto-eject hatch |
-| **Pilot (Union)** | persistent entity; eject/on-foot/hijack | 🟡 candidate staged | "Sci-Fi Soldier/Combat Trooper" (ART_LOLL, CC-BY) in world_library — GOOD look but imports LYING DOWN (source is Y-up figure; needs a −90° X facing fix in normalize before shipping). "Dark Astronaut" is a backup. | Blender character + rig |
+| **Hero HAWC** (Union Sentry — Prowler) | the mech you pilot; most-seen asset | 🟢 hero_striker.glb (SHIPPED Aug27 — MSGDI Striker, rigged, 41 anims, 10.8k tris, union-tinted) | — | Blender hard-surface, 4K PBR, auto-eject hatch (long-term) |
+| **Pilot (Union)** | persistent entity; eject/on-foot/hijack | 🟡 pilot_trooper.glb (SHIPPED Aug27 — ART_LOLL trooper, upright, 512px textures) | rigged version for walk anims | Blender character + rig |
 | **PRIF44 rifle** | on-foot weapon | 🔵 FIND | "sci-fi rifle" (brief: design/HAWK_rifle_brief.md) | Blender hard-surface |
 | **GASHR launcher** | eject/steal tool (5 canisters) | 🔵 FIND | "grenade launcher sci-fi" | Blender |
 
@@ -40,10 +40,10 @@ Scorp green). See `design/HAWC_VARIETY_SPEC.md`. Specs from `reference/GAME_BIBL
 |------------------|------------------|-------|-----------|---------|
 | **A · Sentry** compact biped | Prowler(U) Talon(D) Ogre(M) Jinx(S) | 🟡 enemy_sentry.glb | "bipedal mech" | Blender base + tints |
 | **B · Tactical** taller biped | Rampage(U) Stalker(D) Minotaur(M) Predator(S) | 🟡 enemy_tactical.glb | "assault mech" | Blender base + tints |
-| **C · Heavy** 4–6-leg multipedal | Lion(U,4-leg) WidowMaker(M) Venom(M) Scorpion(S,6-leg) | 🟡 enemy_heavy.glb | "quadruped mech", "spider tank" | Blender base + tints |
+| **C · Heavy** 4–6-leg multipedal | Lion(U,4-leg) WidowMaker(M) Venom(M) Scorpion(S,6-leg) | 🟡 enemy_heavy.glb (Arachnid-Z4 spider tank — REBUILT Aug27) | — | Blender base + tints |
 | **D · Support** tracked hull+turret | Titan(U) Boulder(D) Legionnaire(M) Stinger(S) | 🟡 enemy_support.glb | "sci-fi tank", "MBT" | Blender base + tints |
-| **E · Hover** arrowhead on skirt | Rapier(U) Vulture(D) Razor(M) Wasp(S) | 🟡 enemy_hover.glb | "hovercraft sci-fi" | Blender base + tints |
-| **Infantry** (4 faction tints) | Union/Darken/Merc/Scorp soldiers | 🔵 FIND | "sci-fi soldier" | shared w/ Pilot §1 |
+| **E · Hover** arrowhead on skirt | Rapier(U) Vulture(D) Razor(M) Wasp(S) | 🟡 enemy_hover.glb (Stormbringer hover tank — REBUILT Aug27, was broken sliver) | — | Blender base + tints |
+| **Infantry** (4 faction tints) | Union/Darken/Merc/Scorp soldiers | 🟡 pilot_trooper.glb (shipped, static) | "sci-fi soldier" rigged | Blender base + tints |
 
 ---
 
