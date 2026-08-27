@@ -15,6 +15,8 @@ class_name MechAnimator
 var _ap: AnimationPlayer
 var _body: CharacterBody3D
 var _anim_len := 1.0
+var _jump_anim := ""       # optional airborne clip (e.g. striker's "a8Jump"); "" if none
+var _was_on_floor := true  # edge-detect takeoff/landing
 
 const DUST_PATH := "res://assets/dust_cc0.glb"   # Kenney CC0 dust puff
 var _dust_scene: PackedScene
@@ -54,10 +56,33 @@ func setup(visual_root: Node) -> void:
 		_ap.play(walk_anim)
 		_ap.seek(idle_frame * _anim_len, true)
 		_ap.pause()
+	# optional: a jump/airborne clip to play while off the ground (rigged mechs like the
+	# striker ship an "a8Jump"/"Falling" clip). Skip root-motion variants. "" = none.
+	if _ap:
+		for n in _ap.get_animation_list():
+			var ln := (n as String).to_lower()
+			if ("jump" in ln or "fall" in ln) and "rootmotion" not in ln:
+				_jump_anim = n
+				break
 
 func _physics_process(delta: float) -> void:
 	if _ap == null or _body == null or not is_instance_valid(_body):
 		return
+
+	# --- airborne: play the jump/fall clip if the mech has one ---
+	var on_floor := _body.is_on_floor()
+	if _jump_anim != "":
+		if not on_floor:
+			# just took off, or still rising/falling — hold the jump clip
+			if _was_on_floor or _ap.current_animation != _jump_anim:
+				_ap.play(_jump_anim)
+			_was_on_floor = false
+			return   # skip ground locomotion while airborne
+		elif not _was_on_floor:
+			# just landed — fall through to normal locomotion this frame
+			_was_on_floor = true
+	_was_on_floor = on_floor
+
 	var speed := Vector3(_body.velocity.x, 0.0, _body.velocity.z).length()
 	if speed > min_move:
 		# moving: play the walk, scaled so the cadence matches ground speed
