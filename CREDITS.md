@@ -38,6 +38,23 @@ licenses — retain these attributions in any distribution.
   "Gravel Ground Module Scan" by **Pers Scans** — CC-BY 4.0 (Sketchfab).
 - **Kenney assets** (`dust_cc0.glb`, `flag_cc0.glb`, `cloud_cc0.glb`) —
   Kenney.nl — CC0.
+- **Player hero HAWC** (`hero_striker.glb`) — "Medium Mech Striker" by **MSGDI**
+  — CC-BY 4.0 (Sketchfab). Normalized to 7 m + Union-tinted as the player mech.
+  https://sketchfab.com/3d-models/27ba717c173a40b7841d2f2c6a89d823
+
+### Mech reference library (`blender_assets/sketchfab_src/mech_library/`, not shipped in-game)
+Sourced as candidates/reference for the hero + roster; each CC-BY 4.0 (Sketchfab). Only
+those promoted into `godot/assets/` ship; the rest are study/kitbash reference. If any is
+shipped, keep its attribution here:
+- "Medium Mech Striker" by **MSGDI** — CC-BY 4.0 (in use as hero, above)
+- "Catfish Mech low-poly (animated)" by **Jungle Jim** — CC-BY 4.0
+- "PHANTOM / Titanfall fan concept" by **sanekcloff** — CC-BY 4.0
+- "Biped robot" by **Willy Decarpentrie** — CC-BY 4.0
+- "Mech Walker Drone" by **MauriceBaxter** — CC-BY 4.0
+- "Robot Warrior" by **Andrei Milin** — CC-BY 4.0
+- "Battle Mech" by **Felipe Maciel** — CC-BY 4.0
+- "Industrial Sci Fi Loader Droid - F.A.L.D" by **Mike Farrant** — CC-BY 4.0
+- "Star Wars AT-ST [Rigged]" by **smithson17** — CC-BY 4.0 (fan model; do NOT ship — IP)
 
 ## Not distributed (kept out of this repo)
 These are excluded via `.gitignore` and are **not** part of the public release:

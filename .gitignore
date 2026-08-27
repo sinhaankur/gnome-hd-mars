@@ -52,3 +52,7 @@ blender_assets/sketchfab_src/*.glb
 # Python bytecode
 __pycache__/
 *.pyc
+
+# raw Sketchfab downloads (staging for processing; not shipped)
+blender_assets/sketchfab_src/
+!blender_assets/sketchfab_src/**/ATTRIBUTIONS.json

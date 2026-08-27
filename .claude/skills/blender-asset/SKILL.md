@@ -9,6 +9,32 @@ Hand-modeled guesses were rejected before ("invented placeholders"). The order o
 preference is: **real extracted asset > sourced CC model > kitbash of CC parts >
 build from scratch** (last resort, hero assets only).
 
+## Honest capability limits — what MCP/bpy CAN and CANNOT do
+
+> Set expectations correctly. Trying to *generate* high-definition hero art by scripting
+> Blender blind (no visual feedback while modeling) does not work and wastes time. This is
+> the #1 recurring mistake. Match the tool to the job:
+
+**Blender-via-MCP is GOOD at (use it here):**
+- **Processing/normalizing** downloaded models — fix axis/scale/origin, join, re-export GLB.
+- **Procedural / parametric** geometry — geometry-nodes scatter (rocks, dust, debris),
+  modular-kit assembly, arrays/mirrors/booleans/bevels, terrain from heightmaps, greebles.
+- **Materials/shaders** — PBR node graphs, faction tints, emissive, weathering masks.
+- **Kitbashing** — bolting downloaded CC parts together into a new asset.
+- **Batch/repeatable** operations across many assets.
+
+**Blender-via-MCP CANNOT realistically deliver:**
+- **AAA hero art from scratch.** A beautiful sculpted, hand-textured mech is days of skilled
+  human artist work with constant visual feedback. Scripting that quality blind is not feasible.
+  Grey-box blockouts: yes. Shippable hero fidelity: no.
+
+**Therefore the strategy for HD hero assets is SOURCE, don't GENERATE:**
+1. **Find** the best-looking CC0/CC-BY asset (see `mars-hawc-asset-sourcing` skill).
+2. **Process** it in Blender/MCP — normalize, tint, kitbash extra detail, add rig/anim if needed.
+3. **Verify** in-engine vs NASA photos (`godot-art-pass`).
+4. **Rebuild-from-scratch is a LONG-TERM, human-artist task** — not something to attempt via
+   MCP in one go. Keep the sourced asset shipping in the meantime.
+
 ## Sourcing (do this before modeling anything)
 
 - **Sketchfab add-on v1.7.1** is installed and enabled in Blender 5.1
