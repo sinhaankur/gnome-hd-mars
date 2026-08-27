@@ -34,6 +34,9 @@ def _argv():
     p.add_argument("--target-h", type=float, default=0.0, help="scale so height (Z) = this many metres")
     p.add_argument("--target-len", type=float, default=0.0, help="…or so longest X/Y footprint = this")
     p.add_argument("--facing", default="0,0,0", help="pre-apply rotation degrees 'x,y,z' to fix forward")
+    p.add_argument("--auto-upright", action="store_true",
+                   help="rotate so the model's LONGEST axis is vertical (Blender Z -> Godot Y). "
+                        "Fixes lying-down characters. Static path only.")
     p.add_argument("--keep-rig", action="store_true", help="keep armature+anim (hero mechs)")
     return p.parse_args(argv)
 
@@ -171,6 +174,20 @@ def normalize(a):
     bpy.ops.object.join()
     o = bpy.context.active_object
     o.name = a.name
+
+    # auto-upright: make the LONGEST axis vertical (Blender Z, which export_yup maps to
+    # Godot Y). Fixes source figures that import lying down. Measured in Godot space this
+    # is what puts a character's height on Y. Applied before the explicit --facing.
+    if a.auto_upright:
+        lo, hi = _bounds(o)
+        dx, dy, dz = hi.x - lo.x, hi.y - lo.y, hi.z - lo.z
+        longest = max(('x', dx), ('y', dy), ('z', dz), key=lambda t: t[1])[0]
+        if longest == 'y':
+            o.rotation_euler = (math.radians(90), 0, 0)
+        elif longest == 'x':
+            o.rotation_euler = (0, math.radians(90), 0)
+        if longest != 'z':
+            _activate(o); bpy.ops.object.transform_apply(rotation=True)
 
     if (fx, fy, fz) != (0, 0, 0):
         o.rotation_euler = (math.radians(fx), math.radians(fy), math.radians(fz))

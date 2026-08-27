@@ -34,12 +34,21 @@ func _ready() -> void:
 	_build_visual()
 	_build_collider()
 
+const PILOT_MODEL := "res://assets/pilot_trooper.glb"   # sourced Sci-Fi trooper (ART_LOLL, CC-BY)
+
 func _build_visual() -> void:
-	# stand-in Union soldier: suit capsule, visor helmet, backpack, rifle (primitives —
-	# reads at gameplay distance; a real GLB soldier can replace this node later)
 	var vis := Node3D.new()
 	vis.name = "Visual"
 	add_child(vis)
+	# real Union soldier model if present (normalized upright, 1.85 m, feet at y=0);
+	# falls back to the primitive stand-in below if the asset is missing.
+	var scene: PackedScene = load(PILOT_MODEL) if ResourceLoader.exists(PILOT_MODEL) else null
+	if scene:
+		var soldier := scene.instantiate()
+		soldier.rotation.y = PI   # model faces -Z; pilot moves +Z
+		vis.add_child(soldier)
+		return
+	# --- fallback: stand-in Union soldier from primitives (suit capsule, visor, pack, rifle) ---
 	var suit := StandardMaterial3D.new()
 	suit.albedo_color = Color(0.55, 0.56, 0.52); suit.roughness = 0.8
 	var visor := StandardMaterial3D.new()

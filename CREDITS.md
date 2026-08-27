@@ -35,6 +35,9 @@ licenses — retain these attributions in any distribution.
   "Gravel Ground Module Scan" by **Pers Scans** — CC-BY 4.0 (Sketchfab).
 - **Kenney assets** (`dust_cc0.glb`, `flag_cc0.glb`, `cloud_cc0.glb`) —
   Kenney.nl — CC0.
+- **On-foot pilot** (`pilot_trooper.glb`) — "Sci-Fi Soldier / Futuristic Combat Trooper"
+  by **ART_LOLL** — CC-BY 4.0 (Sketchfab). Normalized upright to 1.85 m as the Union
+  pilot for the eject/hijack loop. https://sketchfab.com/3d-models/de876bfdce1c47a4aa67670faee7208e
 - **Player hero HAWC** (`hero_striker.glb`) — "Medium Mech Striker" by **MSGDI**
   — CC-BY 4.0 (Sketchfab). Normalized to 7 m + Union-tinted as the player mech.
   https://sketchfab.com/3d-models/27ba717c173a40b7841d2f2c6a89d823

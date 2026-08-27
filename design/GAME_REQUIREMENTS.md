@@ -25,7 +25,7 @@ Legend: 🟢 DONE(ours) · 🟡 HAVE(placeholder) · 🔵 FIND · 🟠 REBUILD-i
 | Item | Purpose | State | Find plan (CC0>CC-BY) | Rebuild target |
 |------|---------|-------|-----------------------|----------------|
 | **Hero HAWC** (Union Sentry — Prowler) | the mech you pilot; most-seen asset | 🟡 warrior.glb (243 MB — bad) | search "mech", "walker", "bipedal robot"; want rigged, <40k tris | Blender hard-surface, 4K PBR, auto-eject hatch |
-| **Pilot (Union)** | persistent entity; eject/on-foot/hijack | 🔵 FIND | "sci-fi soldier", "astronaut", "space marine" rigged | Blender character + rig |
+| **Pilot (Union)** | persistent entity; eject/on-foot/hijack | 🟡 candidate staged | "Sci-Fi Soldier/Combat Trooper" (ART_LOLL, CC-BY) in world_library — GOOD look but imports LYING DOWN (source is Y-up figure; needs a −90° X facing fix in normalize before shipping). "Dark Astronaut" is a backup. | Blender character + rig |
 | **PRIF44 rifle** | on-foot weapon | 🔵 FIND | "sci-fi rifle" (brief: design/HAWK_rifle_brief.md) | Blender hard-surface |
 | **GASHR launcher** | eject/steal tool (5 canisters) | 🔵 FIND | "grenade launcher sci-fi" | Blender |
 
