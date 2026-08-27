@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mars HAWC — Devlog</title>
+<meta name="description" content="Mars HAWC — a tactical mech-assault game on the real Martian surface. In-development devlog: play the game so far and follow what's being built.">
+<!-- social preview -->
+<meta property="og:title" content="Mars HAWC — Tactical Mech Assault">
+<meta property="og:description" content="Pilot a walking combat mech on the real Mars surface. In-development devlog.">
+<meta property="og:image" content="img/planet_territory.png">
+<meta property="og:type" content="website">
+<style>
+  :root{
+    --bg:#0e0d0b; --panel:#17150f; --panel2:#1e1b13;
+    --ink:#efe7d6; --muted:#a49a83; --line:#332e21;
+    --gold:#d9b25a; --gold-2:#c9a24a; --orange:#f08a2a; --green:#6fcf7c;
+    --hazard: repeating-linear-gradient(45deg,#d9b25a 0 14px,#17150f 14px 28px);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.6}
+  a{color:var(--gold)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+  .hazard{height:10px;background:var(--hazard);opacity:.85}
+
+  /* header / hero */
+  header{padding:44px 0 28px;text-align:center;background:
+    radial-gradient(1200px 400px at 50% -120px, #2a1a10 0%, transparent 60%), var(--bg)}
+  header img.logo{max-width:460px;width:82%;height:auto;filter:drop-shadow(0 8px 24px #000a)}
+  .tag{color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-size:.82rem;margin-top:6px}
+  .badges{margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .badge{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;
+    padding:5px 11px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:var(--panel)}
+  .badge.dev{color:var(--orange);border-color:#5a3a1e}
+  .badge.play{color:var(--green);border-color:#2f5a34}
+
+  .hero-shot{margin:26px auto 0;max-width:960px}
+  .hero-shot img{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;display:block;
+    box-shadow:0 18px 50px #000b}
+  .hero-cap{color:var(--muted);font-size:.8rem;text-align:center;margin-top:8px}
+
+  section{padding:40px 0;border-top:1px solid var(--line)}
+  h2{font-size:1.5rem;letter-spacing:.02em;margin:0 0 4px}
+  h2 .k{color:var(--gold)}
+  .sub{color:var(--muted);margin:0 0 22px}
+
+  /* playable-now list */
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:720px){.cols{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+  .card h3{margin:0 0 6px;font-size:1rem;color:var(--ink)}
+  .card p{margin:0;color:var(--muted);font-size:.92rem}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:8px;vertical-align:middle}
+
+  /* gallery */
+  .gal{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:720px){.gal{grid-template-columns:1fr}}
+  .gal figure{margin:0}
+  .gal img{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;display:block}
+  .gal figcaption{color:var(--muted);font-size:.8rem;margin-top:7px}
+
+  /* phases / roadmap */
+  .phase{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}
+  .phase:last-child{border-bottom:0}
+  .phase .no{flex:0 0 auto;width:42px;height:42px;border-radius:8px;display:grid;place-items:center;
+    font-weight:700;background:var(--panel2);border:1px solid var(--line);color:var(--gold)}
+  .phase .body{flex:1}
+  .phase h3{margin:0 0 3px;font-size:1.05rem}
+  .phase p{margin:0;color:var(--muted);font-size:.92rem}
+  .status{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:999px;
+    border:1px solid var(--line);color:var(--muted);white-space:nowrap;align-self:flex-start;margin-top:4px}
+  .status.now{color:var(--orange);border-color:#5a3a1e}
+  .status.done{color:var(--green);border-color:#2f5a34}
+  .status.next{color:var(--gold);border-color:#4a3d1e}
+
+  footer{padding:34px 0 48px;color:var(--muted);font-size:.85rem;text-align:center;border-top:1px solid var(--line)}
+  .btnrow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+  .btn{display:inline-block;padding:11px 20px;border-radius:8px;text-decoration:none;font-weight:600;
+    background:var(--gold);color:#1a1509;border:1px solid var(--gold-2)}
+  .btn.ghost{background:transparent;color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="hazard"></div>
+
+<header>
+  <div class="wrap">
+    <img class="logo" src="img/logo.png" alt="Mars HAWC — Red Planet — Tactical Mech Assault">
+    <div class="tag">Pilot a walking combat mech on the real Martian surface</div>
+    <div class="badges">
+      <span class="badge dev">● In development</span>
+      <span class="badge play">Playable vertical slice</span>
+      <span class="badge">Godot 4.7</span>
+      <span class="badge">Real NASA Mars data</span>
+    </div>
+    <div class="hero-shot">
+      <img src="img/planet_territory.png" alt="Mars territory-control globe with contested-territory markers">
+      <div class="hero-cap">The strategic layer — a real NASA/Viking Mars globe you fight across, territory by territory.</div>
+    </div>
+    <div class="btnrow">
+      <a class="btn" href="https://github.com/sinhaankur/gnome-hd-mars">View on GitHub</a>
+      <a class="btn ghost" href="#roadmap">What's being built ↓</a>
+    </div>
+  </div>
+</header>
+
+<!-- WHAT THE GAME IS -->
+<section>
+  <div class="wrap">
+    <h2><span class="k">Mars HAWC</span> — what it is</h2>
+    <p class="sub">A tactical mech-assault game, spiritual successor to the 1997 mech sim <em>G-Nome</em> — rebuilt on the real Mars surface.</p>
+    <div class="cols">
+      <div class="card"><h3>Pilot a HAWC</h3><p>Drive a walking combat mech across genuine ~1&nbsp;m/px HiRISE Martian terrain. Third-person, momentum-based, GTA-style movement.</p></div>
+      <div class="card"><h3>Eject &amp; hijack</h3><p>The pilot is the persistent entity — eject from a dying mech, fight on foot, and steal an enemy machine. (Loop in progress.)</p></div>
+      <div class="card"><h3>Hold the line</h3><p>Defend your installation against waves of rival-faction HAWCs. Three engines drive Environment, your HAWC, and the enemy story.</p></div>
+      <div class="card"><h3>Real Mars</h3><p>Day/night cycle, calibrated atmosphere, scanned regolith and rocks — the realism bar is set against actual NASA rover photos.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- PLAYABLE NOW -->
+<section>
+  <div class="wrap">
+    <h2>Playable <span class="k">now</span></h2>
+    <p class="sub">This is the game as it actually runs today — honest, rough edges and all.</p>
+    <div class="cols">
+      <div class="card"><h3><span class="dot"></span>Menu → mission → win/lose</h3><p>A complete vertical slice loop you can play start to finish.</p></div>
+      <div class="card"><h3><span class="dot"></span>Strategic Mars globe</h3><p>Rotate the real planet, pick a contested territory, deploy.</p></div>
+      <div class="card"><h3><span class="dot"></span>Orbital arrival cinematic</h3><p>A mothership releases your drop-ship, which burns down to the chosen territory.</p></div>
+      <div class="card"><h3><span class="dot"></span>Drivable HAWC + HUD</h3><p>WASD + jump, mouse aim, health/shield bars, minimap radar, wave-defense combat.</p></div>
+    </div>
+
+    <div class="gal" style="margin-top:22px">
+      <figure><img src="img/gameplay_mech.png" alt="HAWC mech on Mars terrain with HUD"><figcaption>In-mission: your HAWC on Martian terrain, with HUD and radar.</figcaption></figure>
+      <figure><img src="img/orbital_arrival.png" alt="Drop-ship descending over Mars"><figcaption>Orbital arrival: the drop-ship descends over the real Mars globe.</figcaption></figure>
+      <figure><img src="img/mars_terrain.png" alt="Mars terrain with impact crater"><figcaption>Walkable terrain built from real HiRISE elevation data.</figcaption></figure>
+      <figure><img src="img/gameplay_mech2.png" alt="HAWC mech, alternate angle"><figcaption>Third-person mech control — momentum-based movement.</figcaption></figure>
+    </div>
+    <p class="hero-cap" style="text-align:left;margin-top:14px">
+      Honest note: the terrain reads flat/pale and the mech is a placeholder — those are exactly what the current build phase is rebuilding (see below).
+    </p>
+  </div>
+</section>
+
+<!-- ROADMAP / PHASES -->
+<section id="roadmap">
+  <div class="wrap">
+    <h2>What's being <span class="k">built</span></h2>
+    <p class="sub">The game is broken into phases. Guiding rule: make one mech feel great → prove one full mission → then scale. The 20-mission campaign is the destination, not the next step.</p>
+
+    <div class="phase">
+      <div class="no">0</div>
+      <div class="body"><h3>Foundation</h3>
+        <p>Real Mars terrain (HiRISE), day/night cycle, three-engine architecture, playable menu→mission→win/lose loop, strategic globe, orbital arrival. <strong>Done.</strong></p></div>
+      <span class="status done">Shipped</span>
+    </div>
+
+    <div class="phase">
+      <div class="no">1</div>
+      <div class="body"><h3>Hero mech</h3>
+        <p>Replace the 243&nbsp;MB placeholder mech with one excellent, purpose-built HAWC — 4K PBR, right silhouette, great to look at and control. "Make one mech feel great on an empty plane."</p></div>
+      <span class="status now">In progress</span>
+    </div>
+
+    <div class="phase">
+      <div class="no">2</div>
+      <div class="body"><h3>World elements — built right in Blender</h3>
+        <p>Break the world into real, art-directed elements and rebuild each: <strong>rocks &amp; regolith, dust &amp; wind, atmosphere &amp; climate, sky &amp; light, hazards</strong>. Verified against NASA Mars photos, element by element.</p></div>
+      <span class="status now">In progress</span>
+    </div>
+
+    <div class="phase">
+      <div class="no">3</div>
+      <div class="body"><h3>The hijack vertical slice</h3>
+        <p>One full tutorial mission that exercises the whole loop — drop in, fight, eject, steal an enemy HAWC, hold a wave. If this mission is great, the game is great.</p></div>
+      <span class="status next">Next</span>
+    </div>
+
+    <div class="phase">
+      <div class="no">4</div>
+      <div class="body"><h3>Enemy roster &amp; factions</h3>
+        <p>Five original archetype silhouettes (Sentry / Tactical / Heavy / Support / Hover) × four faction tints — the full varied roster from one well-made base each.</p></div>
+      <span class="status next">Planned</span>
+    </div>
+
+    <div class="phase">
+      <div class="no">5</div>
+      <div class="body"><h3>Structures &amp; destructible bases</h3>
+        <p>Modular base kit → named structures (Meson Tower, Shield Generator, Power Plant, the Citadel) for mission variety and destruction.</p></div>
+      <span class="status next">Planned</span>
+    </div>
+
+    <div class="phase">
+      <div class="no">6</div>
+      <div class="body"><h3>Campaign</h3>
+        <p>20 missions across 4 campaigns, one new idea per mission — the full arc, once the slice proves out.</p></div>
+      <span class="status next">Destination</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><strong>Mars HAWC</strong> — G-Nome lineage · © 2026 Ankur Sinha · MIT License</p>
+    <p>Built with Godot 4 and Blender. Mars imagery: NASA/Viking mosaic &amp; HiRISE elevation data.</p>
+    <div class="btnrow">
+      <a class="btn" href="https://github.com/sinhaankur/gnome-hd-mars">GitHub repository</a>
+      <a class="btn ghost" href="https://github.com/sinhaankur/gnome-hd-mars/discussions">Discussions</a>
+    </div>
+  </div>
+</footer>
+<div class="hazard"></div>
+</body>
+</html>
