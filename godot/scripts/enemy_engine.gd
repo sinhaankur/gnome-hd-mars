@@ -40,7 +40,7 @@ signal enemy_destroyed_signal   # relayed for scoring
 const ARCH_MODELS := {
 	"sentry":   "res://assets/enemy_sentry.glb",     # Bipedal Mech (Nabo, CC-BY)
 	"tactical": "res://assets/enemy_tactical.glb",   # Magnetar Assault Combat Mech (Treva, CC-BY)
-	"heavy":    "res://assets/enemy_heavy.glb",      # Quadruped Mech walker (Jungle Jim, CC-BY)
+	"heavy":    "res://assets/enemy_heavy.glb",      # Arachnid-Z4 Spider Tank (Treva, CC-BY)
 	"support":  "res://assets/enemy_support.glb",    # MBT-70 battle tank (_Muzaev, CC-BY)
 	"hover":    "res://assets/enemy_hover.glb",      # Stormbringer-H4 Armored Hover Tank (Treva, CC-BY)
 }
