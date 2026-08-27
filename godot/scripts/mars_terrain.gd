@@ -140,10 +140,14 @@ render_mode cull_disabled, diffuse_burley;   // solid from all angles (no see-th
 // plain at sRGB(80,61,35): half the brightness, twice the saturation ("dark mud").
 // NOTE: the warm sun + tan fog supply most of the orange — the albedo itself must be
 // near-grey pale caramel, or the lit result oversaturates far past the photos.
-uniform vec3 low_col  = vec3(0.58, 0.50, 0.44);   // valley-floor regolith
-uniform vec3 mid_col  = vec3(0.66, 0.57, 0.49);   // butterscotch mid-tones
-uniform vec3 high_col = vec3(0.74, 0.66, 0.57);   // pale dust drifts
-uniform vec3 slope_col= vec3(0.42, 0.36, 0.31);   // exposed basalt: grey-brown, never black
+// Red-shifted 2026-08-27 to match Perseverance panorama PIA24765: real foreground ground
+// is sRGB(107,75,52) — hue ~25deg, a redder brown than the old pale caramel. Kept the same
+// luminance (sun+fog still add warmth) but widened the R>G>B gap toward the measured ratio
+// 1:0.70:0.49 so the regolith reads Mars-red, not desert-tan.
+uniform vec3 low_col  = vec3(0.632, 0.485, 0.380);  // valley-floor regolith (redder)
+uniform vec3 mid_col  = vec3(0.719, 0.552, 0.427);  // mid-tones
+uniform vec3 high_col = vec3(0.816, 0.635, 0.493);  // pale dust drifts
+uniform vec3 slope_col= vec3(0.456, 0.349, 0.270);  // exposed basalt: red-brown, never black
 uniform float height_span = 22.0;                 // matches terrain height_scale
 // REAL scanned regolith (Gravel Ground Module Scan, Pers Scans CC-BY) — extracted by
 // tools/extract_ground_textures.py. Blended triplanar over the procedural base so the
