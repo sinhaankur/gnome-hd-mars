@@ -71,6 +71,13 @@ These are excluded via `.gitignore` and are **not** part of the public release:
   never redistributed. Mars HAWC is an independent game and is not affiliated
   with, or endorsed by, the rights holders of G-NOME.
 
+## Procedurally generated (our own — no third-party license)
+Built headless in Blender via `tools/build_*.py`, so 100% original geometry:
+- **Modular base kit** (`godot/assets/basekit/`) — wall/pillar/panel/door/floor.
+- **POI props** (`godot/assets/props/`) — crate/barrel/antenna/pallet/debris.
+- **Rock-field variants** (`godot/assets/rockfield/`) — derived by transforming our
+  already-shipped scanned `mars_rock_1..4` (source attribution unchanged, above).
+
 ## Tools & skills
 - **Godot Engine 4** — MIT license (godotengine.org).
 - **Sketchfab Blender add-on** v1.7.1 — Apache 2.0, © Sketchfab.

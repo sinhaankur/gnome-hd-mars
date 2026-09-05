@@ -73,7 +73,7 @@ Modular kit first (walls/pillars/panels/doors), then assemble named buildings.
 | # | Asset | Current | State |
 |---|-------|---------|-------|
 | 10 | **Installation / HQ** (the thing you defend) | `installation.glb` | 🟡 borrowed/placeholder |
-| 11 | Modular base kit (wall/pillar/door/panel) | staged kits (see note) | ⬜ |
+| 11 | Modular base kit (wall/pillar/door/panel/floor) | `godot/assets/basekit/` | 🟢 DONE (2026-09-05) — 5 own-geometry modules, baked AO, `tools/build_base_kit.py` |
 | 12 | Meson Tower | — | ⬜ |
 | 13 | Shield Generator | — | ⬜ |
 | 14 | Electro-chemical Power Plant | — | ⬜ |
@@ -112,7 +112,7 @@ Modular kit first (walls/pillars/panels/doors), then assemble named buildings.
 |---|-------|---------|-------|-------|
 | 25 | **Walkable Mars terrain** | HiRISE + scanned regolith | 🟢 DONE | real ~1m/px, landing-patch fixed |
 | 26 | **Mars globe** (campaign map) | `imported/mars.glb` | 🟢 | planet layer |
-| 27 | **Rocks** ×4 | `mars_rock_1..4.glb` | 🟢 real scanned | keep |
+| 27 | **Rocks** ×4 (+16 field variants) | `mars_rock_1..4.glb`, `godot/assets/rockfield/` | 🟢 real scanned | 16 size/rot/squash variants derived w/ baked AO via `tools/build_rock_field.py` (2026-09-05). NB: `mars_rock_3` source is only 68 tris — low-detail. |
 | 28 | **Crate** (supply/POI) | `mars_crate.glb` (2 MB) | 🟡 | |
 | 29 | **Monolith** (POI) | `mars_monolith.glb` (9.2 MB) | 🟡 oversized | 9 MB for a slab = rebuild lean |
 | 30 | Old desert/biome HD sets | `env_desert_hd`, `grass_hd`, `ice_hd`, `molten_hd` | 🔴 | pre-Mars leftovers; likely delete |

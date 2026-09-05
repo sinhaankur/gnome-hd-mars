@@ -53,6 +53,9 @@ blender_assets/sketchfab_src/*.glb
 __pycache__/
 *.pyc
 
+# generated run logs (e.g. tools/build_asset_breadth.sh)
+tools/*.log
+
 # raw Sketchfab downloads (staging for processing; not shipped)
 blender_assets/sketchfab_src/
 !blender_assets/sketchfab_src/**/ATTRIBUTIONS.json
