@@ -38,7 +38,7 @@ signal enemy_destroyed_signal   # relayed for scoring
 # the old all-warrior.glb routing (one 243 MB model tinted 5 ways = zero variety); a player
 # can now tell a Sentry from a Heavy at a glance, and each carries real paneling/greebles.
 const ARCH_MODELS := {
-	"sentry":   "res://assets/enemy_sentry.glb",     # Bipedal Mech (Nabo, CC-BY)
+	"sentry":   "res://assets/hawc_green_ai.glb",    # OUR OWN: AI-gen (Hunyuan3D) from concept, Blender-finished (olive HAWC)
 	"tactical": "res://assets/enemy_tactical.glb",   # Magnetar Assault Combat Mech (Treva, CC-BY)
 	"heavy":    "res://assets/enemy_heavy.glb",      # Arachnid-Z4 Spider Tank (Treva, CC-BY)
 	"support":  "res://assets/enemy_support.glb",    # MBT-70 battle tank (_Muzaev, CC-BY)

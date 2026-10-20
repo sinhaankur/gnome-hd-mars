@@ -91,3 +91,10 @@ Hand-built game-ready models (own license). Liveried "SAVIOUR ORBITAL" / MG desi
 | MG-01 Orbital Station | `godot/assets/mg01_orbital_station.glb` | orbital mothership (orbital_arrival) |
 | MG-04 Ground Station | `godot/assets/mg04_ground_station.glb` | surface base (to wire) |
 | MG-05 Survey Rover | `godot/assets/mg05_survey_rover.glb` | Mars rover (to wire) |
+
+## AI-generated base, our pipeline (own asset)
+Generated on-device with Hunyuan3D-2 (Tencent, non-commercial license) from a concept
+image, then decimated + materialed + normalized in Blender by us. Our finished asset.
+| Asset | File | Role |
+|---|---|---|
+| Olive HAWC (AI base → Blender) | `godot/assets/hawc_green_ai.glb` | enemy 'sentry' HAWC |
