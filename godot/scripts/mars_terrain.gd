@@ -25,6 +25,7 @@ static func make(world_size: float = 400.0, height_scale: float = 60.0,
 				 region: String = "") -> StaticBody3D:
 	var body := StaticBody3D.new()
 	body.name = "MarsTerrain"
+	body.set_script(load("res://scripts/mars_terrain_body.gd"))   # adds height(x,z) API
 
 	# pick the region's heightmap if named, else the default
 	var path: String = REGION_PATHS.get(region, HEIGHT_PATH)
@@ -111,6 +112,9 @@ static func make(world_size: float = 400.0, height_scale: float = 60.0,
 	body.add_child(col)
 	body.collision_layer = 1
 	body.collision_mask = 1
+	# expose height(x,z) for seating props/enemies on the real relief
+	if body.has_method("setup"):
+		body.setup(heights, res, world_size)
 	return body
 
 static func _tri(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3) -> void:

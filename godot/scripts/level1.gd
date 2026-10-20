@@ -30,37 +30,51 @@ func _ready() -> void:
 
 # ---------------------------------------------------------------- environment
 func _build_environment() -> void:
-	# Sun
+	# Sun — low, warm Martian key light (The Martian look): long shadows, butterscotch.
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-55, 40, 0)
-	sun.light_energy = 1.4
+	sun.rotation_degrees = Vector3(-38, 35, 0)   # low in the sky
+	sun.light_energy = 1.6
+	sun.light_color = Color(1.0, 0.90, 0.78)     # warm sun
 	sun.shadow_enabled = true
 	add_child(sun)
 
-	# Sky/world environment (warm desert)
+	# Sky/world environment — dusty pink-ochre Mars sky + warm haze fading the distance.
 	var we := WorldEnvironment.new()
 	var env := Environment.new()
 	env.background_mode = Environment.BG_SKY
 	var sky := Sky.new()
 	var mat := ProceduralSkyMaterial.new()
-	mat.sky_top_color = Color(0.55, 0.55, 0.70)
-	mat.sky_horizon_color = Color(0.78, 0.68, 0.50)
-	mat.ground_horizon_color = Color(0.60, 0.50, 0.34)
-	mat.ground_bottom_color = Color(0.45, 0.36, 0.24)
+	mat.sky_top_color = Color(0.62, 0.45, 0.40)        # dusty mauve overhead
+	mat.sky_horizon_color = Color(0.86, 0.62, 0.45)    # butterscotch at horizon
+	mat.ground_horizon_color = Color(0.60, 0.38, 0.26)
+	mat.ground_bottom_color = Color(0.42, 0.26, 0.17)
+	mat.sun_angle_max = 8.0
 	sky.sky_material = mat
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.6
+	env.ambient_light_energy = 0.8
+	env.ambient_light_color = Color(0.70, 0.50, 0.42)
+	env.tonemap_mode = Environment.TONE_MAPPER_AGX     # filmic warm tonemap
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.80, 0.70, 0.52)
-	env.fog_density = 0.004
+	env.fog_mode = Environment.FOG_MODE_DEPTH
+	env.fog_light_color = Color(0.82, 0.55, 0.42)      # warm dust haze
+	env.fog_density = 0.0025
+	env.fog_sky_affect = 0.3
+	env.ssao_enabled = true                            # contact shadows for depth
+	env.glow_enabled = true
+	env.glow_intensity = 0.3
 	we.environment = env
 	add_child(we)
 
-	# Desert dune terrain: procedural heightmap mesh + matching collision.
-	_terrain = StaticBody3D.new()
-	_terrain.name = "Terrain"
-	_terrain.set_script(load("res://scripts/terrain.gd"))
+	# REAL Mars terrain — carved from genuine NASA HiRISE elevation (Candor Chasma),
+	# with the Perseverance-calibrated regolith shader. Replaces the old flat procedural
+	# dune. Fall back to the dune terrain only if the HiRISE build fails.
+	var MarsTerrain := load("res://scripts/mars_terrain.gd")
+	_terrain = MarsTerrain.make(400.0, 55.0, Vector3.ZERO, 30.0, "rugged")
+	if _terrain == null:
+		_terrain = StaticBody3D.new()
+		_terrain.name = "Terrain"
+		_terrain.set_script(load("res://scripts/terrain.gd"))
 	add_child(_terrain)
 
 # ---------------------------------------------------------------- assets
