@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dwdh8t8nwubny"
-path="res://.godot/imported/enemy_sentry_Image_4.png-e915d2635e1f3f0506d427eb53e603eb.ctex"
+path.s3tc="res://.godot/imported/enemy_sentry_Image_4.png-e915d2635e1f3f0506d427eb53e603eb.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "fe4661cc33c9b68cf1c31e35c979ee21"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/enemy_sentry_Image_4.png"
-dest_files=["res://.godot/imported/enemy_sentry_Image_4.png-e915d2635e1f3f0506d427eb53e603eb.ctex"]
+dest_files=["res://.godot/imported/enemy_sentry_Image_4.png-e915d2635e1f3f0506d427eb53e603eb.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

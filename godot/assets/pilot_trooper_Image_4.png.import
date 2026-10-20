@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://0lulimk786da"
-path="res://.godot/imported/pilot_trooper_Image_4.png-62af5de9351027a1f5fee81378981e52.ctex"
+path.s3tc="res://.godot/imported/pilot_trooper_Image_4.png-62af5de9351027a1f5fee81378981e52.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "26f187eda4d26d095f67c7a663f64854"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/pilot_trooper_Image_4.png"
-dest_files=["res://.godot/imported/pilot_trooper_Image_4.png-62af5de9351027a1f5fee81378981e52.ctex"]
+dest_files=["res://.godot/imported/pilot_trooper_Image_4.png-62af5de9351027a1f5fee81378981e52.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

@@ -38,7 +38,24 @@ static func _cyl(parent: Node3D, r: float, h: float, pos: Vector3, mat: Standard
 	return mi
 
 # ---------------------------------------------------------------- mothership (stays in orbit)
+# Prefer the real hand-built orbital station (MG-01, "SAVIOUR ORBITAL") when present —
+# a 51k-poly liveried model, far better than the primitive carrier. Falls back to the
+# procedural build below if the model isn't available.
+const MG01_STATION_PATH := "res://assets/mg01_orbital_station.glb"
+
 static func mothership() -> Node3D:
+	if ResourceLoader.exists(MG01_STATION_PATH):
+		var scene := load(MG01_STATION_PATH) as PackedScene
+		if scene:
+			var inst := scene.instantiate()
+			var wrap := Node3D.new(); wrap.name = "Mothership"
+			# MG-01 is ~678 m long; scale it to ~0.9 units next to the 2u globe.
+			inst.scale = Vector3.ONE * (0.9 / 678.0)
+			wrap.add_child(inst)
+			return wrap
+	return _mothership_procedural()
+
+static func _mothership_procedural() -> Node3D:
 	# A ~0.9-unit interplanetary carrier: long spine, habitation drum, cargo spine with
 	# docked sub-landers, big rear engine block, radiator fins. Reads as "the ride from
 	# Earth" — too big to land, so it holds orbit and drops sub-ships.

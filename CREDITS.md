@@ -83,3 +83,11 @@ Built headless in Blender via `tools/build_*.py`, so 100% original geometry:
 - **Sketchfab Blender add-on** v1.7.1 — Apache 2.0, © Sketchfab.
 - **Blender Claude skills** (`.claude/skills/blender-*`) — adapted from
   [ra100/blender-claude-plugin](https://github.com/ra100/blender-claude-plugin) — MIT, © 2026 ra100.
+
+## MG-series (our own originals — Ankur Sinha)
+Hand-built game-ready models (own license). Liveried "SAVIOUR ORBITAL" / MG designation.
+| Asset | File | Role |
+|---|---|---|
+| MG-01 Orbital Station | `godot/assets/mg01_orbital_station.glb` | orbital mothership (orbital_arrival) |
+| MG-04 Ground Station | `godot/assets/mg04_ground_station.glb` | surface base (to wire) |
+| MG-05 Survey Rover | `godot/assets/mg05_survey_rover.glb` | Mars rover (to wire) |

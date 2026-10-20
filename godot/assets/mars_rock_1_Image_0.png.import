@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dg6q7gbjl38xe"
-path="res://.godot/imported/mars_rock_1_Image_0.png-07014ce15ec67ab9a31c6fc588103560.ctex"
+path.s3tc="res://.godot/imported/mars_rock_1_Image_0.png-07014ce15ec67ab9a31c6fc588103560.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "e6bfb8690f71ee8edb8e0c85f905249f"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/mars_rock_1_Image_0.png"
-dest_files=["res://.godot/imported/mars_rock_1_Image_0.png-07014ce15ec67ab9a31c6fc588103560.ctex"]
+dest_files=["res://.godot/imported/mars_rock_1_Image_0.png-07014ce15ec67ab9a31c6fc588103560.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0
