@@ -32,37 +32,40 @@ func _ready() -> void:
 func _build_environment() -> void:
 	# Sun — low, warm Martian key light (The Martian look): long shadows, butterscotch.
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-38, 35, 0)   # low in the sky
-	sun.light_energy = 1.6
-	sun.light_color = Color(1.0, 0.90, 0.78)     # warm sun
+	sun.rotation_degrees = Vector3(-42, 35, 0)   # low-ish, still casts long shadows
+	sun.light_energy = 2.2                        # brighter key so the scene isn't drowned in red ambient
+	sun.light_color = Color(1.0, 0.95, 0.88)      # near-white warm sun (real Mars noon is pale)
 	sun.shadow_enabled = true
 	add_child(sun)
 
-	# Sky/world environment — dusty pink-ochre Mars sky + warm haze fading the distance.
+	# Sky/world environment — real Martian BUTTERSCOTCH/TAN (not neon orange). Measured
+	# against Perseverance skies: pale tan daytime sky, low saturation; the warmth comes
+	# from the sun + light haze, not a saturated red wash.
 	var we := WorldEnvironment.new()
 	var env := Environment.new()
 	env.background_mode = Environment.BG_SKY
 	var sky := Sky.new()
 	var mat := ProceduralSkyMaterial.new()
-	mat.sky_top_color = Color(0.62, 0.45, 0.40)        # dusty mauve overhead
-	mat.sky_horizon_color = Color(0.86, 0.62, 0.45)    # butterscotch at horizon
-	mat.ground_horizon_color = Color(0.60, 0.38, 0.26)
-	mat.ground_bottom_color = Color(0.42, 0.26, 0.17)
-	mat.sun_angle_max = 8.0
+	mat.sky_top_color = Color(0.60, 0.52, 0.46)        # pale dusty tan overhead
+	mat.sky_horizon_color = Color(0.80, 0.68, 0.54)    # soft butterscotch horizon
+	mat.ground_horizon_color = Color(0.55, 0.40, 0.30)
+	mat.ground_bottom_color = Color(0.40, 0.28, 0.20)
+	mat.sun_angle_max = 6.0
 	sky.sky_material = mat
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.8
-	env.ambient_light_color = Color(0.70, 0.50, 0.42)
-	env.tonemap_mode = Environment.TONE_MAPPER_AGX     # filmic warm tonemap
+	env.ambient_light_energy = 0.55                     # less ambient so red doesn't flood everything
+	env.ambient_light_color = Color(0.68, 0.58, 0.50)  # desaturated warm fill
+	env.tonemap_mode = Environment.TONE_MAPPER_AGX
+	env.tonemap_exposure = 1.0
 	env.fog_enabled = true
 	env.fog_mode = Environment.FOG_MODE_DEPTH
-	env.fog_light_color = Color(0.82, 0.55, 0.42)      # warm dust haze
-	env.fog_density = 0.0025
-	env.fog_sky_affect = 0.3
-	env.ssao_enabled = true                            # contact shadows for depth
+	env.fog_light_color = Color(0.80, 0.66, 0.54)      # tan haze, not orange
+	env.fog_density = 0.0016                            # lighter so mid-ground isn't orange-washed
+	env.fog_sky_affect = 0.25
+	env.ssao_enabled = true
 	env.glow_enabled = true
-	env.glow_intensity = 0.3
+	env.glow_intensity = 0.25
 	we.environment = env
 	add_child(we)
 
