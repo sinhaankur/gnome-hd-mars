@@ -30,3 +30,10 @@ presentation + which scene you boot, NOT missing mechanics.
 - Make mission1 the canonical level + give it the fixed Mars surface/lighting.
 - Wire pack assets (player=Vanguard, base=colony, terrain) when exported.
 - Suited-astronaut pilot.
+
+## AI image→3D quality finding (tested)
+- Green HAWC (clean single-view photo) → GREAT mesh (sharp, recognizable).
+- saviour-mech (busy multi-VIEW concept SHEET) → mushier (AI can't resolve callouts).
+RULE: feed the AI CLEAN SINGLE-SUBJECT, SINGLE-VIEW images. Concept sheets degrade it.
+→ Use hand-built rigged pack (Vanguard) for HERO assets; AI for quick enemy/gap-fill
+  variety from clean renders.
