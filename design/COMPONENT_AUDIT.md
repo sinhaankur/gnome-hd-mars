@@ -31,6 +31,27 @@
 
 ---
 
+## Update after close inspection (2026-11-02, rendered each asset in isolation)
+
+Investigating further changed the picture — some flagged "bad" components are actually **fine**,
+and the real weakness is **staging**, not the assets:
+
+| Component | First read | After close render | Verdict |
+|-----------|-----------|--------------------|---------|
+| **Enemy mechs** (#5) | "grey blob" | rendered each in isolation (`shots/enemy_*.png`) — **detailed, well-textured**: paneling, greebles, glowing cores, proper silhouettes | 🟢 the ASSET is good; it only reads as a speck **at distance** |
+| **Terrain** (#6) | "too orange" | read `mars_terrain.gd` shader — **heavily calibrated** to measured NASA sRGB values, de-greened scan blend, ripples/cracks/pebbles | 🟡→🟢 near-ground is good; don't blind-edit a calibrated shader |
+| **Faction tint** | suspected "darkens mechs" | `faction.gd` **blends** (keeps detail) + adds faint emission to read through haze | 🟢 well-designed |
+
+**So the true remaining issue is STAGING, not broken assets:** enemies spawn at the 800 m map edges
+and march in, so the opening frames show an empty plain with distant specks. The player starts at
+z=160, base at z=-180 — the action is far away at mission start. That's a *composition/pacing*
+problem (fixed by closer first-wave spawns or an opening framing on a nearby enemy), not an asset bug.
+
+**Genuinely fixed this session:** #1 white T-pose pilot (was a static, unriggable GLB), #4 floating
+far health bars (now distance-gated). Those WERE broken; they're now good.
+
+---
+
 ## The "even a lamp has to be good" principle
 
 The user's bar: **every element must survive a close look.** Right now the worst offenders fail at
