@@ -40,15 +40,13 @@ func _build_visual() -> void:
 	var vis := Node3D.new()
 	vis.name = "Visual"
 	add_child(vis)
-	# real Union soldier model if present (normalized upright, 1.85 m, feet at y=0);
-	# falls back to the primitive stand-in below if the asset is missing.
-	var scene: PackedScene = load(PILOT_MODEL) if ResourceLoader.exists(PILOT_MODEL) else null
-	if scene:
-		var soldier := scene.instantiate()
-		soldier.rotation.y = PI   # model faces -Z; pilot moves +Z
-		vis.add_child(soldier)
-		return
-	# --- fallback: stand-in Union soldier from primitives (suit capsule, visor, pack, rifle) ---
+	# NOTE (2026-11-02, COMPONENT_AUDIT.md #1): pilot_trooper.glb is a STATIC prop — 0 skins,
+	# 0 animations — so it can never walk, and in-game it read as a flat-white T-pose mannequin
+	# (the single worst thing on screen). Until a rigged CC0 soldier is sourced (Quaternius),
+	# we use the procedural Union soldier below: fully materialed, correctly posed, and given a
+	# subtle idle bob in _physics_process so it's not a frozen statue. This is a real, visible
+	# upgrade over the broken GLB. To re-enable the GLB later, restore the load() path here.
+	# --- Union soldier from primitives (suit capsule, visor, pack, rifle) ---
 	var suit := StandardMaterial3D.new()
 	suit.albedo_color = Color(0.55, 0.56, 0.52); suit.roughness = 0.8
 	var visor := StandardMaterial3D.new()
