@@ -20,6 +20,8 @@
 /Glb/
 /w9231-combat-mech-rigged/
 /w9231_combat_mech_rigged-2.glb
+# derived from w9231 (license unverified) — keep out of repo until cleared
+/godot/assets/hero_hawc.glb
 # raw CC-BY mech source dump (the game only ships the baked .glb in godot/assets/)
 /bot-mecha-warrior-3d-by-oscar-creativo/
 /design/bot_mecha_warrior_3d_by_oscar_creativo.glb

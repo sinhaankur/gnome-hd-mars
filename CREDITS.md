@@ -41,6 +41,12 @@ licenses — retain these attributions in any distribution.
 - **Player hero HAWC** (`hero_striker.glb`) — "Medium Mech Striker" by **MSGDI**
   — CC-BY 4.0 (Sketchfab). Normalized to 7 m + Union-tinted as the player mech.
   https://sketchfab.com/3d-models/27ba717c173a40b7841d2f2c6a89d823
+- **Art-pass hero HAWC** (`hero_hawc.glb`) — derived from `Glb/w9231_combat_mech`
+  (user-supplied; see note below). Normalized to 2.5 u, given a Mars-faction PBR
+  art-pass (metallic armour, warm dust tint, emissive optics). **Not yet the active
+  player mech** — it has no animations; retarget `hero_striker`'s clips before use.
+  ⚠️ **LICENSE UNVERIFIED** — confirm the w9231 source's license before any public
+  distribution. Do not ship publicly until cleared.
 - **Crashed insertion shuttle** (`shuttle_wreck.glb`) — "Sci-fi Dropship" by
   **Pascal T. Monette** — CC-BY 4.0 (Sketchfab). Normalized to 14 m as the prologue
   crash-site wreck. https://sketchfab.com/3d-models/709a1916c0cc4cbebe197e7ef26964cb
