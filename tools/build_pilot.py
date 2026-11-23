@@ -50,11 +50,12 @@ def build():
 
     arm = next(o for o in bpy.data.objects if o.type == 'ARMATURE')
 
-    # 2) The source "Walk" action was authored for a different up-axis: playing it tips the
-    #    whole body onto its back (rest pose is correctly upright, the walk is not). Rather
-    #    than ship a broken gait, we DROP the animation and export the Chief in its clean
-    #    upright rest pose — a correct standing armored trooper. A proper walk is a tracked
-    #    follow-up (retarget a known-good clip onto this rig). Keep the rig for that later.
+    # 2) The source "Walk" action genuinely TIPS THE BODY OVER in Godot (confirmed in-engine
+    #    2026-11-23 — the pilot lay crumpled on the ground once the clip played; the clip was
+    #    authored in a different up-axis). We can't rotate it out (animated bones ignore an
+    #    object rotation). So DROP the animation and ship the clean upright REST pose — a
+    #    correct standing armored trooper. A retargeted walk is tracked (task #10). Keep the
+    #    rig so that retarget is possible later.
     arm.data.pose_position = 'REST'
     if arm.animation_data:
         for t in list(arm.animation_data.nla_tracks):

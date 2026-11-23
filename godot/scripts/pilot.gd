@@ -36,9 +36,9 @@ func _ready() -> void:
 
 # Real armored trooper — "Halo-Infinite-Master-Chief-rigged-walk" by bensimulator2 (CC-BY,
 # see CREDITS.md), normalized by tools/build_pilot.py (1.9 m, Y-up, base Y=0, forward -Z).
-# Replaces the capsule+sphere+box figure ("doesn't even look human", user 2026-11-22). The
-# source Walk clip was authored for a different up-axis and tipped the body over, so we ship
-# the clean upright rest pose; a retargeted walk is a tracked follow-up.
+# Replaces the capsule+sphere+box figure ("doesn't even look human", user 2026-11-22). Ships
+# the clean upright REST pose — its source Walk clip tips the body over in-engine (wrong
+# up-axis), so a retargeted walk is a tracked follow-up (task #10).
 const PILOT_MODEL := "res://assets/pilot_human.glb"
 
 func _build_visual() -> void:
