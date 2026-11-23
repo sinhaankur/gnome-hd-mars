@@ -52,6 +52,34 @@ far health bars (now distance-gated). Those WERE broken; they're now good.
 
 ---
 
+## Re-audit 2026-11-22 (full scene sweep) + pilot resolved
+
+User, frustrated the game still "doesn't look right," asked for an **honest full visual audit
+first** — captured every scene (menu, planet/globe, hijack prologue, defend mission) and graded
+each. Verdict:
+
+| Scene / asset | Grade | Honest note |
+|---|---|---|
+| **Planet / globe screen** | 🟢 REAL | NASA/Viking mosaic sphere, starfield, rim glow, territory markers — genuinely good, ship as-is |
+| **Mars terrain / ground** | 🟢 REAL | verified vs PIA24765; today's seamless soil set helped |
+| **Sky / atmosphere** | 🟡 OK | reads Mars; horizon a touch flat |
+| **Hero mech (defend)** | 🟡 OK | real model, readable, but small in frame + floaty ground contact |
+| **Enemy mechs** | 🟡 OK | real models but distant specks at mission start (the staging issue above) |
+| **On-foot pilot** | 🔴→🟢 | was capsule+sphere+box ("doesn't even look human" / "looks like a baby" after a chibi CC0 try) → **now a real armored HALO-style trooper** (`pilot_human.glb`), upright, adult proportions, verified in-engine |
+| **HUD / UI** | 🔴 | cramped top-left debug-style labels — next target |
+
+**Pilot — FIXED this session.** Sourced a rigged armored trooper (Master Chief, CC-BY),
+normalized to 1.9 m upright via `tools/build_pilot.py`, wired into `pilot.gd` (with a primitive
+fallback so a fresh clone still runs). Its source Walk clip tips the body over (wrong up-axis root
+keyframes) so we ship the clean rest pose; a retargeted walk is tracked. ⚠️ **IP placeholder** —
+Halo is Microsoft/343 IP; the GLB is `.gitignore`d (dev-only), see CREDITS.md. Replace with an
+original armored trooper before public release.
+
+**Next (user-directed, frame-by-frame):** HUD/UI cleanup, then enemy "personality" (barks, faction
+tells, behavior quirks on top of the role AI), mech framing/ground-contact, SpaceEngine globe.
+
+---
+
 ## The "even a lamp has to be good" principle
 
 The user's bar: **every element must survive a close look.** Right now the worst offenders fail at

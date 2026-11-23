@@ -34,51 +34,41 @@ func _ready() -> void:
 	_build_visual()
 	_build_collider()
 
-const PILOT_MODEL := "res://assets/pilot_trooper.glb"   # sourced Sci-Fi trooper (ART_LOLL, CC-BY)
+# Real armored trooper — "Halo-Infinite-Master-Chief-rigged-walk" by bensimulator2 (CC-BY,
+# see CREDITS.md), normalized by tools/build_pilot.py (1.9 m, Y-up, base Y=0, forward -Z).
+# Replaces the capsule+sphere+box figure ("doesn't even look human", user 2026-11-22). The
+# source Walk clip was authored for a different up-axis and tipped the body over, so we ship
+# the clean upright rest pose; a retargeted walk is a tracked follow-up.
+const PILOT_MODEL := "res://assets/pilot_human.glb"
 
 func _build_visual() -> void:
 	var vis := Node3D.new()
 	vis.name = "Visual"
 	add_child(vis)
-	# NOTE (2026-11-02, COMPONENT_AUDIT.md #1): pilot_trooper.glb is a STATIC prop — 0 skins,
-	# 0 animations — so it can never walk, and in-game it read as a flat-white T-pose mannequin
-	# (the single worst thing on screen). Until a rigged CC0 soldier is sourced (Quaternius),
-	# we use the procedural Union soldier below: fully materialed, correctly posed, and given a
-	# subtle idle bob in _physics_process so it's not a frozen statue. This is a real, visible
-	# upgrade over the broken GLB. To re-enable the GLB later, restore the load() path here.
-	# --- Union soldier from primitives (suit capsule, visor, pack, rifle) ---
-	var suit := StandardMaterial3D.new()
-	suit.albedo_color = Color(0.55, 0.56, 0.52); suit.roughness = 0.8
-	var visor := StandardMaterial3D.new()
-	visor.albedo_color = Color(0.9, 0.55, 0.15); visor.metallic = 0.8; visor.roughness = 0.2
-	var gear := StandardMaterial3D.new()
-	gear.albedo_color = Color(0.25, 0.26, 0.28); gear.roughness = 0.7
 
+	var scene := load(PILOT_MODEL) as PackedScene
+	if scene:
+		var human := scene.instantiate()
+		# source faces +Z; the body yaws so movement is local +Z — a +Z-facing model needs a
+		# PI flip to face the -Z travel direction (same convention as the mechs in mission1.gd).
+		human.rotation.y = PI
+		vis.add_child(human)
+	else:
+		push_warning("pilot: %s failed to load — using primitive fallback" % PILOT_MODEL)
+		_build_primitive_fallback(vis)
+
+func _build_primitive_fallback(vis: Node3D) -> void:
+	# last-resort stand-in if the GLB is missing (kept tiny; the real model is the default).
+	var suit := StandardMaterial3D.new()
+	suit.albedo_color = Color(0.33, 0.37, 0.30); suit.roughness = 0.85
 	var body := MeshInstance3D.new()
-	var cap := CapsuleMesh.new(); cap.radius = 0.32; cap.height = 1.5
-	body.mesh = cap; body.material_override = suit
-	body.position.y = 0.85
+	var cap := CapsuleMesh.new(); cap.radius = 0.3; cap.height = 1.6
+	body.mesh = cap; body.material_override = suit; body.position.y = 0.9
 	vis.add_child(body)
 	var helmet := MeshInstance3D.new()
-	var hs := SphereMesh.new(); hs.radius = 0.24; hs.height = 0.48
-	helmet.mesh = hs; helmet.material_override = suit
-	helmet.position.y = 1.72
+	var hs := SphereMesh.new(); hs.radius = 0.22; hs.height = 0.44
+	helmet.mesh = hs; helmet.material_override = suit; helmet.position.y = 1.72
 	vis.add_child(helmet)
-	var vzr := MeshInstance3D.new()
-	var vb := BoxMesh.new(); vb.size = Vector3(0.3, 0.14, 0.12)
-	vzr.mesh = vb; vzr.material_override = visor
-	vzr.position = Vector3(0, 1.74, -0.18)
-	vis.add_child(vzr)
-	var pack := MeshInstance3D.new()
-	var pb := BoxMesh.new(); pb.size = Vector3(0.4, 0.55, 0.22)
-	pack.mesh = pb; pack.material_override = gear
-	pack.position = Vector3(0, 1.1, 0.3)
-	vis.add_child(pack)
-	var rifle := MeshInstance3D.new()
-	var rb := BoxMesh.new(); rb.size = Vector3(0.08, 0.12, 0.9)
-	rifle.mesh = rb; rifle.material_override = gear
-	rifle.position = Vector3(0.3, 1.0, -0.3)
-	vis.add_child(rifle)
 
 func _build_collider() -> void:
 	var col := CollisionShape3D.new()

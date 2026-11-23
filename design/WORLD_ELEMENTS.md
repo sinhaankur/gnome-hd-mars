@@ -16,8 +16,9 @@ Status: 🟢 good · 🟡 exists, needs work · 🔵 to build · 🟠 in progres
 | Element | Current | State | Phase-2 build step |
 |---------|---------|-------|--------------------|
 | **Walkable terrain mesh** | real HiRISE ~1m/px, MarsTerrain.make | 🟢 | keep; add more regions for mission variety |
-| **Regolith skin** | scanned ground textures (Pers Scans) tinted to palette | 🟢 | per-region palette variants (Gale/Jezero/Candor tones) |
-| **Terrain shader** | low/mid/high/slope palette blend | 🟡 | add micro-normal detail + subtle specular for wet-look rocks after dawn |
+| **Regolith skin** | our own seamless soil set (`assets/ground/soil/`, baked by `tools/build_ground_materials.py`) over the palette; replaced the mossy photogrammetry scan | 🟢 | per-region palette variants (Gale/Jezero/Candor tones) |
+| **Terrain shader** | low/mid/high/slope palette blend + triplanar soil albedo/normal, micro-normal detail | 🟢 | subtle specular for wet-look rocks after dawn |
+| **Surface-type library** | 4 tileable PBR sets baked (soil/sand/ice/water), seamless (<0.5% edge error) w/ real normal+roughness; only `soil` wired so far | 🟠 | height/slope-blend sand into basins, ice into shadowed lows, water in installation pools |
 | **Craters / relief** | from the HiRISE DTM | 🟡 | scatter a few sharp bowl craters as set-pieces (Blender geo-nodes) |
 | **Dunes / ripples** | flat-ish regions | 🔵 | build aeolian ripple fields (real Mars has km of them) — displacement or geo-nodes |
 | **Slopes / talus** | terrain only | 🔵 | scatter rock talus on steep slopes (use slope_at) |

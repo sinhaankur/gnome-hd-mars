@@ -273,10 +273,17 @@ void fragment(){
 """
 	var m := ShaderMaterial.new()
 	m.shader = sh
-	# bind the real scanned regolith textures (extracted by tools/extract_ground_textures.py)
-	# so the terrain blends genuine photogrammetry over its procedural detail. Guarded: if a
-	# texture is missing the shader's hint_default_white keeps the procedural look intact.
-	var alb := load("res://assets/mars_ground_albedo.png") as Texture2D
+	# ground_albedo: the calibrated, SEAMLESS Mars-soil set baked by tools/build_ground_materials.py
+	# (assets/ground/soil/) replaces the old photogrammetry scan — that scan carried Earthly green
+	# (moss) we had to fight in-shader, and tiled visibly. The new soil is low-saturation Mars
+	# caramel, measured against the Perseverance panoramas, and wraps cleanly with no seam.
+	# ground_normal: KEPT as the old scanned normal — it still carries genuine gritty micro-relief;
+	# the baked soil normal came out near-flat (bump-from-noise doesn't survive the NORMAL bake),
+	# so we keep the detailed scan normal until the bake pipeline is fixed. Guarded loads: a missing
+	# texture leaves the shader's hint_default_white defaults, preserving the procedural look.
+	var alb := load("res://assets/ground/soil/albedo.png") as Texture2D
+	if alb == null:
+		alb = load("res://assets/mars_ground_albedo.png") as Texture2D   # fallback to the old scan
 	if alb:
 		m.set_shader_parameter("ground_albedo", alb)
 	var nrm := load("res://assets/mars_ground_normal.png") as Texture2D
