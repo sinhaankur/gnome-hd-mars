@@ -50,28 +50,38 @@ def build():
 
     arm = next(o for o in bpy.data.objects if o.type == 'ARMATURE')
 
-    # 2) The source "Walk" action genuinely TIPS THE BODY OVER in Godot (confirmed in-engine
-    #    2026-11-23 — the pilot lay crumpled on the ground once the clip played; the clip was
-    #    authored in a different up-axis). We can't rotate it out (animated bones ignore an
-    #    object rotation). So DROP the animation and ship the clean upright REST pose — a
-    #    correct standing armored trooper. A retargeted walk is tracked (task #10). Keep the
-    #    rig so that retarget is possible later.
-    arm.data.pose_position = 'REST'
-    if arm.animation_data:
-        for t in list(arm.animation_data.nla_tracks):
-            arm.animation_data.nla_tracks.remove(t)
-        arm.animation_data.action = None
-    for a in list(bpy.data.actions):
-        bpy.data.actions.remove(a)
+    # 2) THE REAL BUG (found 2026-11-23): the Sketchfab root empty carries a baked -90deg X
+    #    world rotation. Blender's importer compensates so the skeleton SHOWS upright (feet at
+    #    Z~0, head at Z~2.9), but on glTF Y-up re-export that baked -90X double-applies and the
+    #    pilot lies down in Godot. FIX: bake the whole hierarchy's transforms flat so there's no
+    #    hidden rotation for the exporter to mishandle. We unparent the armature (keep transform),
+    #    drop the now-empty Sketchfab hierarchy, and apply the armature's transform. The skeleton
+    #    is genuinely upright, so its own "Walk" clip then plays correctly standing.
+    #    Keep the Walk action (do NOT delete) — the skeleton was never the problem, the root
+    #    transform was.
+    bpy.ops.object.select_all(action='DESELECT')
+    arm.select_set(True)
+    bpy.context.view_layer.objects.active = arm
+    # unparent armature + its mesh children, keeping world transform (Alt+P "clear and keep")
+    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+    # also unparent the skinned meshes from the armature-empty chain while keeping their skin
+    # (meshes stay parented to the armature via the Armature modifier, not object parenting)
+    bpy.context.view_layer.update()
+    # drop leftover empties (Sketchfab_model / RootNode / fbx / Object_2) now that nothing needs them
+    for o in list(bpy.data.objects):
+        if o.type == 'EMPTY':
+            bpy.data.objects.remove(o, do_unlink=True)
+    bpy.context.view_layer.update()
+    # bake the armature's (now world-correct) rotation+scale into its data so the export is clean
+    bpy.ops.object.select_all(action='DESELECT')
+    arm.select_set(True)
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+    bpy.context.view_layer.update()
 
-    # 4) normalize to the contract. Rig root is the armature; the whole hierarchy hangs off
-    #    it, so scaling + moving the armature node moves everything and (with export_apply
-    #    =False) the glTF exporter writes that node transform cleanly — no risky apply on a
-    #    rig that already carries NLA strips. Measure at the REST pose (stable bounds).
-    root = arm
-    while root.parent is not None:
-        root = root.parent
-    # force rest pose for a clean measurement (animated poses move the bounds around)
+    # 3) scale to 1.9 m and base to Z=0. Measure at REST (stable bounds). Scale is applied into
+    #    the armature data too (consistent with the rotation we just baked) so the exported rig
+    #    is clean; only the final location stays on the node (a translation Godot honours).
     arm.data.pose_position = 'REST'
     bpy.context.view_layer.update()
 
@@ -92,18 +102,34 @@ def build():
     lo, hi = world_bounds()
     d = hi.z - lo.z
     s = TARGET_H / d if d > 1e-5 else 1.0
-    root.scale = (root.scale.x * s, root.scale.y * s, root.scale.z * s)
+    arm.scale = (arm.scale.x * s, arm.scale.y * s, arm.scale.z * s)
+    bpy.context.view_layer.update()
+    bpy.ops.object.select_all(action='DESELECT')
+    arm.select_set(True)
+    bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     bpy.context.view_layer.update()
 
     lo, hi = world_bounds()
     cx = (lo.x + hi.x) / 2; cy = (lo.y + hi.y) / 2
-    root.location = (root.location.x - cx, root.location.y - cy, root.location.z - lo.z)
+    arm.location = (arm.location.x - cx, arm.location.y - cy, arm.location.z - lo.z)
     bpy.context.view_layer.update()
     lo, hi = world_bounds()
     print("NORM  scaled_h=%.3f base=%.3f cX=%.3f cY=%.3f  (s=%.3f)"
           % (hi.z - lo.z, lo.z, (lo.x + hi.x) / 2, (lo.y + hi.y) / 2, s))
-    # restore pose mode so animations play on import
+
+    # 4) KEEP the Walk clip: put it on an NLA strip so the glTF exporter emits it. The skeleton
+    #    is now genuinely upright (root -90X baked out), so Walk plays standing. MechAnimator in
+    #    Godot drives it on move and holds a paused frame as idle.
     arm.data.pose_position = 'POSE'
+    if arm.animation_data is None:
+        arm.animation_data_create()
+    arm.animation_data.action = None
+    for a in list(bpy.data.actions):
+        a.use_fake_user = True
+        track = arm.animation_data.nla_tracks.new()
+        track.name = a.name
+        track.strips.new(a.name, int(a.frame_range[0]), a)
 
     # 5) export rigged GLB (Y-up, keep armature + skins + both animations)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
@@ -112,7 +138,7 @@ def build():
     bpy.ops.export_scene.gltf(
         filepath=OUT, export_format='GLB', use_selection=True,
         export_yup=True, export_apply=False,
-        export_animations=False, export_skins=True)
+        export_animations=True, export_skins=True)
 
     tris = sum(len(m.data.polygons) for m in bpy.data.objects if m.type == 'MESH')
     print("PILOT_OK  tris=%d  actions=%s  %.2f MB  -> %s" % (

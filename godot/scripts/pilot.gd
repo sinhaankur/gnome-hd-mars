@@ -36,10 +36,13 @@ func _ready() -> void:
 
 # Real armored trooper — "Halo-Infinite-Master-Chief-rigged-walk" by bensimulator2 (CC-BY,
 # see CREDITS.md), normalized by tools/build_pilot.py (1.9 m, Y-up, base Y=0, forward -Z).
-# Replaces the capsule+sphere+box figure ("doesn't even look human", user 2026-11-22). Ships
-# the clean upright REST pose — its source Walk clip tips the body over in-engine (wrong
-# up-axis), so a retargeted walk is a tracked follow-up (task #10).
+# Replaces the capsule+sphere+box figure ("doesn't even look human", user 2026-11-22). Stands
+# upright with a working Walk clip — the orientation bug was a baked -90deg X on the Sketchfab
+# root; build_pilot.py now bakes it out, so the skeleton (and its Walk) are genuinely upright.
 const PILOT_MODEL := "res://assets/pilot_human.glb"
+const MechAnimatorScript := preload("res://scripts/mech_animator.gd")
+
+var _anim: Node               # MechAnimator: plays Walk on the move, holds a pose when idle
 
 func _build_visual() -> void:
 	var vis := Node3D.new()
@@ -53,6 +56,15 @@ func _build_visual() -> void:
 		# PI flip to face the -Z travel direction (same convention as the mechs in mission1.gd).
 		human.rotation.y = PI
 		vis.add_child(human)
+		# drive the Walk clip from movement (human cadence; small min_move so a slow creep still
+		# steps). MechAnimator holds a paused frame as the idle pose when stopped.
+		_anim = MechAnimatorScript.new()
+		_anim.walk_anim = "Walk"
+		_anim.speed_to_anim = 0.11
+		_anim.min_move = 0.4
+		_anim.idle_frame = 0.0
+		add_child(_anim)
+		_anim.setup(human)
 	else:
 		push_warning("pilot: %s failed to load — using primitive fallback" % PILOT_MODEL)
 		_build_primitive_fallback(vis)
