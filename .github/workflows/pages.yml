@@ -1,0 +1,40 @@
+name: Deploy docs to GitHub Pages
+
+# The legacy Pages builder was erroring on this repo. This Actions workflow is the
+# reliable modern path: it publishes the docs/ folder (the devlog + the intro cinematic
+# + docs/assets/ GLBs) to GitHub Pages on every push to main.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# one deploy at a time; let an in-progress run finish
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false            # docs/assets/*.glb are committed as real files, not LFS
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deployment
+        uses: actions/deploy-pages@v4
