@@ -4,3 +4,6 @@ godot/assets/enemy_*_Image_*.jpg filter=lfs diff=lfs merge=lfs -text
 godot/assets/mars_ground_*.png filter=lfs diff=lfs merge=lfs -text
 godot/assets/*_Image_*.png filter=lfs diff=lfs merge=lfs -text
 godot/assets/*_Image_*.jpg filter=lfs diff=lfs merge=lfs -text
+
+# Web cinematic assets must be real files (GitHub Pages cannot serve LFS)
+docs/assets/*.glb -filter -diff -merge text=auto
