@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mars HAWC — Pitch</title>
+<meta name="description" content="Mars HAWC — an animated WebGL pitch deck: the hijack loop, the real Mars, the team, and what's shipped.">
+<meta property="og:title" content="Mars HAWC — Pitch Deck">
+<meta property="og:image" content="img/hero_mech.png">
+<style>
+  :root{ --ink:#efe7d6; --dim:#9a907c; --gold:#d9b25a; --orange:#f08a2a; --panel:rgba(14,13,11,.92); --line:#332e21; }
+  html,body{height:100%}
+  *{box-sizing:border-box}
+  body{margin:0;overflow:hidden;background:#0a0907;color:var(--ink);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;cursor:default}
+  body.idle{cursor:none}
+  #stage{position:fixed;inset:0;width:100%;height:100%;display:block;outline:none;touch-action:none}
+  #ui{position:fixed;inset:0;pointer-events:none;z-index:2}
+  #ui>*{pointer-events:auto}
+
+  /* title overlay drawn in HTML over the 3D (crisp text) */
+  .caption{position:absolute;left:0;right:0;top:0;bottom:0;display:grid;place-content:center;text-align:center;padding:0 7vw;
+    pointer-events:none;transition:opacity .6s cubic-bezier(.16,1,.3,1)}
+  .caption .kick{font-size:.78rem;letter-spacing:.34em;text-transform:uppercase;color:var(--orange);margin-bottom:14px;text-shadow:0 2px 20px #000}
+  .caption h1{margin:0;font:700 clamp(2.2rem,7vw,5rem)/1.02 system-ui;letter-spacing:.01em;text-shadow:0 4px 40px #000c}
+  .caption h1 b{color:var(--orange)}
+  .caption p{margin:16px auto 0;max-width:52ch;font-size:clamp(1rem,2.4vw,1.5rem);color:var(--dim);text-shadow:0 2px 18px #000}
+  .caption .big{font:700 clamp(2.6rem,9vw,7rem)/1 system-ui;color:var(--gold)}
+
+  /* presenter notes */
+  .notes{position:absolute;left:0;right:0;bottom:0;padding:16px max(24px,env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));
+    background:var(--panel);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 28px;align-items:center;
+    transform:translateY(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);border-top:1px solid var(--line)}
+  .notes.show{transform:none}
+  .notes p{margin:0;max-width:78ch;font-size:16px;color:var(--ink)}
+  .notes .meta{color:var(--dim);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap;font-size:14px}
+
+  /* progress dots */
+  .dots{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:7px;z-index:3}
+  .dots i{width:7px;height:7px;border-radius:50%;background:#4a4336;transition:background .3s,width .3s}
+  .dots i.on{background:var(--gold);width:20px;border-radius:4px}
+
+  /* thumbnail overview */
+  .over{position:absolute;inset:0;background:rgba(10,9,7,.97);overflow:auto;padding:40px;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr));gap:20px;align-content:start;
+    opacity:0;pointer-events:none;transition:opacity .3s}
+  .over.show{opacity:1;pointer-events:auto}
+  .over button{all:unset;cursor:pointer;display:grid;gap:8px}
+  .over .th{aspect-ratio:16/9;background:#15120d center/cover;border:1px solid var(--line);border-radius:8px;
+    display:grid;place-content:center;text-align:center;padding:14px;transition:border-color .2s,transform .2s}
+  .over button:hover .th,.over button:focus-visible .th{border-color:var(--gold);transform:translateY(-3px)}
+  .over .th b{font:600 1.1rem/1.2 system-ui;color:var(--ink)}
+  .over .th b em{color:var(--orange);font-style:normal}
+  .over span{color:var(--dim);font-size:13px;font-variant-numeric:tabular-nums}
+
+  .help{position:absolute;right:20px;top:18px;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    padding:12px 16px;display:grid;grid-template-columns:auto auto;gap:4px 18px;font-size:13px;opacity:.0;transition:opacity .3s}
+  .help.show{opacity:1}
+  .help b{font-weight:600;color:var(--gold)}.help span{color:var(--dim)}
+
+  .load{position:absolute;inset:0;background:#0a0907;display:grid;place-content:center;gap:16px;z-index:5;transition:opacity .6s}
+  .load.hide{opacity:0;pointer-events:none}
+  .load h2{margin:0;font:700 2rem/1 system-ui;letter-spacing:.14em;text-transform:uppercase;text-align:center}
+  .load h2 b{color:var(--orange)}
+  .load .bar{width:min(320px,70vw);height:3px;background:#241f16;border-radius:2px;overflow:hidden;margin:0 auto}
+  .load .bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+  .load p{margin:0;text-align:center;color:var(--dim);font-size:.82rem;letter-spacing:.2em;text-transform:uppercase}
+  .enter{position:absolute;left:50%;bottom:7vh;transform:translateX(-50%);z-index:3;
+    font:600 .78rem/1 system-ui;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);opacity:.8}
+</style>
+</head>
+<body>
+<canvas id="stage" tabindex="0" aria-label="Mars HAWC pitch"></canvas>
+<div id="ui">
+  <div class="caption" id="cap"></div>
+  <div class="dots" id="dots"></div>
+  <div class="notes" id="notes"><p id="noteText"></p><div class="meta" id="noteMeta"></div></div>
+  <div class="over" id="over"></div>
+  <div class="help" id="help">
+    <b>← →</b><span>prev / next</span><b>Space</b><span>next</span><b>O</b><span>overview</span>
+    <b>N</b><span>notes</span><b>?</b><span>help</span>
+  </div>
+  <div class="enter" id="enter">← → to move · O overview · N notes</div>
+</div>
+<div class="load" id="load"><h2>MARS <b>HAWC</b></h2><div class="bar"><i id="loadBar"></i></div><p>loading the pitch</p></div>
+
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+const canvas = document.getElementById('stage');
+let renderer;
+try { renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:'high-performance' }); } catch(e){}
+if (!renderer){ document.getElementById('load').innerHTML = '<p style="color:#9a907c">This pitch needs WebGL. Open the <a href="index.html" style="color:#d9b25a">devlog</a>.</p>'; throw new Error('no webgl'); }
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+// ---- shared palette (grim Mars, per ART_DIRECTION) ----
+const MARS = 0xc08a52, DUST = 0x7a4f30, STEEL = 0x8d94a0, OLIVE = 0x3a4030, RUST = 0x6a3030, SKY = 0x5a3522;
+
+// ---- camera + scene shared; each slide builds its own content group ----
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x1a0f08, 0.03);      // the reference leans HARD on fog for depth
+const cam = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 400);
+cam.position.set(0, 4, 16);
+const key = new THREE.DirectionalLight(0xfff0dc, 2.6); key.position.set(-12,16,8); scene.add(key);
+scene.add(new THREE.HemisphereLight(0x3a2a22, 0x0a0604, 0.5));
+const rim = new THREE.DirectionalLight(0xffb070, 0.9); rim.position.set(14,2,-10); scene.add(rim);
+
+// reusable builders -----------------------------------------------------------
+function ground(col=DUST){ const g=new THREE.Mesh(new THREE.CircleGeometry(60,48), new THREE.MeshStandardMaterial({color:col,roughness:1})); g.rotation.x=-Math.PI/2; g.position.y=-1.2; return g; }
+function mech(col=OLIVE, s=1){ // a blocky hard-surface HAWC (reverse-jointed legs, cockpit, gun-arm)
+  const g=new THREE.Group(); const m=(c)=>new THREE.MeshStandardMaterial({color:c,metalness:.6,roughness:.5,flatShading:true});
+  const torso=new THREE.Mesh(new THREE.BoxGeometry(1.8,1.7,1.2),m(col)); torso.position.y=3; g.add(torso);
+  const can=new THREE.Mesh(new THREE.BoxGeometry(1.0,.5,.3),m(0x7fd4ff)); can.position.set(0,3.1,.65); can.material.emissive=new THREE.Color(0x2a6a8a); g.add(can);
+  const paul=(x)=>{const p=new THREE.Mesh(new THREE.BoxGeometry(.8,1,.9),m(col));p.position.set(x,3.4,0);g.add(p);};paul(-1.3);paul(1.3);
+  const gun=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,1.6,8),m(0x14141a)); gun.rotation.x=Math.PI/2; gun.position.set(1.4,2.9,.9); g.add(gun);
+  // reverse-jointed legs
+  [[-.6,1],[.6,-1]].forEach(([x])=>{
+    const th=new THREE.Mesh(new THREE.BoxGeometry(.5,1.6,.6),m(col)); th.position.set(x,1.9,.3); th.rotation.x=.3; g.add(th);
+    const sh=new THREE.Mesh(new THREE.BoxGeometry(.4,1.6,.5),m(0x14141a)); sh.position.set(x,.6,-.2); sh.rotation.x=-.4; g.add(sh);
+    const ft=new THREE.Mesh(new THREE.BoxGeometry(.7,.3,1.4),m(col)); ft.position.set(x,-.9,.2); g.add(ft);
+  });
+  g.scale.setScalar(s); return g;
+}
+function rockField(n=40){ const grp=new THREE.Group(); const geo=new THREE.IcosahedronGeometry(1,0);
+  const mat=new THREE.MeshStandardMaterial({color:DUST,roughness:1,flatShading:true});
+  const mm=new THREE.InstancedMesh(geo,mat,n); const d=new THREE.Object3D();
+  for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2,r=6+Math.random()*48; d.position.set(Math.cos(a)*r,-1.2+Math.random()*.4,Math.sin(a)*r);
+    d.rotation.set(Math.random(),Math.random(),Math.random()); const s=.3+Math.random()*1.6; d.scale.set(s,s*.6,s); d.updateMatrix(); mm.setMatrixAt(i,d.matrix); }
+  grp.add(mm); return grp; }
+
+// ============ THE SLIDES ============
+const SLIDES = [
+  { key:'TITLE', title:'Mars <em>HAWC</em>', notes:"Open cold. A single walking war machine on the real Martian surface. This is the pitch — the fantasy, the world, the team, and what already runs.",
+    cap:`<div class="kick">A tactical mech-assault game</div><h1>MARS <b>HAWC</b></h1><p>Pilot a walking combat mech on the real Mars surface.</p>`,
+    build(g){ g.add(ground()); g.add(rockField(30)); const h=mech(OLIVE,1); h.position.set(0,0,2); g.add(h); g._hero=h; cam.position.set(0,4,16); } ,
+    tick(g,t){ if(g._hero) g._hero.rotation.y = Math.sin(t*.3)*.3; } },
+
+  { key:'FANTASY', title:'The fantasy', notes:"Your power doesn't come from one unbreakable machine — it comes from your willingness to ABANDON it. Combat is asset theft, not attrition.",
+    cap:`<div class="kick">The core fantasy</div><h1>Abandon the machine.</h1><p>Your power isn't one unbreakable mech — it's your willingness to leave it.</p>`,
+    build(g){ g.add(ground()); const a=mech(OLIVE,.9); a.position.set(-4,0,2); g.add(a); const b=mech(RUST,.9); b.position.set(4,0,2); g.add(b); g._a=a;g._b=b; cam.position.set(0,4,15);},
+    tick(g,t){ if(g._a){ g._a.position.y=Math.sin(t)*.1; g._b.rotation.y=Math.sin(t*.4+1)*.2; } } },
+
+  { key:'HIJACK', title:'The hijack loop', notes:"Eject from any vehicle — a fragile human on foot. Fire the HAWK: it disables an enemy HAWC and force-ejects its pilot WITHOUT destroying the chassis. Sprint over. Steal it. The whole game can swing on one hijack.",
+    cap:`<div class="kick">The signature loop</div><h1>Eject · HAWK · <b>steal</b></h1><p>Disable an enemy mech, force its pilot out, and take the still-warm cockpit.</p>`,
+    build(g){ g.add(ground()); const e=mech(RUST,.9); e.position.set(3,0,1); g.add(e); g._e=e;
+      // the HAWK beam
+      const beam=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,7,6), new THREE.MeshBasicMaterial({color:0x7fd4ff})); beam.position.set(0,2.4,1); beam.rotation.z=Math.PI/2; g.add(beam); g._beam=beam; cam.position.set(-2,3,13);},
+    tick(g,t){ if(g._beam){ g._beam.material.opacity=.5+.5*Math.sin(t*8); g._beam.material.transparent=true; if(g._e) g._e.rotation.z=Math.sin(t*10)*.03; } } },
+
+  { key:'MARS', title:'The real Mars', notes:"Not invented. Genuine ~1 metre-per-pixel HiRISE terrain from Candor Chasma. Butterscotch regolith measured against Perseverance photos. A living surface: scattered rocks, windblown megaripples, wandering dust devils, slope streaks on canyon walls.",
+    cap:`<div class="kick">Built from real data</div><h1>The <b>real</b> Mars</h1><p>Genuine HiRISE terrain. A discovery-based living surface.</p>`,
+    build(g){ g.add(ground(MARS)); g.add(rockField(70)); // dust devil
+      const dd=new THREE.Mesh(new THREE.ConeGeometry(2,14,16,1,true), new THREE.MeshBasicMaterial({color:0xb08050,transparent:true,opacity:.22,side:THREE.DoubleSide})); dd.position.set(-10,5,-6); g.add(dd); g._dd=dd; cam.position.set(0,5,18);},
+    tick(g,t){ if(g._dd){ g._dd.rotation.y=t*2; g._dd.position.x=-10+Math.sin(t*.3)*6; } } },
+
+  { key:'CLASSES', title:'Four classes', notes:"Combined-arms variety. Four vehicle classes, each a radically different FEEL through weight and momentum: the bipedal HAWC, the tracked tank, the drifting hovercraft, the multipedal walker.",
+    cap:`<div class="kick">Combined arms</div><h1>Four classes.<br>Four <b>weights</b>.</h1><p>HAWC · tank · hovercraft · walker — each feels completely different to drive.</p>`,
+    build(g){ g.add(ground()); const cols=[OLIVE,0x4a4030,STEEL,0x5a4a2a]; for(let i=0;i<4;i++){ const m=mech(cols[i],.7); m.position.set((i-1.5)*5,0,2); g.add(m);} cam.position.set(0,5,18);},
+    tick(g,t){ g.children.forEach((c,i)=>{ if(c.type==='Group') c.position.y=Math.sin(t+i)*.12; }); } },
+
+  { key:'FACTIONS', title:'Four factions', notes:"Asymmetrical war. Union, Darken, the Bendian mercs, the alien Scorp — distinct silhouettes, armour language, and doctrine. The enemy HAWC is your own silhouette in a different colour: a mirror that wants you dead.",
+    cap:`<div class="kick">A four-way war</div><h1>Four <b>factions</b></h1><p>Distinct silhouettes and doctrine. The enemy is your mirror, in another colour.</p>`,
+    build(g){ g.add(ground()); const cols=[OLIVE,RUST,0x2a4a6a,0x3a5a2a]; for(let i=0;i<4;i++){ const m=mech(cols[i],.7); const a=i/4*Math.PI*2; m.position.set(Math.cos(a)*5,0,Math.sin(a)*5+2); m.rotation.y=-a; g.add(m);} g._spin=g; cam.position.set(0,7,16);},
+    tick(g,t){ g.rotation.y=t*.15; } },
+
+  { key:'CROWD', title:'A country of them', notes:"This scales. Waves of rival-faction HAWCs, driven by role-based AI — rush, snipe, anchor, flank. Hold your installation, or take theirs.",
+    cap:`<div class="kick">It scales</div><h1>Hold the <b>line</b>.</h1><p>Waves of enemy HAWCs, role-driven AI, a base to defend — or capture.</p>`,
+    build(g){ g.add(ground()); // an army via InstancedMesh (the reference's 'country of them')
+      const geo=new THREE.BoxGeometry(.8,1.6,.8); const mat=new THREE.MeshStandardMaterial({color:RUST,flatShading:true,metalness:.5,roughness:.6});
+      const N=120; const mm=new THREE.InstancedMesh(geo,mat,N); const d=new THREE.Object3D();
+      for(let i=0;i<N;i++){ const row=Math.floor(i/12),col=i%12; d.position.set((col-5.5)*2.4,-.4,-row*3-4); d.updateMatrix(); mm.setMatrixAt(i,d.matrix);} g.add(mm); g._army=mm; g._d=d;
+      const you=mech(OLIVE,1); you.position.set(0,0,8); g.add(you); cam.position.set(0,6,20);},
+    tick(g,t){ /* subtle march */ } },
+
+  { key:'TEAM', title:'Built by a team of agents', notes:"The game is built by an 11-agent team — producer, creative director, art director, 3D artist, engineer, technical artist, level designer, web dev, QA, a critic in the owner's voice, and a storyboard artist — running a plan→build→judge→ship loop.",
+    cap:`<div class="kick">How it's made</div><h1>An <b>11-agent</b> studio</h1><p>Producer, art director, engineers, a critic, a storyboard artist — a real build loop.</p>`,
+    build(g){ g.add(ground()); // a ring of 'agents' as lit pillars
+      for(let i=0;i<11;i++){ const a=i/11*Math.PI*2; const p=new THREE.Mesh(new THREE.CylinderGeometry(.3,.4,2.4,6), new THREE.MeshStandardMaterial({color:0x2a2620,emissive:new THREE.Color(0xd9b25a).multiplyScalar(.15),flatShading:true})); p.position.set(Math.cos(a)*6,0,Math.sin(a)*6+2); g.add(p);} cam.position.set(0,8,16); g._spin=g;},
+    tick(g,t){ g.rotation.y=-t*.1; } },
+
+  { key:'SHIPPED', title:'What already runs', notes:"This isn't a concept. A playable vertical slice runs today: menu to mission to win/lose, the strategic Mars globe, the orbital-arrival cinematic, a drivable HAWC with HUD, the eject-and-hijack loop, and the living Mars surface.",
+    cap:`<div class="kick">Playable now</div><h1>It already <b>runs</b>.</h1><p>Vertical slice: globe → arrival → drive → eject → hijack → hold. Real, today.</p>`,
+    build(g){ g.add(ground(MARS)); g.add(rockField(50)); const h=mech(OLIVE,1); h.position.set(0,0,4); g.add(h); g._h=h; cam.position.set(2,3,13);},
+    tick(g,t){ if(g._h) g._h.rotation.y=.4+Math.sin(t*.4)*.2; } },
+
+  { key:'CTA', title:'Play it', notes:"Watch the arrival cinematic, read the devlog, see the team and the storyboard. Mars HAWC — a G-NOME successor on the real Mars.",
+    cap:`<div class="kick">Mars HAWC</div><h1 class="big">Boots on Mars.</h1><p>Watch the arrival · read the devlog · see the team. &nbsp; <span style="color:var(--gold)">sinhaankur.github.io/gnome-hd-mars</span></p>`,
+    build(g){ g.add(ground()); g.add(rockField(40)); const h=mech(OLIVE,1.1); h.position.set(0,0,2); g.add(h); g._h=h; cam.position.set(-3,4,14);},
+    tick(g,t){ if(g._h) g._h.rotation.y=Math.sin(t*.25)*.4; } },
+];
+
+// ---- slide machine ----
+let idx=0, group=null, slideT=0, lastT=performance.now()/1000;
+const capEl=document.getElementById('cap'), noteEl=document.getElementById('noteText'), metaEl=document.getElementById('noteMeta');
+const dotsEl=document.getElementById('dots'), overEl=document.getElementById('over'), notesBox=document.getElementById('notes');
+SLIDES.forEach((s,i)=>{ const d=document.createElement('i'); if(i===0)d.className='on'; dotsEl.appendChild(d);
+  const b=document.createElement('button'); b.innerHTML=`<div class="th"><b>${s.title.replace(/<em>/g,'<em>').replace(/<\/em>/g,'</em>')}</b></div><span>${String(i+1).padStart(2,'0')} · ${s.key}</span>`;
+  b.onclick=()=>{ go(i); toggleOver(false); }; overEl.appendChild(b); });
+
+function show(i){
+  if(group){ scene.remove(group); group.traverse(o=>{ o.geometry&&o.geometry.dispose&&o.geometry.dispose(); }); }
+  idx=(i+SLIDES.length)%SLIDES.length; const s=SLIDES[idx];
+  group=new THREE.Group(); s.build(group); scene.add(group); slideT=0;
+  capEl.innerHTML=s.cap; capEl.style.opacity=0; requestAnimationFrame(()=>{ capEl.style.opacity=1; });
+  noteEl.textContent=s.notes; metaEl.textContent=`${String(idx+1).padStart(2,'0')} / ${SLIDES.length}  ·  ${s.key}`;
+  [...dotsEl.children].forEach((d,j)=>d.className=j===idx?'on':'');
+  history.replaceState(null,'','#'+(idx+1));
+}
+function go(i){ show(i); }
+function next(){ show(idx+1); } function prev(){ show(idx-1); }
+
+let overOpen=false; function toggleOver(v){ overOpen=v??!overOpen; overEl.classList.toggle('show',overOpen); }
+let notesOpen=false; function toggleNotes(v){ notesOpen=v??!notesOpen; notesBox.classList.toggle('show',notesOpen); }
+let helpOpen=false;
+
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ next(); e.preventDefault(); }
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){ prev(); }
+  else if(e.key==='o'||e.key==='O'){ toggleOver(); }
+  else if(e.key==='n'||e.key==='N'){ toggleNotes(); }
+  else if(e.key==='?'){ helpOpen=!helpOpen; document.getElementById('help').classList.toggle('show',helpOpen); }
+  else if(e.key==='Escape'){ toggleOver(false); }
+});
+canvas.addEventListener('pointerdown',e=>{ if(overOpen)return; (e.clientX>innerWidth*.5)?next():prev(); });
+
+// idle-hide cursor + the enter hint
+let idleTimer; function wake(){ document.body.classList.remove('idle'); clearTimeout(idleTimer); idleTimer=setTimeout(()=>document.body.classList.add('idle'),2600); }
+addEventListener('pointermove',wake); wake();
+setTimeout(()=>{ document.getElementById('enter').style.transition='opacity .6s'; document.getElementById('enter').style.opacity='0'; },4000);
+
+addEventListener('resize',()=>{ cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+
+function loop(){ const now=performance.now()/1000, dt=now-lastT; lastT=now; slideT+=dt;
+  const s=SLIDES[idx]; if(s&&s.tick) s.tick(group,slideT);
+  // gentle idle camera drift for life
+  cam.position.x += (Math.sin(slideT*.15)*0.6 - (cam.position.x - cam.position.x)) * 0; cam.lookAt(0,2.4,2);
+  renderer.render(scene,cam); requestAnimationFrame(loop);
+}
+
+// loading: warm the first slide, then reveal
+const loadBar=document.getElementById('loadBar'), loadEl=document.getElementById('load');
+let p=0; const li=setInterval(()=>{ p=Math.min(1,p+.12); loadBar.style.width=(p*100)+'%'; if(p>=1){ clearInterval(li);
+  const start=(location.hash.match(/\d+/)||[1])[0]-0; show(Math.max(0,Math.min(SLIDES.length-1,start-1)));
+  loop(); setTimeout(()=>loadEl.classList.add('hide'),300); } },90);
+</script>
+</body>
+</html>
