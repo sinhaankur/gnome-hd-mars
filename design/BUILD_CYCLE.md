@@ -43,7 +43,7 @@ run. Each agent is a person on the team, living in `.claude/agents/`. Invoke one
 ### Step detail
 1. **PLAN** — `producer` reads MEMORY, GDD, git log, open tasks; picks the single most
    valuable next piece (what a player most notices). Creates a task.
-2. **DEFINE** — `creative-director` confirms it serves a pillar + the fantasy;
+2. **DEFINE (sketch first)** — `creative-director` confirms it serves a pillar + the fantasy, and **sketches/storyboards the key frames BEFORE anything is built** (draw the story frame by frame, then paint/model/build to the board);
    `level-designer` specs the gameplay/mission shape if relevant. Output: a clear intent.
 3. **BUILD** — the right maker does the work: `asset-artist` (models), `godot-engineer`
    (gameplay), `technical-artist` (shaders/lighting), `web-dev` (the browser window).
