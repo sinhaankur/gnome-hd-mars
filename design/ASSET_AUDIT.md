@@ -52,7 +52,9 @@ Plus the 4 shipped ecosystem systems (rock scatter, megaripples, dust devils, RS
 ## Priority fix list (worst first, for the loop)
 1. ⚠️ **mars_monolith.glb (9 MB)** — decimate; a monolith shouldn't cost more than the hero mech.
 2. 🔶 **wr_hawk.glb** — confirm orphan vs hero_striker; remove if dead.
-3. 🔶 **enemy_support.glb (8.2 MB)** — poly budget check.
+3. ✅ **enemy_support.glb (8.2 MB)** — CHECKED: only 12k tris; the weight is baked TEXTURES, not
+   geometry. Reads fine in-game; leave it (texture downscale is a later batch pass, not worth
+   risking a working enemy now). The monolith was the real outlier (119k tris → fixed).
 4. 🔶 **Legacy Ruhelen biome kits** (grass/ice/molten_hd) — Mars-only now? Archive if unused.
 5. In-game visual tuning of the 4 ecosystem systems + 3rd-person camera (needs a human to run Godot).
 
