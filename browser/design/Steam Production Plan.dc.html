@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com"></link>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&amp;family=Barlow+Condensed:wght@500;600;700&amp;family=Barlow:wght@400;500&amp;display=swap" rel="stylesheet"></link>
+  <style>
+    html, body { margin: 0; background: #f2efe8; color: #1a1816; }
+    a { color: #9a3f22; text-decoration-thickness: 1px; text-underline-offset: 2px; } a:hover { color: #5e2412; }
+  </style>
+</helmet>
+<article style="max-width:1080px;margin:0 auto;padding:56px 28px 80px;font-family:'Newsreader',Georgia,serif;font-size:19px;line-height:1.55">
+  <header style="display:flex;flex-direction:column;gap:14px;border-bottom:3px solid #1a1816;padding-bottom:28px">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:14px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">
+      <span>Mars HAWC · Production plan</span><span>26 November 2026</span>
+    </div>
+    <h1 style="margin:0;font-weight:500;font-size:clamp(40px,6vw,72px);line-height:1.02;letter-spacing:-.01em;text-wrap:balance">From browser prototype to Steam Early Access in Godot</h1>
+    <p style="margin:0;max-width:780px;font-size:22px;line-height:1.45;color:#3d3833;text-wrap:pretty">This plan assumes a team of 4 to 8, a six-month runway, Early Access first and then 1.0, and Windows, Linux, macOS and Steam Deck builds. All six art and audio areas are outsourced. Your form ticked every outsourcing option as well as "Nothing, all in-house", so I've treated the outsourcing answers as the intent. Valve rules and dates are cited. Schedules, team splits and scope cuts are my recommendations.</p>
+  </header>
+
+  <section style="display:flex;flex-wrap:wrap;gap:40px;padding:36px 0;border-bottom:1px solid #cfc8bc">
+    <div style="display:flex;flex-direction:column;gap:14px;flex:999 1 480px;min-width:0">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#9a3f22">The scope call</span>
+      <h2 style="margin:0;font-weight:500;font-size:36px;line-height:1.1">The full scope fits across Early Access, not on day one</h2>
+      <p style="margin:0;text-wrap:pretty">The stated scope is 20+ missions, four vehicle classes, skirmish, PvP and four platforms. Six months with a team of up to eight cannot produce all of that to Steam quality. Early Access exists for this case. Valve warns against launching with only a tech demo and against launching a game that is already finished, because Early Access is where players shape the final game (<a href="https://steamcommunity.com/app/1372880/discussions/0/4031347929699840620">Valve EA rules, as quoted</a>).</p>
+      <p style="margin:0;text-wrap:pretty">So the Early Access launch build carries the whole hijack loop and all four classes, since that is the core fantasy. The campaign and PvP grow in public after launch.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0;flex:1 1 300px;max-width:380px;border-top:3px solid #9a3f22;align-self:start">
+      <div style="display:flex;flex-direction:column;gap:2px;padding:12px 0;border-bottom:1px solid #cfc8bc">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#9a3f22">EA launch · July 2027</span>
+        <span style="font-size:17px">Act 1, 8 missions · 4 hijackable classes · crews and control towers at every base · skirmish vs AI on 3 maps · Win, Linux, Mac, Deck</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;padding:12px 0;border-bottom:1px solid #cfc8bc">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#6b645c">Update 1 · Oct 2027</span>
+        <span style="font-size:17px">Act 2, missions 9–14 · PvP beta, 2v2 and 4v4</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;padding:12px 0;border-bottom:1px solid #cfc8bc">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#6b645c">Update 2 · Jan 2028</span>
+        <span style="font-size:17px">Act 3, missions 15–20+, including 3 flight missions · more PvP maps</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;padding:12px 0">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#6b645c">1.0 · Q2 2028, then consoles</span>
+        <span style="font-size:17px">Full campaign, PvP, localisation, all achievements</span>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:18px;padding:40px 0;border-bottom:1px solid #cfc8bc">
+    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">01 · Schedule</span>
+    <h2 style="margin:0;font-weight:500;font-size:36px;line-height:1.1">Eight months, built around the June Next Fest</h2>
+    <p style="margin:0;max-width:820px;text-wrap:pretty">Each game can enter only one Next Fest (<a href="https://games.gg/news/steam-next-fest-2027-developer-preparation/">games.gg</a>), and the festival is for unreleased games (<a href="https://tvashtastudio.com/blog/steam-next-fest-guide">Tvashta</a>). The June 2027 edition runs June 14–21. Registration closes April 25, the demo is due May 10 for the press preview, and every required item must be in review by May 24 (<a href="https://nextwishlist.com/guides/steam-next-fest-dates">Next Wishlist, from Valve's pages</a>). Six months gets the game ready for Early Access by the end of May. I recommend holding the launch about six weeks for Next Fest.</p>
+    <div style="overflow-x:auto;padding-top:6px">
+      <div style="display:grid;grid-template-columns:220px repeat(8,minmax(56px,1fr));row-gap:8px;min-width:720px;font-family:'Barlow',sans-serif;font-size:14px">
+        <span></span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#6b645c;border-left:1px solid #cfc8bc;padding-left:6px">Dec</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#6b645c;border-left:1px solid #cfc8bc;padding-left:6px">Jan</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#6b645c;border-left:1px solid #cfc8bc;padding-left:6px">Feb</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#6b645c;border-left:1px solid #cfc8bc;padding-left:6px">Mar</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#6b645c;border-left:1px solid #cfc8bc;padding-left:6px">Apr</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#6b645c;border-left:1px solid #cfc8bc;padding-left:6px">May</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#6b645c;border-left:1px solid #cfc8bc;padding-left:6px">Jun</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#6b645c;border-left:1px solid #cfc8bc;padding-left:6px">Jul</span>
+
+        <span style="grid-column:1;padding-right:12px">Pre-production + vertical slice</span>
+        <span style="grid-column:2 / 4;background:#9a3f22;height:22px;border-radius:2px;align-self:center"></span>
+        <span style="grid-column:1;padding-right:12px">Core systems: 4 classes, pilot, damage, AI, saves</span>
+        <span style="grid-column:3 / 7;background:#9a3f22;height:22px;border-radius:2px;align-self:center"></span>
+        <span style="grid-column:1;padding-right:12px">Missions 1–8 + 3 skirmish maps</span>
+        <span style="grid-column:4 / 9;background:#9a3f22;height:22px;border-radius:2px;align-self:center"></span>
+        <span style="grid-column:1;padding-right:12px">Outsourced models, rigs, audio, VO</span>
+        <span style="grid-column:2 / 8;background:#9a3f22;height:22px;border-radius:2px;align-self:center"></span>
+        <span style="grid-column:1;padding-right:12px">Steam page, trailer, Next Fest</span>
+        <span style="grid-column:3 / 9;background:#9a3f22;height:22px;border-radius:2px;align-self:center"></span>
+        <span style="grid-column:1;padding-right:12px">Look-dev, lighting, render pipeline</span>
+        <span style="grid-column:2 / 10;background:#9a3f22;height:22px;border-radius:2px;align-self:center"></span>
+        <span style="grid-column:1;padding-right:12px">Steam Deck, performance, QA</span>
+        <span style="grid-column:5 / 10;background:#9a3f22;height:22px;border-radius:2px;align-self:center"></span>
+        <span style="grid-column:1;padding-right:12px;color:#6b645c">PvP prototype (ships in Update 1)</span>
+        <span style="grid-column:6 / 10;background:#a39a8f;height:22px;border-radius:2px;align-self:center"></span>
+        <span style="grid-column:1;padding-right:12px;color:#6b645c">Flight prototype (browser lab, ships in Update 2)</span>
+        <span style="grid-column:4 / 7;background:#a39a8f;height:22px;border-radius:2px;align-self:center"></span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:0 32px;padding-top:12px">
+      <div style="display:flex;gap:14px;padding:10px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;min-width:76px">Dec 2026</span><span style="font-size:16px">Pay the $100 Steam Direct fee, which starts the 21-day wait. Pin the engine version. Send outsourcing briefs.</span></div>
+      <div style="display:flex;gap:14px;padding:10px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;min-width:76px">Jan 29</span><span style="font-size:16px">Vertical slice: Level 1 in Godot at ship quality, played with a controller.</span></div>
+      <div style="display:flex;gap:14px;padding:10px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;min-width:76px">Feb</span><span style="font-size:16px">Coming Soon page live, made from the slice's footage. Wishlists start.</span></div>
+      <div style="display:flex;gap:14px;padding:10px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;min-width:76px">Mar 31</span><span style="font-size:16px">Alpha: 4 classes, 4 missions, 1 skirmish map. Closed playtest starts.</span></div>
+      <div style="display:flex;gap:14px;padding:10px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;min-width:76px">Apr 25</span><span style="font-size:16px">Next Fest registration closes.</span></div>
+      <div style="display:flex;gap:14px;padding:10px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;min-width:76px">May 10</span><span style="font-family:'Newsreader',serif;font-size:16px">Demo submitted for the press preview (Level 1 + one skirmish map).</span></div>
+      <div style="display:flex;gap:14px;padding:10px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;min-width:76px">May 31</span><span style="font-size:16px">Early Access content lock: 8 missions, 3 maps, Deck pass.</span></div>
+      <div style="display:flex;gap:14px;padding:10px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;min-width:76px">Jun 14–21</span><span style="font-size:16px">Steam Next Fest.</span></div>
+      <div style="display:flex;gap:14px;padding:10px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;min-width:76px;color:#9a3f22">Jul 13</span><span style="font-size:16px">Early Access launch, a Tuesday after the Summer Sale ends on July 8. The date locks on June 29.</span></div>
+    </div>
+    <p style="margin:0;max-width:820px;font-size:17px;color:#3d3833;text-wrap:pretty"><strong style="font-weight:600">If launching at month six matters more:</strong> release into Early Access on May 24 and skip Next Fest. One developer calendar lists May 24 as the last release date that qualifies for the Summer Sale (<a href="https://gamedevproducer.com/steam-sale-dates/">GameDev Producer</a>).</p>
+  </section>
+
+  <section style="display:flex;flex-wrap:wrap;gap:40px;padding:40px 0;border-bottom:1px solid #cfc8bc">
+    <div style="display:flex;flex-direction:column;gap:16px;flex:999 1 480px;min-width:0">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">02 · Steam requirements</span>
+      <h2 style="margin:0;font-weight:500;font-size:36px;line-height:1.1">Valve's gates, and how long each takes</h2>
+      <ul style="margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px">
+        <li style="text-wrap:pretty">You can't release until 21 days after paying the app fee (<a href="https://partner.steamgames.com/doc/gettingstarted/onboarding">Steamworks onboarding</a>).</li>
+        <li style="text-wrap:pretty">A Coming Soon page has to be public for at least two weeks before release, Early Access included (<a href="https://partner.steamgames.com/doc/store/types">Steamworks release options</a>). Submit the page for review at least 7 business days before you want it live (<a href="https://partner.steamgames.com/doc/store/coming_soon">Coming Soon docs</a>).</li>
+        <li style="text-wrap:pretty">The release date can't change within two weeks of launch (<a href="https://partner.steamgames.com/doc/store/release_dates">release dates docs</a>).</li>
+        <li style="text-wrap:pretty">Sources disagree on build review time. Valve's onboarding page says 1–5 days. A November 2026 guide reports that Valve says reviews are taking up to 12 business days (<a href="https://ai-game.dev/blog/how-to-release-a-game-on-steam">AI Game Dev</a>). The plan assumes the longer figure.</li>
+        <li style="text-wrap:pretty">If an Early Access update will break save files, Valve asks you to tell players up front. The Early Access price must be no higher than on any other store.</li>
+      </ul>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;flex:1 1 300px;min-width:0">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">Steam Deck Verified</span>
+      <ul style="margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:17px">
+        <li style="text-wrap:pretty">Every menu works with a controller, and the prompts show the correct button icons. Text entry opens the on-screen keyboard. No launcher (<a href="https://dev.to/aplusgamesstudio/steam-deck-verified-how-to-get-your-game-approved-kf4">A+ Games</a>).</li>
+        <li style="text-wrap:pretty">The smallest text is at least 9 px tall at 1280×800, and Valve recommends 12 px (<a href="https://envyui.com/blog/steam-deck-ui-checklist">Envy</a>).</li>
+        <li style="text-wrap:pretty">Frame rate: one guide says 30 fps at 800p with default settings (<a href="https://www.gamingonlinux.com/guides/view/what-steam-deck-steam-machine-steam-frame-and-steamos-verified-ratings-mean/">GamingOnLinux</a>), another says 25 fps (<a href="https://gtstu.com/steam-deck-optimization-indie/">GTSTU</a>). The plan targets 40 fps with a dedicated Deck preset.</li>
+        <li style="text-wrap:pretty">Godot's official Linux export runs on the Deck natively (<a href="https://docs.godotengine.org/en/4.3/tutorials/platform/consoles.html">Godot docs</a>).</li>
+      </ul>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-wrap:wrap;gap:40px;padding:40px 0;border-bottom:1px solid #cfc8bc">
+    <div style="display:flex;flex-direction:column;gap:16px;flex:999 1 480px;min-width:0">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">03 · Godot standards</span>
+      <h2 style="margin:0;font-weight:500;font-size:36px;line-height:1.1">Pin one engine version and keep every change shippable</h2>
+      <ul style="margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px">
+        <li style="text-wrap:pretty"><strong style="font-weight:600">Engine.</strong> The latest stable release is 4.7.2 (August 2026), and 4.8 is still in beta (<a href="https://godotawesome.com/godot-versions/">Godot Awesome</a>). W4 Consoles lists support for 4.4 to 4.6 (<a href="https://www.w4games.com/w4consoles">W4 Games</a>). Since consoles come later, check W4's 4.7 support before locking the version, or stay on 4.6.x. After that, take only maintenance releases.</li>
+        <li style="text-wrap:pretty"><strong style="font-weight:600">Physics.</strong> Use Jolt, which has been Godot's default since 4.6 (<a href="https://ziva.sh/blogs/godot-4-7">Ziva</a>). All four vehicle classes run on it.</li>
+        <li style="text-wrap:pretty"><strong style="font-weight:600">Architecture.</strong> The pilot is its own persistent node that moves between hulls and is never destroyed with them. Each hull scene is built from components: seat, cell bay, damage model, weapons and locomotion. Class stats live in <code style="font-size:16px">.tres</code> resources so designers can tune them without touching code. Damage disables components rather than killing the vehicle, so a hull can still be captured.</li>
+        <li style="text-wrap:pretty"><strong style="font-weight:600">Code.</strong> Typed GDScript, with untyped-variable warnings set to errors. C++ GDExtension only where profiling demands it, such as MOLA terrain streaming. Unit tests for the hijack, damage and cell economy rules.</li>
+        <li style="text-wrap:pretty"><strong style="font-weight:600">Assets.</strong> Export from Blender as <code style="font-size:16px">.glb</code>: real metres, feet at y=0, and 30k triangles or fewer for enemies. Store binaries in Git LFS. Use shared import presets with automatic LODs.</li>
+        <li style="text-wrap:pretty"><strong style="font-weight:600">Builds.</strong> On every push, CI exports headless Windows, Linux and macOS builds. A nightly SteamPipe upload goes to a private beta branch. macOS builds need an Apple Developer account for signing and notarisation.</li>
+      </ul>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;flex:1 1 300px;min-width:0">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">Steam integration and PvP</span>
+      <p style="margin:0;font-size:17px;text-wrap:pretty">GodotSteam is an open-source Steamworks module for Godot 4 on Windows, Linux and Mac (<a href="https://github.com/GodotSteam/GodotSteam">GodotSteam</a>). It covers achievements, cloud saves, Steam Input, rich presence and lobbies. Its MultiplayerPeer, which connects Godot's multiplayer nodes to Steam networking, has been merged into the main 4.x branch (<a href="https://codeberg.org/godotsteam/multiplayerpeer">Codeberg</a>). Godot doesn't ship a relay of its own, and for Steam builds GodotSteam is the most proven option (<a href="https://ziva.sh/blogs/godot-multiplayer">Ziva</a>).</p>
+      <p style="margin:0;font-size:17px;text-wrap:pretty">The hardest PvP problem is the hijack itself. The moment a pilot boards an enemy hull, network ownership of that hull has to pass to the new pilot. That's why PvP gets its own prototype from April and ships in Update 1.</p>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-wrap:wrap;gap:40px;padding:40px 0;border-bottom:1px solid #cfc8bc">
+    <div style="display:flex;flex-direction:column;gap:16px;flex:999 1 480px;min-width:0">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">04 · Team</span>
+      <h2 style="margin:0;font-weight:500;font-size:36px;line-height:1.1">Six core roles, two rendering seats</h2>
+      <ol style="margin:0;padding-left:26px;display:flex;flex-direction:column;gap:8px">
+        <li><strong style="font-weight:600">Director-producer.</strong> Owns scope, the schedule, Steamworks and outsourcing.</li>
+        <li><strong style="font-weight:600">Gameplay engineer.</strong> Vehicles, pilot, hijack, damage.</li>
+        <li><strong style="font-weight:600">Systems engineer.</strong> AI, mission scripting, saves, GodotSteam, CI.</li>
+        <li><strong style="font-weight:600">Technical artist.</strong> Terrain, lighting, VFX, shaders, the Deck performance budget.</li>
+        <li><strong style="font-weight:600">Level designer.</strong> Missions and skirmish maps on MOLA terrain.</li>
+        <li><strong style="font-weight:600">UI and audio integrator.</strong> HUD, menus, controller navigation, glyphs, mixing.</li>
+        <li style="color:#3d3833"><strong style="font-weight:600">Seat 7: rendering engineer</strong>, from January. Owns the render pipeline, shaders and GPU profiling.</li>
+        <li style="color:#3d3833"><strong style="font-weight:600">Seat 8: environment and lighting artist</strong>, from January. Terrain materials, rock scatter, per-site lighting.</li>
+        <li style="color:#3d3833"><strong style="font-weight:600">Contract:</strong> a network engineer from April for PvP, and outsourced QA from March.</li>
+      </ol>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;flex:1 1 300px;min-width:0">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">Outsourced, briefed in December</span>
+      <p style="margin:0;font-size:17px;text-wrap:pretty">3D models and rigging come first, because missions can't reach final quality without the hulls. Each brief includes the asset manifest (real metres, triangle budget, clip list). For music, SFX and voice, Act 1 is recorded first and the rest after launch. The store capsule art and trailer are due in late January so the Coming Soon page can go up in February.</p>
+    </div>
+  </section>
+  <section style="display:flex;flex-direction:column;gap:24px;padding:40px 0;border-bottom:1px solid #cfc8bc">
+    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">05 · Rendering and visual quality</span>
+    <h2 style="margin:0;font-weight:500;font-size:36px;line-height:1.1">Visual quality is checked against references, not judged by eye</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:40px">
+      <div style="display:flex;flex-direction:column;gap:16px;flex:999 1 480px;min-width:0">
+        <p style="margin:0;text-wrap:pretty">Three people own the image: the core technical artist, a rendering engineer and an environment and lighting artist. Explosion and dust VFX packs and hero-hull texturing are outsourced to specialists. The pipeline choices below are my recommendations for Godot.</p>
+        <ul style="margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px">
+          <li style="text-wrap:pretty"><strong style="font-weight:600">Renderer.</strong> Forward+ on Vulkan for every platform, so PC and Deck share one look and differ only in presets.</li>
+          <li style="text-wrap:pretty"><strong style="font-weight:600">Lighting.</strong> On PC, real-time global illumination (SDFGI) across the open terrain. Baked lightmaps inside bases. On Deck, sky ambient plus SSAO. One physical sun drives the real day/night cycle at every site.</li>
+          <li style="text-wrap:pretty"><strong style="font-weight:600">Atmosphere.</strong> Volumetric fog for dust storms and distance haze. The sky shader's butterscotch colour is checked against Curiosity and Perseverance frames.</li>
+          <li style="text-wrap:pretty"><strong style="font-weight:600">Image quality.</strong> TAA on PC. On Deck, the scene renders below 800p and Godot's built-in FSR 2 upscales it. HDR output for supported displays, which arrived in Godot 4.7 (<a href="https://ziva.sh/blogs/godot-4-7">Ziva</a>).</li>
+          <li style="text-wrap:pretty"><strong style="font-weight:600">No shader stutter.</strong> Use the shader baker added in Godot 4.5 (<a href="https://ziva.sh/blogs/godot-4-7">Ziva</a>), so shaders are compiled before the first mission instead of hitching mid-fight.</li>
+          <li style="text-wrap:pretty"><strong style="font-weight:600">Materials.</strong> Physically based materials with consistent texel density. Targets: 512 px/m on hero hulls, 256 px/m on props. Regolith and rock layers are built from HiRISE and rover imagery, with decals for tracks, scorch and dust.</li>
+        </ul>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;flex:1 1 300px;min-width:0;border-top:3px solid #9a3f22;padding-top:14px;align-self:start">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">Quality gate, weekly</span>
+        <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:17px">
+          <li>Each mission site gets a reference board of rover frames at a matching sun angle.</li>
+          <li>Every changed shot is screenshotted beside its reference frame.</li>
+          <li>Sky colour, exposure and regolith tone are checked with a colour picker against the reference.</li>
+          <li>The art director gives the verdict first. "Looks fine" doesn't pass.</li>
+          <li>GPU time for each changed shot is profiled on the Deck and on a min-spec PC.</li>
+        </ul>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:0 32px">
+      <div style="display:flex;flex-direction:column;gap:6px;padding:14px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:#1a1816">Steam Deck · 40 fps target</span><span style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.5;color:#3d3833">800p output with FSR 2 upscaling · sky ambient + SSAO · medium shadows · light volumetric fog · baked base lighting</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;padding:14px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:#1a1816">PC Medium · 60 fps at 1080p</span><span style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.5;color:#3d3833">Native resolution, TAA · SDFGI low · high shadows · full volumetric fog</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;padding:14px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:#1a1816">PC High · 60 fps at 1440p</span><span style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.5;color:#3d3833">SDFGI high · soft shadows · HDR output · full post stack (bloom, grade, grain)</span></div>
+    </div>
+    <p style="margin:0;font-size:15px;font-family:'Barlow',sans-serif;color:#6b645c">The frame-rate and texel-density figures are targets I've set. Benchmark them on hardware during the March Deck pass.</p>
+  </section>
+  <section style="display:flex;flex-direction:column;gap:24px;padding:40px 0;border-bottom:1px solid #cfc8bc">
+    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">06 · Flight</span>
+    <h2 style="margin:0;font-weight:500;font-size:36px;line-height:1.1">Cockpit dogfights that end in a hijack</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:40px">
+      <div style="display:flex;flex-direction:column;gap:16px;flex:999 1 480px;min-width:0">
+        <p style="margin:0;text-wrap:pretty">Flight missions draw on the classic space-combat-sim tradition: a cockpit view, close dogfights and managing your power under fire. They have to stay hard sci-fi, though, and they have to feed the hijack loop. These rules are my recommendations.</p>
+        <ul style="margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px">
+          <li style="text-wrap:pretty"><strong style="font-weight:600">Where flight happens.</strong> Mars's air is about 1% as dense as Earth's at sea level, so winged dogfights low over the surface wouldn't be credible. Flight happens in orbit around the Ares Ring and Phobos, and in rocket-powered descents and ascents between orbit and the surface.</li>
+          <li style="text-wrap:pretty"><strong style="font-weight:600">Flight model.</strong> Newtonian, with a flight-assist toggle. With assist on, damping makes it easy to fly on a controller or Deck. With it off, you get true inertia for experts.</li>
+          <li style="text-wrap:pretty"><strong style="font-weight:600">Power split.</strong> The pilot divides the methalox cell's output between thrust, guns and armour. These are the same cells as on the ground, so a hit to the cell bay matters in the air too.</li>
+          <li style="text-wrap:pretty"><strong style="font-weight:600">Hijack in orbit.</strong> Knock out a fighter's engines without destroying it, match its velocity and eject. Cross to it with the jetpack, force its pilot out with GASHR and take the craft. Flight becomes the core fantasy in a new place, not a separate game.</li>
+        </ul>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;flex:1 1 300px;min-width:0;border-top:3px solid #9a3f22;padding-top:14px;align-self:start">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">Act 3, the gamble</span>
+        <ol style="margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:17px">
+          <li style="text-wrap:pretty"><strong style="font-weight:600">Descent escort.</strong> Cover a Starship-class tanker's powered descent to your base while Starfall interceptors attack it.</li>
+          <li style="text-wrap:pretty"><strong style="font-weight:600">Phobos intercept.</strong> Catch a Darken courier near Phobos and disable it so it can be captured.</li>
+          <li style="text-wrap:pretty"><strong style="font-weight:600">Ares Ring boarding.</strong> Fight your way to the dock, cross the hull on foot and escape in the station's own fighter. This sets up the reversal.</li>
+        </ol>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <h3 style="margin:0;font-weight:500;font-size:26px;line-height:1.2">The supply chain gives you a reason to fly</h3>
+      <p style="margin:0;max-width:820px;text-wrap:pretty">Mining feeds a chain of rovers and ships that runs to a timetable in every mission. You can see landers launch and land on the horizon even during ground missions. Each link in the chain can be attacked and hijacked, and cutting a link lowers that faction's cell stock on the war map.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1 1 170px;min-width:0;padding:14px 14px 16px;background:#e8e3d8;border-top:3px solid #1a1816"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#6b645c">1 · Ice pit and mine</span><span style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.45">Excavators dig ice and ore while HAWCs guard the pit.</span><span style="font-family:'Barlow',sans-serif;font-size:14px;line-height:1.45;color:#9a3f22">Hit it: take the mine, as in Level 1.</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1 1 170px;min-width:0;padding:14px 14px 16px;background:#e8e3d8;border-top:3px solid #1a1816"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#6b645c">2 · Rover convoy</span><span style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.45">Six-wheel haulers carry ice and ore to the plant.</span><span style="font-family:'Barlow',sans-serif;font-size:14px;line-height:1.45;color:#9a3f22">Hit it: ambush the convoy, cripple a bogie, take the cab.</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1 1 170px;min-width:0;padding:14px 14px 16px;background:#e8e3d8;border-top:3px solid #1a1816"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#6b645c">3 · Plant and cell dock</span><span style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.45">Sabatier and electrolysis make methalox, and the dock charges cells.</span><span style="font-family:'Barlow',sans-serif;font-size:14px;line-height:1.45;color:#9a3f22">Hit it: cut the plant and enemy HAWCs run dry.</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1 1 170px;min-width:0;padding:14px 14px 16px;background:#e8e3d8;border-top:3px solid #9a3f22"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#6b645c">4 · Pad and tanker</span><span style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.45">A Starship-class tanker loads up and launches to orbit.</span><span style="font-family:'Barlow',sans-serif;font-size:14px;line-height:1.45;color:#9a3f22">Hit it: intercept on ascent, when it is heaviest and slowest.</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1 1 170px;min-width:0;padding:14px 14px 16px;background:#e8e3d8;border-top:3px solid #1a1816"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#6b645c">5 · Ares Ring</span><span style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.45">Cargo comes back down as parts and fresh hulls.</span><span style="font-family:'Barlow',sans-serif;font-size:14px;line-height:1.45;color:#9a3f22">Hit it: board the station in orbit.</span></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:0 32px">
+      <div style="display:flex;flex-direction:column;gap:6px;padding:14px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase">Feb–Apr 2027 · Browser lab</span><span style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.5;color:#3d3833">Prototype the flight feel, the power split and the orbital EVA hijack, plus timetabled rover and lander traffic. Port cards come out of this.</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;padding:14px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase">Aug–Dec 2027 · Godot</span><span style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.5;color:#3d3833">Build flight after the Early Access launch, so it stays off the critical path. The gameplay engineer leads.</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;padding:14px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase">Assets</span><span style="font-family:'Barlow',sans-serif;font-size:15px;line-height:1.5;color:#3d3833">A fighter hull with its cockpit (start from space_fighter.fbx), a cargo lander with launch and landing sequences, the convoy rover, the Ares Ring exterior and dock, and your space station .blend exported as GLB.</span></div>
+    </div>
+  </section>
+  <section style="display:flex;flex-wrap:wrap;gap:40px;padding:40px 0;border-bottom:1px solid #cfc8bc">
+    <div style="display:flex;flex-direction:column;gap:16px;flex:999 1 480px;min-width:0">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">07 · Population and control</span>
+      <h2 style="margin:0;font-weight:500;font-size:36px;line-height:1.1">Every base is a town, and someone runs it</h2>
+      <p style="margin:0;text-wrap:pretty">People keep the supply chain running. Each base has a fictional population living in regolith-shielded habs and working shifts: miners, rover drivers, plant technicians, pad crews, traffic controllers and medics. These systems are my recommendations.</p>
+      <ul style="margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px">
+        <li style="text-wrap:pretty"><strong style="font-weight:600">Crew drives output.</strong> A base makes cells at a rate set by the crew on shift, the plant's capacity and the depth of its ice. Scatter the crew and the chain slows. When you capture a base, its crew either works for you or refuses, depending on morale.</li>
+        <li style="text-wrap:pretty"><strong style="font-weight:600">Control towers.</strong> Each tower sets the base's convoy timetable and lander slots. Take the tower and you can send a convoy into an ambush or hold a tanker on the pad. In effect you hijack the schedule as well as the hull.</li>
+        <li style="text-wrap:pretty"><strong style="font-weight:600">Life support.</strong> The same Sabatier and electrolysis plant makes the oxygen people breathe, so cutting it has a human cost. Crews have a few hours of reserve, and the game shows what follows: distress calls and evacuation rovers. Nobody cheers.</li>
+        <li style="text-wrap:pretty"><strong style="font-weight:600">Non-combatants.</strong> Civilians don't fight. They shelter, evacuate or surrender. Pilots who eject survive as the same person, because the rule is capture, not kill. Hitting habs costs you reputation with every faction and changes how bases receive you.</li>
+        <li style="text-wrap:pretty"><strong style="font-weight:600">Control map.</strong> The war map shows who controls each base and how many people live there. A base changes hands when you take its tower and cell dock, not when everyone in it is dead.</li>
+      </ul>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;flex:1 1 300px;min-width:0;border-top:3px solid #9a3f22;padding-top:14px;align-self:start">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">What the player sees</span>
+      <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:17px">
+        <li>Crews walking between habs at shift change</li>
+        <li>Lit hab windows at night</li>
+        <li>Tower radio calling convoy and lander slots</li>
+        <li>Suited workers who flee, take cover or surrender</li>
+      </ul>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c;padding-top:8px">Build</span>
+      <p style="margin:0;font-size:17px;text-wrap:pretty">The full population is simulated as numbers, and only the nearest 20–40 people are rendered, using Godot's MultiMesh and animation LOD. That needs three suit variants per faction, rigged with about ten clips each: walk, work, carry, flee, surrender and board vehicle. Rigging is outsourced. Act 1 needs the mining base's crew and tower. The full population system arrives in Update 1.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;flex:1 1 100%;min-width:0;border-top:1px solid #cfc8bc;padding-top:28px">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">Settlement scale</span>
+      <h3 style="margin:0;font-weight:500;font-size:28px;line-height:1.15">From a six-person outpost to a city of ten thousand</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;flex-direction:column;gap:4px;flex:1 1 180px;min-width:0;padding:12px 14px 14px;background:#e8e3d8;border-top:3px solid #1a1816"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase">Outpost</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:22px;line-height:1">6–20 people</span><span style="font-family:'Barlow',sans-serif;font-size:14.5px;line-height:1.45;color:#3d3833">One hab, a pad, an ice pit. Union forward camps.</span></div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex:1 1 180px;min-width:0;padding:12px 14px 14px;background:#e8e3d8;border-top:3px solid #1a1816"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase">Base</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:22px;line-height:1">50–200</span><span style="font-family:'Barlow',sans-serif;font-size:14.5px;line-height:1.45;color:#3d3833">Plant, cell dock, tower, convoy yard. Level 1's mining base.</span></div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex:1 1 180px;min-width:0;padding:12px 14px 14px;background:#e8e3d8;border-top:3px solid #1a1816"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase">Town</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:22px;line-height:1">500–2,000</span><span style="font-family:'Barlow',sans-serif;font-size:14.5px;line-height:1.45;color:#3d3833">Greenhouse domes, workshops, several pads, a hospital.</span></div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex:1 1 180px;min-width:0;padding:12px 14px 14px;background:#e8e3d8;border-top:3px solid #9a3f22"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:.12em;text-transform:uppercase">City</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:22px;line-height:1">10,000+</span><span style="font-family:'Barlow',sans-serif;font-size:14.5px;line-height:1.45;color:#3d3833">Starfall's capital. A grid of pressurised blocks with a launch field.</span></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:40px">
+        <div style="display:flex;flex-direction:column;gap:12px;flex:999 1 480px;min-width:0">
+          <p style="margin:0;text-wrap:pretty"><strong style="font-weight:600">The city, from your reference image.</strong> Pressurised blocks, domes and towers sit on a street grid, linked by tube corridors. Hex-panelled greenhouse domes are spread through the blocks. At the edge, a launch field with long straight roads runs out to the outer pads, and a solar field fills the far side.</p>
+          <p style="margin:0;text-wrap:pretty"><strong style="font-weight:600">Where.</strong> Arcadia Planitia, at the real candidate sites studied for Starship landings. Researchers call it one of the few regions where abundant shallow ice is present at relatively low latitude (<a href="https://www.geekwire.com/2019/nasa-checks-spacexs-potential-starship-landing-sites-mars-water-mind/">GeekWire</a>). A 2025 study puts the ice table at roughly 8–12 cm deep in parts of the region (<a href="https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2024JE008724">JGR Planets</a>). That is why the city is rich in cells, and why everyone wants it.</p>
+          <p style="margin:0;text-wrap:pretty"><strong style="font-weight:600">How you fight there.</strong> Thousands of civilians live in the pressurised core. Firing into a block decompresses it, which causes casualties and costs you reputation. So city missions are about the edges: the launch field, the solar field, the ice mine and the tower. Take those and the city has to deal with you.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;flex:1 1 300px;min-width:0;border-top:3px solid #9a3f22;padding-top:14px;align-self:start">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">Rendering a city</span>
+          <p style="margin:0;font-size:17px;text-wrap:pretty">Build it from a modular kit of about 25 pieces: hab block, dome, greenhouse, tower, straight, T and X corridors, pad, and a solar row. The pieces are placed on the street grid by rules, then hand-dressed.</p>
+          <p style="margin:0;font-size:17px;text-wrap:pretty">Repeated pieces are drawn with MultiMesh instancing. Distant blocks merge into combined low-detail meshes. Lights in the city windows follow the real day/night cycle. This is the biggest single job for the two rendering seats.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-wrap:wrap;gap:40px;padding:40px 0;border-bottom:1px solid #cfc8bc">
+    <div style="display:flex;flex-direction:column;gap:16px;flex:999 1 480px;min-width:0">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">08 · This browser edition</span>
+      <h2 style="margin:0;font-weight:500;font-size:36px;line-height:1.1">A prototype lab with a hand-off rule</h2>
+      <p style="margin:0;text-wrap:pretty">Features are tested here first because iteration is quick. When one is proven, it gets a port card: a short spec, its tuning numbers, a reference capture and the acceptance test. Only port cards go into the Godot backlog. Nothing is copied over as code.</p>
+      <p style="margin:0;text-wrap:pretty">Proven and ready to port: the hijack loop and GASHR, the MOLA horizon, the real sky and day/night cycle, the methalox cell economy, the Level 1 storyboard and the settings screen. Next to prototype here, from the research report: trauma-based camera shake with hit-stop, and the field log and scanner. After those, the flight model, the cell power split and the orbital EVA hijack.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;flex:1 1 300px;min-width:0;border-top:3px solid #9a3f22;padding-top:14px;align-self:start">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">Definition of done, every piece</span>
+      <ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:17px">
+        <li>Every frame holds up as a still next to real Mars photos</li>
+        <li>Fully playable with a controller, with correct glyphs</li>
+        <li>40 fps on the Deck preset</li>
+        <li>No errors in the log, and the save loads</li>
+        <li>Five playtesters finish it without help</li>
+      </ul>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px;padding:40px 0;border-bottom:1px solid #cfc8bc">
+    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">09 · Risks</span>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:0 32px">
+      <div style="display:flex;flex-direction:column;gap:4px;padding:12px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:#9a3f22">High · Scope</span><span style="font-size:17px">Missions are the bottleneck. Lock the mission template in the vertical slice so missions 2–8 reuse it.</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;padding:12px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:#9a3f22">High · PvP netcode</span><span style="font-size:17px">Handing hull ownership to the hijacker mid-fight. Prototype it in April and keep it off the critical path.</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;padding:12px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:#6b645c">Medium · Repo state unknown</span><span style="font-size:17px">The Godot repo isn't connected, so the December estimates are assumptions until I can read it.</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;padding:12px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:#6b645c">Medium · Deck performance</span><span style="font-size:17px">The 160 km MOLA horizon and post-processing. Build the Deck preset in March, not May.</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;padding:12px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:#6b645c">Medium · Outsourcing lag</span><span style="font-size:17px">Hulls arrive late. Grey-box every class so gameplay never waits on art.</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;padding:12px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:#6b645c">Medium · Crowd cost on Deck</span><span style="font-size:17px">Large numbers of animated people are expensive to render. Simulate the full population and render only the nearest 20–40 people.</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;padding:12px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:#6b645c">Medium · Flight scope creep</span><span style="font-size:17px">Flight is a second control scheme and a second set of levels. Keep it in the browser lab until Early Access ships.</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;padding:12px 0;border-top:1px solid #cfc8bc"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:#6b645c">Low now · Consoles</span><span style="font-size:17px">Godot needs a third-party console build, either middleware such as W4 or a porting studio (<a href="https://docs.godotengine.org/en/4.4/tutorials/platform/consoles.html">Godot docs</a>). Plan it after 1.0.</span></div>
+    </div>
+  </section>
+
+  <footer style="display:flex;flex-direction:column;gap:10px;padding-top:32px;font-family:'Barlow',sans-serif;font-size:14.5px;line-height:1.5">
+    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#6b645c">Sources (read 26 November 2026)</span>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:6px 28px">
+      <a href="https://partner.steamgames.com/doc/gettingstarted/onboarding">Steamworks: Onboarding</a>
+      <a href="https://partner.steamgames.com/doc/store/types">Steamworks: Release options</a>
+      <a href="https://partner.steamgames.com/doc/store/coming_soon">Steamworks: Coming Soon</a>
+      <a href="https://partner.steamgames.com/doc/store/release_dates">Steamworks: Release dates</a>
+      <a href="https://steamcommunity.com/app/1372880/discussions/0/4031347929699840620">Steam Early Access rules (as quoted)</a>
+      <a href="https://nextwishlist.com/guides/steam-next-fest-dates">Next Wishlist: Next Fest 2027 deadlines</a>
+      <a href="https://games.gg/news/steam-next-fest-2027-developer-preparation/">games.gg: Next Fest 2027 guide</a>
+      <a href="https://tvashtastudio.com/blog/steam-next-fest-guide">Tvashta: Next Fest guide</a>
+      <a href="https://gamedevproducer.com/steam-sale-dates/">GameDev Producer: Steam sale dates</a>
+      <a href="https://ai-game.dev/blog/how-to-release-a-game-on-steam">AI Game Dev: Steam release checklist</a>
+      <a href="https://www.gamingonlinux.com/guides/view/what-steam-deck-steam-machine-steam-frame-and-steamos-verified-ratings-mean/">GamingOnLinux: Deck Verified ratings</a>
+      <a href="https://dev.to/aplusgamesstudio/steam-deck-verified-how-to-get-your-game-approved-kf4">A+ Games: Deck Verified criteria</a>
+      <a href="https://envyui.com/blog/steam-deck-ui-checklist">Envy: Deck UI checklist</a>
+      <a href="https://gtstu.com/steam-deck-optimization-indie/">GTSTU: Deck optimisation</a>
+      <a href="https://godotawesome.com/godot-versions/">Godot Awesome: Godot versions</a>
+      <a href="https://ziva.sh/blogs/godot-4-7">Ziva: Godot 4.7</a>
+      <a href="https://ziva.sh/blogs/godot-multiplayer">Ziva: Godot multiplayer in 2026</a>
+      <a href="https://github.com/GodotSteam/GodotSteam">GodotSteam</a>
+      <a href="https://codeberg.org/godotsteam/multiplayerpeer">GodotSteam MultiplayerPeer</a>
+      <a href="https://docs.godotengine.org/en/4.4/tutorials/platform/consoles.html">Godot docs: Console support</a>
+      <a href="https://www.w4games.com/w4consoles">W4 Consoles</a>
+      <a href="https://www.geekwire.com/2019/nasa-checks-spacexs-potential-starship-landing-sites-mars-water-mind/">GeekWire: Starship landing sites and ice</a>
+      <a href="https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2024JE008724">JGR Planets: Near-surface ice at Amazonis/Arcadia sites (2025)</a>
+    </div>
+    <span style="color:#6b645c;padding-top:12px">Mars HAWC © 2026 sinhaankur.</span>
+  </footer>
+</article>
+</x-dc>
+</body>
+</html>

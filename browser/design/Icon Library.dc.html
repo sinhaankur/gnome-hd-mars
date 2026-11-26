@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com"></link>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Barlow:wght@400;500&amp;display=swap" rel="stylesheet"></link>
+  <style>html, body { margin: 0; background: #030405; } a { color: #94bce3; } a:hover { color: #b5d9fd; }</style>
+</helmet>
+<div style="min-height:100vh;background:{{ bg }};color:{{ fg }};font-family:'Barlow',system-ui,sans-serif;transition:background .2s,color .2s">
+  <div style="max-width:1180px;margin:0 auto;padding:44px 28px 72px;display:flex;flex-direction:column;gap:28px">
+    <header style="display:flex;flex-direction:column;gap:10px">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#94bce3">Mars HAWC · Icon library</span>
+      <h1 style="margin:0;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:clamp(40px,6vw,64px);line-height:1">{{ count }} icons, one grid</h1>
+      <p style="margin:0;max-width:720px;font-size:17px;line-height:1.55;opacity:.82;text-wrap:pretty">A 24 px grid, a 1.5 px stroke, square caps and mitred joins. Everything uses currentColor, so an icon takes on the colour of its text. The source lives in hawc/icons.js and the game imports it from there. Click any tile to copy its SVG.</p>
+    </header>
+
+    <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:center;padding:14px 0;border-top:1px solid {{ line }};border-bottom:1px solid {{ line }}">
+      <input value="{{ q }}" onInput="{{ onQ }}" placeholder="Search icons" style="flex:1 1 220px;min-width:0;height:40px;padding:0 12px;background:transparent;border:1px solid {{ line }};color:inherit;font:inherit;font-size:15px;outline:none"></input>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.7;margin-right:4px">Size</span>
+        <sc-for list="{{ sizes }}" as="o" hint-placeholder-count="5">
+          <button onClick="{{ o.onClick }}" style="height:36px;min-width:44px;padding:0 10px;border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.color }};font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:background .12s,color .12s">{{ o.label }}</button>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.7;margin-right:4px">Stroke</span>
+        <sc-for list="{{ strokes }}" as="o" hint-placeholder-count="3">
+          <button onClick="{{ o.onClick }}" style="height:36px;min-width:44px;padding:0 10px;border:1px solid {{ o.border }};background:{{ o.bg }};color:{{ o.color }};font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:background .12s,color .12s">{{ o.label }}</button>
+        </sc-for>
+      </div>
+      <button onClick="{{ toggleTheme }}" role="switch" aria-checked="{{ lightOn }}" style="display:flex;align-items:center;gap:10px;height:36px;padding:0;background:none;border:0;color:inherit;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase">
+        <span style="position:relative;flex:none;width:40px;height:22px;border:1px solid {{ trackBorder }};background:{{ trackBg }};transition:background .16s,border-color .16s"><span style="position:absolute;top:3px;left:{{ knobX }};width:14px;height:14px;background:{{ knobBg }};transition:left .16s cubic-bezier(.2,.8,.2,1),background .16s"></span></span>
+        <span style="white-space:nowrap">Light ground</span>
+      </button>
+    </div>
+
+    <sc-for list="{{ groups }}" as="g" hint-placeholder-count="6">
+      <section style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+          <h2 style="margin:0;flex:1 1 auto;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:24px">{{ g.label }}</h2>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;opacity:.6">{{ g.n }}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));border-top:1px solid {{ line }};border-left:1px solid {{ line }}">
+          <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="8">
+            <button onClick="{{ it.onClick }}" title="{{ it.usage }}" style="display:flex;flex-direction:column;align-items:flex-start;gap:14px;padding:16px 14px 14px;background:{{ tile }};border:0;border-right:1px solid {{ line }};border-bottom:1px solid {{ line }};color:inherit;text-align:left;cursor:pointer;font:inherit;transition:background .12s" style-hover="background:{{ tileHover }}">
+              <span style="display:grid;place-items:center;height:52px;color:{{ it.color }}">{{ it.el }}</span>
+              <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:15px;letter-spacing:.04em">{{ it.name }}</span>
+                <span style="font-size:13px;line-height:1.35;opacity:.68;text-wrap:pretty">{{ it.usage }}</span>
+              </span>
+            </button>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+
+    <section style="display:flex;flex-direction:column;gap:14px;padding-top:12px;border-top:1px solid {{ line }}">
+      <h2 style="margin:0;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:24px">In use</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px">
+        <div style="display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid {{ line }}">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.7">HUD weapon row</span>
+          <sc-for list="{{ hudRows }}" as="r" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid {{ line }}">
+              <span style="display:grid;place-items:center;color:#b5d9fd">{{ r.el }}</span>
+              <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:16px">{{ r.name }}</span>
+              <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:16px;font-variant-numeric:tabular-nums">{{ r.v }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid {{ line }}">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.7">Panel header and buttons</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:28px">Settings</span>
+            <button aria-label="Close" style="display:grid;place-items:center;width:44px;height:44px;background:transparent;border:1px solid {{ line }};color:inherit;cursor:pointer;transition:background .12s,border-color .12s" style-hover="background:{{ tileHover }};border-color:#94bce3">{{ closeEl }}</button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button style="display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;background:#b5d9fd;border:1px solid #b5d9fd;color:#1d2d3d;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:16px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;cursor:pointer">Deploy {{ nextEl }}</button>
+            <button style="display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;background:transparent;border:1px solid {{ line }};color:inherit;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:16px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;cursor:pointer">{{ hawcEl }} Change HAWC</button>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid {{ line }}">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.7">War room operations</span>
+          <sc-for list="{{ opRows }}" as="r" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:12px;padding:8px 10px;border:1px solid {{ line }}">
+              <span style="display:grid;place-items:center;color:{{ r.color }}">{{ r.el }}</span>
+              <span style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:{{ r.color }}">{{ r.kind }}</span><span style="font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:18px">{{ r.title }}</span></span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <sc-if value="{{ copied }}">
+      <div style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);padding:10px 16px;background:#b5d9fd;color:#1d2d3d;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:15px;letter-spacing:.06em">{{ copied }}</div>
+    </sc-if>
+    <span style="font-size:13px;opacity:.55">Mars HAWC © 2026 sinhaankur.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { lib: null, size: 24, stroke: 1.5, light: false, q: '', copied: '' };
+  componentDidMount() { import('./hawc/icons.js?v=2').then((m) => this.setState({ lib: m })); }
+  ic(name, size, stroke) { const L = this.state.lib; if (!L) return null; return React.createElement('span', { style: { display: 'block', width: size, height: size }, dangerouslySetInnerHTML: { __html: L.svg(name, size, stroke ?? this.state.stroke) } }); }
+  copy(name) { const L = this.state.lib; const txt = L.svg(name, this.state.size, this.state.stroke); try { navigator.clipboard?.writeText(txt); } catch (e) {} this.setState({ copied: `Copied ${name}.svg` }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ copied: '' }), 1400); }
+  renderVals() {
+    const s = this.state, L = s.lib, light = s.light;
+    const fg = light ? '#1d1f20' : '#f2f2f3', bg = light ? '#f2f2f3' : '#030405', line = light ? 'rgba(29,31,32,.16)' : 'rgba(242,242,243,.14)';
+    const seg = (list, cur, key) => list.map((v) => { const on = v === cur; return { label: String(v), onClick: () => this.setState({ [key]: v }), bg: on ? '#94bce3' : 'transparent', color: on ? '#1d2d3d' : fg, border: on ? '#94bce3' : line }; });
+    const q = s.q.trim().toLowerCase();
+    const groups = !L ? [] : L.GROUPS.map(([id, label]) => {
+      const items = Object.entries(L.ICONS).filter(([n, v]) => v[0] === id && (!q || n.includes(q) || v[2].toLowerCase().includes(q)))
+        .map(([n, v]) => ({ name: n, usage: v[2], color: n === 'warning' ? '#ffb38a' : 'inherit', el: this.ic(n, s.size), onClick: () => this.copy(n) }));
+      return { label, n: `${items.length}`, items };
+    }).filter((g) => g.items.length);
+    return {
+      bg, fg, line, tile: light ? '#f2f2f3' : '#07090b', tileHover: light ? '#e6e6e8' : '#101419',
+      count: L ? Object.keys(L.ICONS).length : '', q: s.q, onQ: (e) => this.setState({ q: e.target.value }),
+      sizes: seg([16, 20, 24, 32, 48], s.size, 'size'), strokes: seg([1.25, 1.5, 2], s.stroke, 'stroke'),
+      toggleTheme: () => this.setState({ light: !light }), lightOn: light ? 'true' : 'false',
+      trackBg: light ? '#94bce3' : 'transparent', trackBorder: light ? '#94bce3' : line, knobX: light ? '22px' : '3px', knobBg: light ? '#1d2d3d' : fg,
+      groups,
+      hudRows: [['autocannon', 'Autocannon Mk I', '800'], ['missile', 'Missiles ×4', '24'], ['cell', 'Power · 3 spare', '94%']].map(([n, name, v]) => ({ el: this.ic(n, 22), name, v })),
+      opRows: [['defend', 'Defend', 'Hold Perseverance', '#ffb38a'], ['capture', 'Capture', 'Take Opportunity', '#94bce3'], ['hijack', 'Hijack', 'Borrowed iron at Spirit', '#94bce3'], ['lander', 'Protect lander', 'Lift-off at Phoenix', '#94bce3']].map(([n, kind, title, color]) => ({ el: this.ic(n, 24), kind, title, color })),
+      closeEl: this.ic('close', 20), nextEl: this.ic('next', 18), hawcEl: this.ic('hawc', 18),
+      copied: s.copied,
+    };
+  }
+}
+</script>
+</body>
+</html>
