@@ -12,17 +12,21 @@ class_name MarsStars
 const RADIUS := 4000.0
 var _mat: ShaderMaterial
 
-static func make(seed_val: int = 7) -> MarsStars:
+# radius lets the same dome serve the big game world (default 4000) and the small strategic
+# globe (e.g. 120). always_on = true keeps stars at full brightness (space scenes with no day cycle).
+static func make(seed_val: int = 7, radius: float = RADIUS, always_on: bool = false) -> MarsStars:
 	var s := MarsStars.new()
 	s.name = "MarsStars"
-	s._build(seed_val)
+	s._build(seed_val, radius)
+	if always_on:
+		s.set_night(1.0)
 	return s
 
-func _build(seed_val: int) -> void:
+func _build(seed_val: int, radius: float) -> void:
 	# a big sphere, rendered from the INSIDE (flip faces), unshaded, behind geometry
 	var sph := SphereMesh.new()
-	sph.radius = RADIUS
-	sph.height = RADIUS * 2.0
+	sph.radius = radius
+	sph.height = radius * 2.0
 	sph.radial_segments = 64
 	sph.rings = 32
 	sph.flip_faces = true
