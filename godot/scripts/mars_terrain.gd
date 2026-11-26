@@ -255,6 +255,20 @@ void fragment(){
 	float slope = 1.0 - clamp(v_nrm.y, 0.0, 1.0);
 	col = mix(col, slope_col, smoothstep(0.35,0.7,slope));
 
+	// RECURRING SLOPE LINEAE (ecosystem #5): dark narrow streaks that run DOWN steep slopes.
+	// Real RSL (HiRISE): 0.5-5 m wide, only on slopes steeper than ~28deg, darker than
+	// surroundings, following the fall line. Here: only where slope is steep, striped along
+	// the downhill horizontal direction so they read as vertical streaks on canyon walls.
+	float rsl_slope = smoothstep(0.42, 0.62, slope);                 // ~28deg+ only
+	if (rsl_slope > 0.001) {
+		vec2 downhill = normalize(v_nrm.xz + vec2(1e-5));            // horizontal downslope dir
+		float along = dot(w, vec2(-downhill.y, downhill.x));         // coordinate ACROSS the slope
+		float streak = fbm(vec2(along * 0.9, dot(w, downhill) * 0.08));
+		float lineae = smoothstep(0.52, 0.6, streak) * smoothstep(0.78, 0.62, streak); // thin bands
+		// dark, slightly reddened (briny/damp look), only on the steep faces
+		col = mix(col, slope_col * vec3(0.52, 0.46, 0.44), lineae * rsl_slope * 0.8);
+	}
+
 	// perturb normal slightly for a rougher, grittier surface under light
 	vec3 n = v_nrm;
 	float nx = fbm(w*3.0+vec2(1.0,0.0)) - fbm(w*3.0-vec2(1.0,0.0));
