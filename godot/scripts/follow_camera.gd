@@ -7,19 +7,27 @@ extends Camera3D
 
 enum Mode { THIRD, FIRST, FAR }
 
+# --- framing tuned for a ~7 m hero HAWC (research: anchor at the shoulders, look slightly
+#     DOWN over the mech, offset to one shoulder so its bulk never covers the reticle) ---
 @export var target_path: NodePath
-@export var distance: float = 12.0        # how far behind the mech (tighter = hero mech fills frame)
-@export var height: float = 6.0           # pivot height on the mech
-@export var min_pitch: float = -0.5       # look up limit (radians)
+@export var distance: float = 9.5         # boom length behind the mech (closer = hero mech fills frame)
+@export var height: float = 8.5           # pivot just ABOVE the shoulders (was mid-torso)
+@export var shoulder_offset: float = 1.8  # lateral over-the-shoulder offset (0 = centred). KEY fix.
+@export var min_pitch: float = -0.4       # look up limit (radians)
 @export var max_pitch: float = 1.1        # look down limit (radians)
 @export var mouse_sens: float = 0.005
 @export var pos_smooth: float = 12.0      # position follow damping
 @export var aim_smooth: float = 14.0      # look-target damping
-@export var look_height: float = 4.5      # aim point height on the mech
-@export var base_fov: float = 62.0
+@export var look_height: float = 6.8      # aim point near the shoulders → camera looks slightly down
+@export var base_fov: float = 60.0
 @export var speed_fov: float = 8.0        # extra FOV at full speed
-@export var speed_pullback: float = 3.0   # extra distance at full speed
+@export var speed_pullback: float = 2.5   # extra distance at full speed
 @export var collision_margin: float = 1.2 # keep the cam this far off surfaces
+# --- aim state: pull in tight + narrow the lens when the player holds aim ---
+@export var aim_distance: float = 6.0
+@export var aim_fov_drop: float = 12.0
+@export var aim_shoulder: float = 1.2
+var _aim: float = 0.0                      # 0 = follow framing, 1 = aim framing (eased)
 
 @export var cockpit_height: float = 6.2   # head height on the mech for first person
 @export var far_mult: float = 2.3         # FAR mode distance multiplier
@@ -112,12 +120,22 @@ func _physics_process(delta: float) -> void:
 			rotation.z = randf_range(-1, 1) * _shake * _shake * 0.03
 		return
 
-	# target distance: base per mode + wheel zoom + a little pull-back at speed
+	# --- aim state: ease _aim toward 1 while the aim action is held (THIRD mode only) ---
+	var want_aim := 1.0 if (_mode == Mode.THIRD and InputMap.has_action("aim") and Input.is_action_pressed("aim")) else 0.0
+	_aim = lerpf(_aim, want_aim, clampf(10.0 * delta, 0.0, 1.0))
+
+	# target distance: base per mode, tightened toward aim_distance when aiming, + zoom + speed
 	var mode_dist := distance * (far_mult if _mode == Mode.FAR else 1.0)
-	var want_dist := maxf(mode_dist + _zoom + speed_pullback * speed_ratio, 6.0)
+	mode_dist = lerpf(mode_dist, aim_distance, _aim if _mode == Mode.THIRD else 0.0)
+	var want_dist := maxf(mode_dist + _zoom + speed_pullback * speed_ratio * (1.0 - _aim), 5.0)
+
+	# over-the-shoulder lateral offset, eased tighter when aiming. Perpendicular to the view
+	# direction on the horizontal plane, so the mech's bulk never covers the reticle.
+	var off_amt := lerpf(shoulder_offset, aim_shoulder, _aim)
+	var side := Vector3(cos(yaw), 0.0, -sin(yaw)) * off_amt
 
 	# --- spring arm: cast from pivot toward the ideal cam pos; stop before obstacles ---
-	var pivot := _pivot()
+	var pivot := _pivot() + side
 	var ideal := pivot + _dir() * want_dist
 	var space := get_world_3d().direct_space_state
 	var q := PhysicsRayQueryParameters3D.create(pivot, ideal)
@@ -146,5 +164,6 @@ func _physics_process(delta: float) -> void:
 		global_position += jitter
 		rotation.z = randf_range(-1, 1) * s * 0.04
 
-	# --- dynamic FOV: widen a touch at speed ---
-	fov = lerpf(fov, base_fov + speed_fov * speed_ratio, clampf(6.0 * delta, 0.0, 1.0))
+	# --- dynamic FOV: widen a touch at speed, narrow hard when aiming ---
+	var target_fov := base_fov + speed_fov * speed_ratio * (1.0 - _aim) - aim_fov_drop * _aim
+	fov = lerpf(fov, target_fov, clampf(6.0 * delta, 0.0, 1.0))
