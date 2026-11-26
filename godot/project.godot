@@ -13,7 +13,7 @@ config_version=5
 config/name="Mars HAWC"
 config/description="Pilot a walking combat mech (HAWC) on the real Martian surface and defend your installation. A Mars mech-defense game."
 run/main_scene="res://scenes/main_menu.tscn"
-config/features=PackedStringArray("4.6", "Forward Plus")
+config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
@@ -28,26 +28,12 @@ Audio="*res://scripts/audio_manager.gd"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
-window/size/mode=0
-window/size/resizable=true
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-window/stretch/scale=1.0
 
 [dotnet]
 
 project/assembly_name="G-NOME HD"
-
-[rendering]
-
-anti_aliasing/quality/msaa_3d=2
-anti_aliasing/quality/screen_space_aa=1
-lights_and_shadows/directional_shadow/size=4096
-lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
-environment/ssao/quality=3
-environment/ssil/quality=2
-environment/glow/upscale_mode=1
-anti_aliasing/quality/use_taa=true
 
 [input]
 
@@ -124,8 +110,8 @@ fire={
 "pressed": false,
 "type": "InputEventKey"
 }, {
-"device": -1,
 "button_index": 1,
+"device": -1,
 "pressed": false,
 "type": "InputEventMouseButton"
 }]
@@ -153,8 +139,8 @@ camera_mode={
 secondary={
 "deadzone": 0.5,
 "events": [{
-"device": -1,
 "button_index": 2,
+"device": -1,
 "pressed": false,
 "type": "InputEventMouseButton"
 }, {
@@ -185,3 +171,11 @@ interact={
 "type": "InputEventKey"
 }]
 }
+
+[rendering]
+
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
+environment/ssao/quality=3
+anti_aliasing/quality/msaa_3d=2
+anti_aliasing/quality/screen_space_aa=1
+anti_aliasing/quality/use_taa=true
