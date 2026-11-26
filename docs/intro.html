@@ -272,8 +272,8 @@ async function buildWorld(onProgress){
        const k = frameAll(s); s.scale.setScalar(20/k); s.rotation.y = 0.5; station.add(s);
   }catch(e){ station.add(fallbackStation()); } tick();
 
-  // the descent ship that undocks (HAWC aboard, built in Blender → subship.glb). Its model
-  // nose is +X; the ship group travels toward +x, so the mesh already leads with the nose.
+  // the descent ship that undocks (HAWC aboard → subship.glb). It's a Starship-style VERTICAL
+  // lander (nose +Y up, legs at the base) — it descends and lands upright on its legs.
   try{ const sh = await load('assets/subship.glb');
        const k = frameAll(sh); sh.scale.setScalar(8/k); ship.add(sh);
   }catch(e){ ship.add(fallbackShip()); } tick();
@@ -371,21 +371,27 @@ function animate(time){
   station.position.set(-30, 70, -40);
   station.rotation.y = T*0.05;
 
-  // ship: docked → undocks → pitches down → enters → lands
+  // ship: docked → undocks → belly-first entry → flips upright → lands vertically on its legs.
+  // The subship is a Starship-style VERTICAL lander (nose +Y up, legs at the base), so it stays
+  // broadly upright and descends onto its legs — it does NOT fly nose-first like a plane.
   const undock = seg(T,7,15), entry = seg(T,15,24), descent = seg(T,24,32), deploy = seg(T,32,40);
-  // position arc: from the station, curving down toward the surface
-  v3lerp(_p, -28,68,-38,  -10,40,-10, undock);        // drift off the dock
-  if(entry>0)  v3lerp(_p, -10,40,-10,  6,14,8, entry); // plunge toward atmosphere
-  if(descent>0)v3lerp(_p, 6,14,8,  2,2.4,6, descent);  // settle to the pad
-  if(deploy>0) _p.set(2,2.2,6);
+  // position arc: drift off the dock, descend, then settle straight DOWN onto the pad
+  v3lerp(_p, -26,66,-36,  -8,42,-10, undock);          // drift off the dock
+  if(entry>0)  v3lerp(_p, -8,42,-10,  4,18,6, entry);  // descend toward atmosphere
+  if(descent>0)v3lerp(_p, 4,18,6,  2,3.0,6, descent);  // settle nearly straight down to the pad
+  if(deploy>0) _p.set(2,3.0,6);
   ship.position.copy(_p);
-  ship.rotation.set(lerp(0, -0.5, ease(entry)) + lerp(0,0.5,ease(descent)), T*0.1, 0);
+  // orientation: a gentle belly-lean during the entry burn, then right itself to vertical for
+  // a legs-down touchdown. Slow yaw throughout so we read all sides.
+  var lean = Math.sin(entry*Math.PI) * 0.5 * (1.0 - descent);   // lean out and back to 0
+  ship.rotation.set(lean, T*0.12, lean*0.3);
 
   // entry burn ramps up then fades as it slows
   const hot = Math.max(0, Math.sin(entry*Math.PI)) * (1-descent*0.7);
   burn.value = hot; trail.visible = hot>0.02; trail.material.uniforms.uHot.value = hot;
   trail.material.uniforms.uT.value = T;
-  trail.position.set(0, 2.2, 0); trail.rotation.x = -0.5;   // trail off the back/top during the dive
+  // the retro/entry burn fires DOWN from the lander's base engines (it's vertical, legs-down)
+  trail.position.set(0, -3.2, 0); trail.rotation.set(0, 0, 0);
   bloom.strength = 0.6 + hot*1.6;
 
   // surface appears once we're low
