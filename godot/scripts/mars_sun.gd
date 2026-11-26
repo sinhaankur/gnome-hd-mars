@@ -50,7 +50,17 @@ func _ready() -> void:
 		_sky.sun_angle_max = 12.0
 		_sky.sun_curve = 0.3
 	_build_disc()
+	_build_stars()
 	_apply(_t)
+
+var _stars: Node3D
+func _build_stars() -> void:
+	# a real night starfield (Mars has a thin atmosphere → brilliant night sky). Fades in as
+	# the sun dips below the horizon via set_night() in _apply().
+	var StarsScript := load("res://scripts/mars_stars.gd")
+	if StarsScript:
+		_stars = StarsScript.make()
+		add_child(_stars)
 
 func _build_disc() -> void:
 	# A bright emissive sphere far in the sun's direction — a guaranteed-visible sun disc
@@ -131,6 +141,9 @@ func _apply(t: float) -> void:
 	# (Godot directional energy 1.0 ~= full daylight on a white surface)
 	light_energy = lerpf(0.0, 0.95, above) * lerpf(0.75, 1.0, day)
 	shadow_opacity = clampf(above, 0.0, 0.9)            # firm ground-contact, fade as sun sets
+	# stars fade in as the sun sets (night = 1 - above), fully out in daylight
+	if _stars and is_instance_valid(_stars):
+		_stars.set_night(clampf((1.0 - above) * 1.1, 0.0, 1.0))
 
 	# tint the visible sun disc to match (warmer/redder low, pale high)
 	if _disc and is_instance_valid(_disc):
