@@ -18,14 +18,16 @@
   #ui{position:fixed;inset:0;pointer-events:none;z-index:2}
   #ui>*{pointer-events:auto}
 
-  /* title overlay drawn in HTML over the 3D (crisp text) */
-  .caption{position:absolute;left:0;right:0;top:0;bottom:0;display:grid;place-content:center;text-align:center;padding:0 7vw;
-    pointer-events:none;transition:opacity .6s cubic-bezier(.16,1,.3,1)}
-  .caption .kick{font-size:.78rem;letter-spacing:.34em;text-transform:uppercase;color:var(--orange);margin-bottom:14px;text-shadow:0 2px 20px #000}
-  .caption h1{margin:0;font:700 clamp(2.2rem,7vw,5rem)/1.02 system-ui;letter-spacing:.01em;text-shadow:0 4px 40px #000c}
+  /* caption anchored to the LOWER-LEFT third — never sits over the 3D subject.
+     A gradient scrim behind it keeps text readable over the scene. */
+  .caption{position:absolute;left:0;right:0;bottom:0;top:auto;display:block;text-align:left;
+    padding:0 7vw 11vh;pointer-events:none;transition:opacity .6s cubic-bezier(.16,1,.3,1);
+    background:linear-gradient(0deg, rgba(10,9,7,.85) 0%, rgba(10,9,7,.55) 40%, transparent 100%)}
+  .caption .kick{font-size:.78rem;letter-spacing:.34em;text-transform:uppercase;color:var(--orange);margin-bottom:10px;text-shadow:0 2px 20px #000}
+  .caption h1{margin:0;font:700 clamp(2rem,6vw,4.2rem)/1.03 system-ui;letter-spacing:.01em;text-shadow:0 4px 40px #000e;max-width:16ch}
   .caption h1 b{color:var(--orange)}
-  .caption p{margin:16px auto 0;max-width:52ch;font-size:clamp(1rem,2.4vw,1.5rem);color:var(--dim);text-shadow:0 2px 18px #000}
-  .caption .big{font:700 clamp(2.6rem,9vw,7rem)/1 system-ui;color:var(--gold)}
+  .caption p{margin:14px 0 0;max-width:50ch;font-size:clamp(1rem,2.2vw,1.4rem);color:#d8cfbf;text-shadow:0 2px 18px #000}
+  .caption .big{font:700 clamp(2.4rem,8vw,6rem)/1 system-ui;color:var(--gold);max-width:none}
 
   /* presenter notes */
   .notes{position:absolute;left:0;right:0;bottom:0;padding:16px max(24px,env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));
@@ -85,10 +87,12 @@
 <div class="load" id="load"><h2>MARS <b>HAWC</b></h2><div class="bar"><i id="loadBar"></i></div><p>loading the pitch</p></div>
 
 <script type="importmap">
-{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
 </script>
 <script type="module">
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const canvas = document.getElementById('stage');
 let renderer;
@@ -97,7 +101,7 @@ if (!renderer){ document.getElementById('load').innerHTML = '<p style="color:#9a
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
+renderer.toneMappingExposure = 1.5;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 // ---- shared palette (grim Mars, per ART_DIRECTION) ----
@@ -105,51 +109,81 @@ const MARS = 0xc08a52, DUST = 0x7a4f30, STEEL = 0x8d94a0, OLIVE = 0x3a4030, RUST
 
 // ---- camera + scene shared; each slide builds its own content group ----
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x1a0f08, 0.03);      // the reference leans HARD on fog for depth
+scene.fog = new THREE.FogExp2(0x3a2416, 0.012);      // lighter warm haze for depth (was crushing the scene)
 const cam = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 400);
 cam.position.set(0, 4, 16);
-const key = new THREE.DirectionalLight(0xfff0dc, 2.6); key.position.set(-12,16,8); scene.add(key);
-scene.add(new THREE.HemisphereLight(0x3a2a22, 0x0a0604, 0.5));
-const rim = new THREE.DirectionalLight(0xffb070, 0.9); rim.position.set(14,2,-10); scene.add(rim);
+// ---- lighting: hard warm Mars key + cool fill + rim, plus image-based reflections (IBL) ----
+const key = new THREE.DirectionalLight(0xfff1dc, 4.4); key.position.set(-10,18,14); key.castShadow=false; scene.add(key);
+scene.add(new THREE.HemisphereLight(0x8a6a4a, 0x2a1a10, 1.3));
+const rim = new THREE.DirectionalLight(0xffc088, 2.0); rim.position.set(14,6,-10); scene.add(rim);
+const fill = new THREE.DirectionalLight(0xbfd4ff, 0.8); fill.position.set(8,4,16); scene.add(fill);
+(function ibl(){ const pm=new THREE.PMREMGenerator(renderer); scene.environment=pm.fromScene(new RoomEnvironment(),0.05).texture; })();
 
-// reusable builders -----------------------------------------------------------
-function ground(col=DUST){ const g=new THREE.Mesh(new THREE.CircleGeometry(60,48), new THREE.MeshStandardMaterial({color:col,roughness:1})); g.rotation.x=-Math.PI/2; g.position.y=-1.2; return g; }
-function mech(col=OLIVE, s=1){ // a blocky hard-surface HAWC (reverse-jointed legs, cockpit, gun-arm)
-  const g=new THREE.Group(); const m=(c)=>new THREE.MeshStandardMaterial({color:c,metalness:.6,roughness:.5,flatShading:true});
-  const torso=new THREE.Mesh(new THREE.BoxGeometry(1.8,1.7,1.2),m(col)); torso.position.y=3; g.add(torso);
-  const can=new THREE.Mesh(new THREE.BoxGeometry(1.0,.5,.3),m(0x7fd4ff)); can.position.set(0,3.1,.65); can.material.emissive=new THREE.Color(0x2a6a8a); g.add(can);
-  const paul=(x)=>{const p=new THREE.Mesh(new THREE.BoxGeometry(.8,1,.9),m(col));p.position.set(x,3.4,0);g.add(p);};paul(-1.3);paul(1.3);
-  const gun=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,1.6,8),m(0x14141a)); gun.rotation.x=Math.PI/2; gun.position.set(1.4,2.9,.9); g.add(gun);
-  // reverse-jointed legs
-  [[-.6,1],[.6,-1]].forEach(([x])=>{
-    const th=new THREE.Mesh(new THREE.BoxGeometry(.5,1.6,.6),m(col)); th.position.set(x,1.9,.3); th.rotation.x=.3; g.add(th);
-    const sh=new THREE.Mesh(new THREE.BoxGeometry(.4,1.6,.5),m(0x14141a)); sh.position.set(x,.6,-.2); sh.rotation.x=-.4; g.add(sh);
-    const ft=new THREE.Mesh(new THREE.BoxGeometry(.7,.3,1.4),m(col)); ft.position.set(x,-.9,.2); g.add(ft);
+// ---- universe backdrop (reuse the universe-engine look so space scenes read real) ----
+(function universe(){
+  const gal=new THREE.Vector3(0.35,0.75,0.55).normalize();
+  const skyMat=new THREE.ShaderMaterial({ side:THREE.BackSide, depthWrite:false, fog:false,
+    uniforms:{ uG:{value:gal} },
+    vertexShader:`varying vec3 vD; void main(){ vD=normalize(position); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+    fragmentShader:`varying vec3 vD; uniform vec3 uG;
+      float h(vec3 p){return fract(sin(dot(p,vec3(12.9,78.2,37.1)))*43758.5);}
+      float n(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);}
+      float fbm(vec3 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n(p);p*=2.1;a*=.5;}return v;}
+      void main(){ vec3 d=normalize(vD); float band=abs(dot(d,uG)); float milky=smoothstep(0.42,0.0,band);
+        float cl=fbm(d*6.0)*0.6+fbm(d*16.0)*0.4; float dust=smoothstep(0.45,0.72,fbm(d*9.0+3.0));
+        vec3 mw=mix(vec3(0.03,0.03,0.05),vec3(0.20,0.17,0.15),cl)*milky*(1.0-dust*0.8);
+        vec3 col=vec3(0.015,0.017,0.028)+mw;
+        // sparse stars
+        vec3 g=d*260.0; vec3 c=floor(g); float r=h(c); if(r>0.978){ float m=pow(h(c+3.1),3.0); vec2 q=fract(g).xy-0.5; col+=vec3(0.9,0.92,1.0)*smoothstep(0.08,0.0,length(q))*(0.4+m*0.8);}
+        gl_FragColor=vec4(col,1.0); }`
   });
-  g.scale.setScalar(s); return g;
-}
-function rockField(n=40){ const grp=new THREE.Group(); const geo=new THREE.IcosahedronGeometry(1,0);
-  const mat=new THREE.MeshStandardMaterial({color:DUST,roughness:1,flatShading:true});
+  const sky=new THREE.Mesh(new THREE.SphereGeometry(300,32,32), skyMat); sky.name='sky'; scene.add(sky); scene._sky=sky;
+})();
+
+// ---- real Mars ground: a big graded disc with subtle relief, butterscotch palette ----
+function ground(){ const geo=new THREE.PlaneGeometry(300,300,80,80); const pos=geo.attributes.position;
+  for(let i=0;i<pos.count;i++){ const x=pos.getX(i),y=pos.getY(i); pos.setZ(i, Math.sin(x*0.05)*Math.cos(y*0.04)*1.2 + Math.sin(x*0.17+y*0.1)*0.4); }
+  geo.computeVertexNormals(); geo.rotateX(-Math.PI/2);
+  const g=new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:0xa86a3e, roughness:1, metalness:0})); g.position.y=-1.2; return g; }
+
+// ---- rocks: real-ish scattered boulders (varied, grounded), InstancedMesh for perf ----
+function rockField(n=60){ const grp=new THREE.Group(); const geo=new THREE.IcosahedronGeometry(1,0);
+  // deform the base geo once so rocks aren't perfect gems
+  const p=geo.attributes.position; for(let i=0;i<p.count;i++){ const s=0.8+Math.random()*0.4; p.setXYZ(i,p.getX(i)*s,p.getY(i)*s*0.7,p.getZ(i)*s); } geo.computeVertexNormals();
+  const mat=new THREE.MeshStandardMaterial({color:0x5a4030,roughness:1,flatShading:true});
   const mm=new THREE.InstancedMesh(geo,mat,n); const d=new THREE.Object3D();
-  for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2,r=6+Math.random()*48; d.position.set(Math.cos(a)*r,-1.2+Math.random()*.4,Math.sin(a)*r);
-    d.rotation.set(Math.random(),Math.random(),Math.random()); const s=.3+Math.random()*1.6; d.scale.set(s,s*.6,s); d.updateMatrix(); mm.setMatrixAt(i,d.matrix); }
+  for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2,r=7+Math.random()*60; d.position.set(Math.cos(a)*r,-1.3+Math.random()*.3,Math.sin(a)*r-6);
+    d.rotation.set(Math.random(),Math.random(),Math.random()); const s=.4+Math.random()*2.2; d.scale.set(s,s*.65,s); d.updateMatrix(); mm.setMatrixAt(i,d.matrix); }
   grp.add(mm); return grp; }
+
+// ---- REAL hero mech: load hero.glb once, clone per slide (repo-first, real not sloppy) ----
+const _loader=new GLTFLoader(); let HERO=null;
+function heroClone(tint=null, s=1){
+  if(!HERO){ // fallback only if the GLB failed — a cleaner primitive than before
+    const g=new THREE.Group(); const m=new THREE.MeshStandardMaterial({color:tint||0x3a4030,metalness:.6,roughness:.5});
+    const t=new THREE.Mesh(new THREE.BoxGeometry(1.6,1.8,1.1),m); t.position.y=3; g.add(t);
+    [[-.5],[.5]].forEach(([x])=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.5,3,.5),m);l.position.set(x,1.2,0);g.add(l);});
+    g.scale.setScalar(s); return g; }
+  const c=HERO.clone(true);
+  if(tint!=null){ c.traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); o.material.color=new THREE.Color(tint); } }); }
+  c.scale.setScalar(s); return c;
+}
 
 // ============ THE SLIDES ============
 const SLIDES = [
   { key:'TITLE', title:'Mars <em>HAWC</em>', notes:"Open cold. A single walking war machine on the real Martian surface. This is the pitch — the fantasy, the world, the team, and what already runs.",
     cap:`<div class="kick">A tactical mech-assault game</div><h1>MARS <b>HAWC</b></h1><p>Pilot a walking combat mech on the real Mars surface.</p>`,
-    build(g){ g.add(ground()); g.add(rockField(30)); const h=mech(OLIVE,1); h.position.set(0,0,2); g.add(h); g._hero=h; cam.position.set(0,4,16); } ,
+    build(g){ g.add(ground()); g.add(rockField(30)); const h=heroClone(0x3a4030,1); h.position.set(3,0,2); g.add(h); g._hero=h; cam.position.set(1,4.5,15); } ,
     tick(g,t){ if(g._hero) g._hero.rotation.y = Math.sin(t*.3)*.3; } },
 
   { key:'FANTASY', title:'The fantasy', notes:"Your power doesn't come from one unbreakable machine — it comes from your willingness to ABANDON it. Combat is asset theft, not attrition.",
     cap:`<div class="kick">The core fantasy</div><h1>Abandon the machine.</h1><p>Your power isn't one unbreakable mech — it's your willingness to leave it.</p>`,
-    build(g){ g.add(ground()); const a=mech(OLIVE,.9); a.position.set(-4,0,2); g.add(a); const b=mech(RUST,.9); b.position.set(4,0,2); g.add(b); g._a=a;g._b=b; cam.position.set(0,4,15);},
+    build(g){ g.add(ground()); const a=heroClone(0x3a4030,.9); a.position.set(1,0,2); g.add(a); const b=heroClone(0x6a3030,.9); b.position.set(6,0,0); g.add(b); g._a=a;g._b=b; cam.position.set(2,4.5,15);},
     tick(g,t){ if(g._a){ g._a.position.y=Math.sin(t)*.1; g._b.rotation.y=Math.sin(t*.4+1)*.2; } } },
 
   { key:'HIJACK', title:'The hijack loop', notes:"Eject from any vehicle — a fragile human on foot. Fire the HAWK: it disables an enemy HAWC and force-ejects its pilot WITHOUT destroying the chassis. Sprint over. Steal it. The whole game can swing on one hijack.",
     cap:`<div class="kick">The signature loop</div><h1>Eject · HAWK · <b>steal</b></h1><p>Disable an enemy mech, force its pilot out, and take the still-warm cockpit.</p>`,
-    build(g){ g.add(ground()); const e=mech(RUST,.9); e.position.set(3,0,1); g.add(e); g._e=e;
+    build(g){ g.add(ground()); const e=heroClone(0x6a3030,.9); e.position.set(4,0,1); g.add(e); g._e=e;
       // the HAWK beam
       const beam=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,7,6), new THREE.MeshBasicMaterial({color:0x7fd4ff})); beam.position.set(0,2.4,1); beam.rotation.z=Math.PI/2; g.add(beam); g._beam=beam; cam.position.set(-2,3,13);},
     tick(g,t){ if(g._beam){ g._beam.material.opacity=.5+.5*Math.sin(t*8); g._beam.material.transparent=true; if(g._e) g._e.rotation.z=Math.sin(t*10)*.03; } } },
@@ -162,12 +196,12 @@ const SLIDES = [
 
   { key:'CLASSES', title:'Four classes', notes:"Combined-arms variety. Four vehicle classes, each a radically different FEEL through weight and momentum: the bipedal HAWC, the tracked tank, the drifting hovercraft, the multipedal walker.",
     cap:`<div class="kick">Combined arms</div><h1>Four classes.<br>Four <b>weights</b>.</h1><p>HAWC · tank · hovercraft · walker — each feels completely different to drive.</p>`,
-    build(g){ g.add(ground()); const cols=[OLIVE,0x4a4030,STEEL,0x5a4a2a]; for(let i=0;i<4;i++){ const m=mech(cols[i],.7); m.position.set((i-1.5)*5,0,2); g.add(m);} cam.position.set(0,5,18);},
+    build(g){ g.add(ground()); const cols=[OLIVE,0x4a4030,STEEL,0x5a4a2a]; for(let i=0;i<4;i++){ const m=heroClone(cols[i],.7); m.position.set((i-1.5)*5,0,2); g.add(m);} cam.position.set(0,5,18);},
     tick(g,t){ g.children.forEach((c,i)=>{ if(c.type==='Group') c.position.y=Math.sin(t+i)*.12; }); } },
 
   { key:'FACTIONS', title:'Four factions', notes:"Asymmetrical war. Union, Darken, the Bendian mercs, the alien Scorp — distinct silhouettes, armour language, and doctrine. The enemy HAWC is your own silhouette in a different colour: a mirror that wants you dead.",
     cap:`<div class="kick">A four-way war</div><h1>Four <b>factions</b></h1><p>Distinct silhouettes and doctrine. The enemy is your mirror, in another colour.</p>`,
-    build(g){ g.add(ground()); const cols=[OLIVE,RUST,0x2a4a6a,0x3a5a2a]; for(let i=0;i<4;i++){ const m=mech(cols[i],.7); const a=i/4*Math.PI*2; m.position.set(Math.cos(a)*5,0,Math.sin(a)*5+2); m.rotation.y=-a; g.add(m);} g._spin=g; cam.position.set(0,7,16);},
+    build(g){ g.add(ground()); const cols=[OLIVE,RUST,0x2a4a6a,0x3a5a2a]; for(let i=0;i<4;i++){ const m=heroClone(cols[i],.7); const a=i/4*Math.PI*2; m.position.set(Math.cos(a)*5,0,Math.sin(a)*5+2); m.rotation.y=-a; g.add(m);} g._spin=g; cam.position.set(0,7,16);},
     tick(g,t){ g.rotation.y=t*.15; } },
 
   { key:'CROWD', title:'A country of them', notes:"This scales. Waves of rival-faction HAWCs, driven by role-based AI — rush, snipe, anchor, flank. Hold your installation, or take theirs.",
@@ -176,7 +210,7 @@ const SLIDES = [
       const geo=new THREE.BoxGeometry(.8,1.6,.8); const mat=new THREE.MeshStandardMaterial({color:RUST,flatShading:true,metalness:.5,roughness:.6});
       const N=120; const mm=new THREE.InstancedMesh(geo,mat,N); const d=new THREE.Object3D();
       for(let i=0;i<N;i++){ const row=Math.floor(i/12),col=i%12; d.position.set((col-5.5)*2.4,-.4,-row*3-4); d.updateMatrix(); mm.setMatrixAt(i,d.matrix);} g.add(mm); g._army=mm; g._d=d;
-      const you=mech(OLIVE,1); you.position.set(0,0,8); g.add(you); cam.position.set(0,6,20);},
+      const you=heroClone(OLIVE,1); you.position.set(0,0,8); g.add(you); cam.position.set(0,6,20);},
     tick(g,t){ /* subtle march */ } },
 
   { key:'TEAM', title:'Built by a team of agents', notes:"The game is built by an 11-agent team — producer, creative director, art director, 3D artist, engineer, technical artist, level designer, web dev, QA, a critic in the owner's voice, and a storyboard artist — running a plan→build→judge→ship loop.",
@@ -187,12 +221,12 @@ const SLIDES = [
 
   { key:'SHIPPED', title:'What already runs', notes:"This isn't a concept. A playable vertical slice runs today: menu to mission to win/lose, the strategic Mars globe, the orbital-arrival cinematic, a drivable HAWC with HUD, the eject-and-hijack loop, and the living Mars surface.",
     cap:`<div class="kick">Playable now</div><h1>It already <b>runs</b>.</h1><p>Vertical slice: globe → arrival → drive → eject → hijack → hold. Real, today.</p>`,
-    build(g){ g.add(ground(MARS)); g.add(rockField(50)); const h=mech(OLIVE,1); h.position.set(0,0,4); g.add(h); g._h=h; cam.position.set(2,3,13);},
+    build(g){ g.add(ground(MARS)); g.add(rockField(50)); const h=heroClone(0x3a4030,1); h.position.set(4,0,3); g.add(h); g._h=h; cam.position.set(2,4,13);},
     tick(g,t){ if(g._h) g._h.rotation.y=.4+Math.sin(t*.4)*.2; } },
 
   { key:'CTA', title:'Play it', notes:"Watch the arrival cinematic, read the devlog, see the team and the storyboard. Mars HAWC — a G-NOME successor on the real Mars.",
     cap:`<div class="kick">Mars HAWC</div><h1 class="big">Boots on Mars.</h1><p>Watch the arrival · read the devlog · see the team. &nbsp; <span style="color:var(--gold)">sinhaankur.github.io/gnome-hd-mars</span></p>`,
-    build(g){ g.add(ground()); g.add(rockField(40)); const h=mech(OLIVE,1.1); h.position.set(0,0,2); g.add(h); g._h=h; cam.position.set(-3,4,14);},
+    build(g){ g.add(ground()); g.add(rockField(40)); const h=heroClone(0x3a4030,1.1); h.position.set(3,0,2); g.add(h); g._h=h; cam.position.set(0,4.5,14);},
     tick(g,t){ if(g._h) g._h.rotation.y=Math.sin(t*.25)*.4; } },
 ];
 
@@ -239,16 +273,33 @@ addEventListener('resize',()=>{ cam.aspect=innerWidth/innerHeight; cam.updatePro
 
 function loop(){ const now=performance.now()/1000, dt=now-lastT; lastT=now; slideT+=dt;
   const s=SLIDES[idx]; if(s&&s.tick) s.tick(group,slideT);
-  // gentle idle camera drift for life
-  cam.position.x += (Math.sin(slideT*.15)*0.6 - (cam.position.x - cam.position.x)) * 0; cam.lookAt(0,2.4,2);
+  // keep the sky centred on the camera so it never parallaxes oddly
+  if(scene._sky) scene._sky.position.copy(cam.position);
+  // look at a point slightly RIGHT and UP of centre, so the subject sits upper-right,
+  // clear of the lower-left caption. gentle breathing drift for life.
+  const lx = 1.6 + Math.sin(slideT*.12)*0.5;
+  cam.lookAt(lx, 3.2, 1);
   renderer.render(scene,cam); requestAnimationFrame(loop);
 }
 
 // loading: warm the first slide, then reveal
 const loadBar=document.getElementById('loadBar'), loadEl=document.getElementById('load');
-let p=0; const li=setInterval(()=>{ p=Math.min(1,p+.12); loadBar.style.width=(p*100)+'%'; if(p>=1){ clearInterval(li);
+function reveal(){
   const start=(location.hash.match(/\d+/)||[1])[0]-0; show(Math.max(0,Math.min(SLIDES.length-1,start-1)));
-  loop(); setTimeout(()=>loadEl.classList.add('hide'),300); } },90);
+  loop(); setTimeout(()=>loadEl.classList.add('hide'),300);
+}
+// load the REAL hero mech, normalize it (centre on the floor, known height), THEN reveal
+_loader.load('assets/hero.glb', (gltf)=>{
+  const m=gltf.scene;
+  const box=new THREE.Box3().setFromObject(m), size=new THREE.Vector3(); box.getSize(size);
+  const c=box.getCenter(new THREE.Vector3());
+  m.position.x-=c.x; m.position.z-=c.z; m.position.y-=box.min.y;      // feet on y=0
+  const target=4.2; m.scale.setScalar(target/(size.y||1));            // ~4.2 units tall
+  HERO=m;
+  loadBar.style.width='100%'; reveal();
+}, (e)=>{ if(e.total) loadBar.style.width=(70*e.loaded/e.total)+'%'; },
+   ()=>{ // load failed — reveal with the fallback primitive
+     loadBar.style.width='100%'; reveal(); });
 </script>
 </body>
 </html>
