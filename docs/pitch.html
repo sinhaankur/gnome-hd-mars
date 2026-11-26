@@ -288,18 +288,24 @@ function reveal(){
   const start=(location.hash.match(/\d+/)||[1])[0]-0; show(Math.max(0,Math.min(SLIDES.length-1,start-1)));
   loop(); setTimeout(()=>loadEl.classList.add('hide'),300);
 }
-// load the REAL hero mech, normalize it (centre on the floor, known height), THEN reveal
+// Reveal EXACTLY once, no matter what — the deck must never hang on the loader.
+let revealed=false;
+function revealOnce(){ if(revealed) return; revealed=true; loadBar.style.width='100%'; reveal(); }
+// hard safety: if the mech hasn't loaded/revealed in 6s, reveal anyway (fallback mech).
+setTimeout(revealOnce, 6000);
+// load the REAL hero mech, normalize it, then reveal. Any error → still reveal.
 _loader.load('assets/hero.glb', (gltf)=>{
-  const m=gltf.scene;
-  const box=new THREE.Box3().setFromObject(m), size=new THREE.Vector3(); box.getSize(size);
-  const c=box.getCenter(new THREE.Vector3());
-  m.position.x-=c.x; m.position.z-=c.z; m.position.y-=box.min.y;      // feet on y=0
-  const target=4.2; m.scale.setScalar(target/(size.y||1));            // ~4.2 units tall
-  HERO=m;
-  loadBar.style.width='100%'; reveal();
+  try{
+    const m=gltf.scene;
+    const box=new THREE.Box3().setFromObject(m), size=new THREE.Vector3(); box.getSize(size);
+    const c=box.getCenter(new THREE.Vector3());
+    m.position.x-=c.x; m.position.z-=c.z; m.position.y-=box.min.y;      // feet on y=0
+    m.scale.setScalar(4.2/(size.y||1));                                 // ~4.2 units tall
+    HERO=m;
+  }catch(err){ console.warn('mech normalize failed', err); }
+  revealOnce();
 }, (e)=>{ if(e.total) loadBar.style.width=(70*e.loaded/e.total)+'%'; },
-   ()=>{ // load failed — reveal with the fallback primitive
-     loadBar.style.width='100%'; reveal(); });
+   ()=>{ revealOnce(); });   // load failed → reveal with the fallback primitive
 </script>
 </body>
 </html>
