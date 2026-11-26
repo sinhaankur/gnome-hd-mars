@@ -64,7 +64,7 @@ func _build() -> void:
 
 	# --- copyright + attribution footer (see LICENSE / CREDITS.md at project root) ---
 	var foot := Label.new()
-	foot.text = "© 2026 Ankur Sinha · Mech: Oscar Creativo (CC-BY) · Globe: Solar System Scope (CC-BY) · Terrain: NASA HiRISE"
+	foot.text = "© 2026 sinhaankur · Mech: Oscar Creativo (CC-BY) · Globe: Solar System Scope (CC-BY) · Terrain: NASA HiRISE"
 	foot.add_theme_font_size_override("font_size", 12)
 	foot.add_theme_color_override("font_color", Color(0.6, 0.55, 0.5))
 	foot.anchor_top = 1.0; foot.anchor_bottom = 1.0; foot.anchor_right = 1.0

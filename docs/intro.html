@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mars HAWC — Arrival</title>
+<meta name="description" content="Mars HAWC — opening cinematic: a ship undocks from a Mars-orbit station, burns through entry, and deploys a walking combat mech on the surface.">
+<meta property="og:title" content="Mars HAWC — Arrival">
+<meta property="og:description" content="From orbit to the surface. The opening of Mars HAWC.">
+<meta property="og:image" content="img/orbital_arrival.png">
+<style>
+  :root{
+    --bg:#0a0907; --ink:#efe7d6; --muted:#a49a83;
+    --gold:#d9b25a; --orange:#f08a2a; --line:#332e21;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden;-webkit-font-smoothing:antialiased}
+  canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
+
+  /* ---- cinematic letterbox + grain + vignette, drawn over the canvas ---- */
+  .bars{position:fixed;left:0;right:0;pointer-events:none;background:#000;z-index:3;transition:height .9s cubic-bezier(.16,1,.3,1)}
+  .bars.top{top:0;height:7vh} .bars.bot{bottom:0;height:7vh}
+  .vig{position:fixed;inset:0;pointer-events:none;z-index:3;
+    background:radial-gradient(130% 90% at 50% 46%, transparent 55%, #000a 100%)}
+  .grain{position:fixed;inset:-50%;pointer-events:none;z-index:4;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    animation:grain 1.2s steps(3) infinite}
+  @keyframes grain{to{transform:translate(6%,4%)}}
+
+  /* ---- captions ---- */
+  .cap{position:fixed;left:0;right:0;bottom:12vh;text-align:center;z-index:5;pointer-events:none;
+    padding:0 24px}
+  .cap .k{display:inline-block;font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;
+    color:var(--gold);opacity:0;transform:translateY(8px);transition:opacity .7s,transform .7s;
+    text-shadow:0 2px 14px #000}
+  .cap .t{display:block;margin-top:10px;font-size:clamp(1.1rem,3.4vw,2rem);font-weight:600;
+    letter-spacing:.01em;opacity:0;transform:translateY(10px);transition:opacity .8s .1s,transform .8s .1s;
+    text-shadow:0 3px 22px #000c}
+  .cap.show .k,.cap.show .t{opacity:1;transform:none}
+
+  /* ---- HUD chrome: title lockup + skip ---- */
+  .brand{position:fixed;top:calc(7vh + 18px);left:50%;transform:translateX(-50%);z-index:5;text-align:center;
+    opacity:0;transition:opacity 1s;pointer-events:none}
+  .brand .logo{font:700 clamp(1.4rem,5vw,2.6rem)/1 "Segoe UI",system-ui,sans-serif;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--ink);text-shadow:0 2px 20px #000}
+  .brand .logo b{color:var(--orange)}
+  .brand .sub{margin-top:8px;font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:var(--muted)}
+  .brand.show{opacity:1}
+
+  .skip{position:fixed;right:18px;bottom:calc(7vh + 16px);z-index:6;
+    font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+    background:rgba(20,18,14,.6);border:1px solid var(--line);border-radius:999px;
+    padding:9px 16px;cursor:pointer;backdrop-filter:blur(6px);transition:color .2s,border-color .2s}
+  .skip:hover{color:var(--ink);border-color:var(--gold)}
+
+  /* ---- start gate (autoplay-safe) ---- */
+  .gate{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:var(--bg);
+    transition:opacity .8s}
+  .gate.hide{opacity:0;pointer-events:none}
+  .gate .box{text-align:center;max-width:560px;padding:0 26px}
+  .gate h1{margin:0 0 6px;font:700 clamp(1.6rem,6vw,3.1rem)/1.04 system-ui;letter-spacing:.14em;text-transform:uppercase}
+  .gate h1 b{color:var(--orange)}
+  .gate p{margin:14px auto 26px;color:var(--muted);max-width:44ch;line-height:1.6;font-size:.98rem}
+  .gate .play{display:inline-flex;align-items:center;gap:10px;cursor:pointer;
+    font:600 .82rem/1 system-ui;letter-spacing:.2em;text-transform:uppercase;color:#120d06;
+    background:var(--gold);border:0;border-radius:999px;padding:16px 30px;
+    box-shadow:0 10px 40px #d9b25a30;transition:transform .2s,box-shadow .2s}
+  .gate .play:hover{transform:translateY(-2px);box-shadow:0 14px 50px #d9b25a50}
+  .gate .load{margin-top:18px;height:2px;width:220px;margin-inline:auto;background:#241f16;border-radius:2px;overflow:hidden;opacity:0;transition:opacity .3s}
+  .gate .load.on{opacity:1}
+  .gate .load i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s}
+  .gate .hint{margin-top:16px;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:#6b6252}
+
+  /* ---- end card ---- */
+  .end{position:fixed;inset:0;z-index:8;display:grid;place-items:center;opacity:0;pointer-events:none;
+    background:radial-gradient(90% 90% at 50% 40%, #1a0f08cc, #000e);transition:opacity 1.2s}
+  .end.show{opacity:1;pointer-events:auto}
+  .end .box{text-align:center;padding:0 26px}
+  .end h2{margin:0;font:700 clamp(1.3rem,5vw,2.3rem)/1.1 system-ui;letter-spacing:.1em;text-transform:uppercase}
+  .end p{color:var(--muted);margin:12px 0 24px}
+  .end a{display:inline-block;margin:6px;font:600 .78rem/1 system-ui;letter-spacing:.16em;text-transform:uppercase;
+    text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:14px 24px;transition:border-color .2s,color .2s}
+  .end a.primary{background:var(--gold);color:#120d06;border-color:var(--gold)}
+  .end a:hover{border-color:var(--gold)}
+
+  .nogl{position:fixed;inset:0;display:grid;place-items:center;text-align:center;padding:30px;color:var(--muted);z-index:9}
+  @media(prefers-reduced-motion:reduce){.grain{animation:none}}
+</style>
+</head>
+<body>
+
+<canvas id="c" aria-label="Mars HAWC orbital arrival cinematic"></canvas>
+<div class="bars top"></div><div class="bars bot"></div>
+<div class="vig"></div><div class="grain"></div>
+
+<div class="brand" id="brand">
+  <div class="logo">MARS <b>HAWC</b></div>
+  <div class="sub">Tactical Mech Assault</div>
+</div>
+
+<div class="cap" id="cap"><span class="k" id="capK"></span><span class="t" id="capT"></span></div>
+<div class="skip" id="skip" hidden>Skip ↦</div>
+
+<div class="end" id="end">
+  <div class="box">
+    <h2>Boots on Mars.</h2>
+    <p>Your power isn't one unbreakable machine — it's your willingness to abandon it.</p>
+    <a class="primary" href="index.html">Enter the devlog →</a>
+    <a href="#" id="replay">Replay arrival</a>
+  </div>
+</div>
+
+<div class="gate" id="gate">
+  <div class="box">
+    <h1>MARS <b>HAWC</b></h1>
+    <p>A ship leaves orbit. Inside it, a walking war machine — and you.
+       This is the arrival.</p>
+    <button class="play" id="play">▶ Watch the arrival</button>
+    <div class="load" id="load"><i id="loadBar"></i></div>
+    <div class="hint">Best with sound · 4K · WebGL2</div>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const canvas = document.getElementById('c');
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:'high-performance' });
+} catch(e){}
+if (!renderer || !renderer.capabilities.isWebGL2) {
+  document.body.insertAdjacentHTML('beforeend','<div class="nogl">This arrival needs a browser with WebGL2.<br>Open the <a href="index.html" style="color:var(--gold)">devlog</a> instead.</div>');
+  throw new Error('no webgl2');
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));   // 4K-crisp, capped for perf
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+
+// ---------- image-based lighting: real reflections on the metal (the big quality lever) ----------
+// a generated room environment gives the mech/ship PBR surfaces something to reflect, so
+// they read as machined metal instead of flat-shaded blocks.
+(function envLight(){
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+})();
+const cam = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.1, 5000);
+
+// ---------- lighting: a hard low sun (the real Mars key) + cool fill ----------
+const sun = new THREE.DirectionalLight(0xfff1dc, 3.1);
+sun.position.set(-40, 18, 22);
+scene.add(sun);
+scene.add(new THREE.HemisphereLight(0x3a2a22, 0x060402, 0.5));
+const rim = new THREE.DirectionalLight(0xffb070, 1.2); rim.position.set(30,-6,-20); scene.add(rim);
+
+// ---------- universe engine ----------
+// A real procedural space backdrop (replaces the flat dot starfield): stars with realistic
+// stellar colours (blue-white → yellow → red by temperature) and a power-law brightness
+// distribution, a Milky Way band concentrated along a galactic plane with dust-lane darkening,
+// and faint nebula glow. Generated once on a huge inverted sphere so it surrounds the scene.
+(function universe(){
+  const R = 3000;
+  // --- the deep-space gradient + Milky Way + nebulae, as a shader on an inverted sphere ---
+  const skyMat = new THREE.ShaderMaterial({ side:THREE.BackSide, depthWrite:false,
+    uniforms:{ uGalaxy:{ value:new THREE.Vector3(0.35,0.75,0.55).normalize() } },  // galactic-plane normal
+    vertexShader:`varying vec3 vDir; void main(){ vDir=normalize(position); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+    fragmentShader:`
+      varying vec3 vDir; uniform vec3 uGalaxy;
+      float h(vec3 p){ return fract(sin(dot(p,vec3(12.9,78.2,37.1)))*43758.5); }
+      float n(vec3 p){ vec3 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
+        return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),
+                   mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z); }
+      float fbm(vec3 p){ float v=0.,a=.5; for(int i=0;i<5;i++){ v+=a*n(p); p*=2.1; a*=.5;} return v; }
+      void main(){
+        vec3 d = normalize(vDir);
+        // distance from the galactic plane (0 = in the band)
+        float band = abs(dot(d, uGalaxy));
+        float milky = smoothstep(0.42, 0.0, band);              // bright near the plane
+        // the Milky Way: warm desaturated glow + mottled star-cloud texture + dark dust lanes
+        float clouds = fbm(d*6.0)*0.6 + fbm(d*16.0)*0.4;
+        float dust = smoothstep(0.45, 0.7, fbm(d*9.0 + 3.0));   // dark dust lanes cutting the band
+        vec3 mw = mix(vec3(0.06,0.06,0.10), vec3(0.34,0.30,0.26), clouds) * milky * (1.0 - dust*0.8);
+        // a couple of faint colour nebulae off the plane
+        float neb1 = smoothstep(0.6,0.95,fbm(d*3.0+vec3(5.0,1.0,2.0)));
+        float neb2 = smoothstep(0.62,0.95,fbm(d*3.5+vec3(-4.0,2.0,-1.0)));
+        vec3 neb = vec3(0.10,0.04,0.16)*neb1 + vec3(0.03,0.10,0.14)*neb2;
+        // base deep-space colour (very dark blue, slightly warmer toward the band)
+        vec3 col = vec3(0.012,0.014,0.025) + mw + neb*0.5;
+        gl_FragColor = vec4(col, 1.0);
+      }`
+  });
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(R, 48, 48), skyMat));
+
+  // --- the stars: points with real stellar colours + power-law brightness, denser in the band ---
+  const gal = new THREE.Vector3(0.35,0.75,0.55).normalize();
+  const N = 9000, pos = new Float32Array(N*3), col = new Float32Array(N*3), siz = new Float32Array(N);
+  // stellar colour by "temperature" t (0 cool/red → 1 hot/blue-white)
+  function starColor(t){
+    if (t < 0.5){ const k=t/0.5; return [1.0, 0.5+0.45*k, 0.25+0.35*k]; }   // red → yellow
+    const k=(t-0.5)/0.5; return [1.0-0.25*k, 0.95-0.05*k, 0.75+0.25*k];     // yellow → blue-white
+  }
+  let i=0;
+  while(i<N){
+    // sample a direction; bias extra stars toward the galactic plane
+    let u=Math.random()*2-1, a=Math.random()*Math.PI*2, s=Math.sqrt(1-u*u);
+    let dir=new THREE.Vector3(s*Math.cos(a), u, s*Math.sin(a));
+    const band = Math.abs(dir.dot(gal));
+    // rejection: keep all stars near the plane, thin them out far from it
+    if (band > 0.35 && Math.random() > 0.45) continue;
+    const r = R*0.92;
+    pos[i*3]=dir.x*r; pos[i*3+1]=dir.y*r; pos[i*3+2]=dir.z*r;
+    // most stars are hot-white-ish; a power-law gives a few bright ones and many faint
+    const t = Math.pow(Math.random(), 0.6);
+    const c = starColor(Math.random());
+    const mag = Math.pow(Math.random(), 3.2);            // few bright, many dim
+    const bright = 0.35 + mag*0.65;
+    col[i*3]=c[0]*bright; col[i*3+1]=c[1]*bright; col[i*3+2]=c[2]*bright;
+    siz[i] = 1.0 + mag*3.2;                               // brighter stars render bigger
+    i++;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  g.setAttribute('color', new THREE.BufferAttribute(col,3));
+  g.setAttribute('aSize', new THREE.BufferAttribute(siz,1));
+  const starMat = new THREE.ShaderMaterial({ transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+    vertexShader:`attribute float aSize; varying vec3 vC; void main(){ vC=color;
+      vec4 mv=modelViewMatrix*vec4(position,1.0); gl_PointSize=aSize; gl_Position=projectionMatrix*mv; }`,
+    fragmentShader:`varying vec3 vC; void main(){ vec2 d=gl_PointCoord-0.5; float r=length(d)*2.0;
+      float a=smoothstep(1.0,0.0,r); a*=a; gl_FragColor=vec4(vC, a); }`,
+    vertexColors:true });
+  scene.add(new THREE.Points(g, starMat));
+})();
+
+// ---------- Mars: procedural, butterscotch palette (researched real colour) + caps + atmosphere ----------
+const MARS_R = 300;
+const mars = new THREE.Mesh(
+  new THREE.SphereGeometry(MARS_R, 128, 128),
+  new THREE.ShaderMaterial({
+    uniforms:{ uTime:{value:0}, uSun:{value:sun.position.clone().normalize()} },
+    vertexShader:`varying vec3 vN; varying vec3 vP;
+      void main(){ vN=normalize(normalMatrix*normal); vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+    fragmentShader:`
+      varying vec3 vN; varying vec3 vP; uniform vec3 uSun; uniform float uTime;
+      float h(vec3 p){ return fract(sin(dot(p,vec3(12.9,78.2,37.1)))*43758.5); }
+      float n(vec3 p){ vec3 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
+        float a=mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),
+                    mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z); return a; }
+      float fbm(vec3 p){ float v=0.,a=.5; for(int i=0;i<6;i++){ v+=a*n(p); p*=2.03; a*=.5;} return v; }
+      void main(){
+        vec3 p = normalize(vP);
+        float f = fbm(p*3.0), f2 = fbm(p*8.0+2.0);
+        // butterscotch regolith, low saturation (researched: sRGB ~174,147,123 up close)
+        vec3 lo = vec3(0.42,0.26,0.17), mid = vec3(0.68,0.49,0.34), hi = vec3(0.80,0.64,0.49);
+        vec3 col = mix(lo, mid, smoothstep(0.35,0.6,f));
+        col = mix(col, hi, smoothstep(0.55,0.8,f2)*0.5);           // pale dust drifts
+        col = mix(col, vec3(0.30,0.20,0.15), smoothstep(0.62,0.48,f)*0.4); // dark basalt plains
+        // polar caps
+        float lat = abs(p.y);
+        col = mix(col, vec3(0.92,0.9,0.88), smoothstep(0.82,0.9,lat - fbm(p*6.0)*0.08));
+        // terminator shading (hard Mars key light)
+        float d = clamp(dot(normalize(vN), normalize(uSun)), 0.0, 1.0);
+        float lit = pow(d, 0.9);
+        vec3 shade = mix(vec3(0.02,0.015,0.01), col, 0.1+0.9*lit);
+        shade += col*0.06;                                         // tiny ambient
+        gl_FragColor = vec4(shade, 1.0);
+      }`
+  })
+);
+scene.add(mars);
+// atmosphere shell (rusty rim glow via back-side fresnel)
+const atmo = new THREE.Mesh(
+  new THREE.SphereGeometry(MARS_R*1.035, 64, 64),
+  new THREE.ShaderMaterial({ transparent:true, side:THREE.BackSide, blending:THREE.AdditiveBlending, depthWrite:false,
+    uniforms:{ uSun:{value:sun.position.clone().normalize()} },
+    vertexShader:`varying vec3 vN; varying vec3 vP; void main(){ vN=normalize(normalMatrix*normal); vP=(modelViewMatrix*vec4(position,1.0)).xyz; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+    fragmentShader:`varying vec3 vN; varying vec3 vP; void main(){ float fres=pow(1.0-abs(dot(normalize(vN),normalize(-vP))),2.5);
+      gl_FragColor=vec4(vec3(0.95,0.5,0.28)*fres, fres*0.9);}` })
+);
+scene.add(atmo);
+
+// ---------- groups we animate ----------
+const station = new THREE.Group();   // the orbital station
+const ship = new THREE.Group();      // the undocking ship (HAWC aboard)
+const surface = new THREE.Group();   // the landing site + deployed mech (built lazily)
+scene.add(station, ship, surface);
+
+// placeholder lights so loading never shows a black void
+const loader = new GLTFLoader();
+const load = (url)=> new Promise((res,rej)=> loader.load(url, g=>res(g.scene), undefined, rej));
+
+function frameAll(obj){ // normalize a GLB to a known size & center
+  const box = new THREE.Box3().setFromObject(obj), s = new THREE.Vector3(); box.getSize(s);
+  const c = box.getCenter(new THREE.Vector3()); obj.position.sub(c);
+  return Math.max(s.x,s.y,s.z)||1;
+}
+
+// ---- entry-burn material (friction plasma) applied to the ship hull during beat 3 ----
+const burn = { value: 0 };   // 0..1 how hot the entry is
+function makeBurnTrail(){
+  const g = new THREE.ConeGeometry(2.2, 26, 20, 1, true);
+  g.translate(0, -13, 0); g.rotateX(Math.PI);      // trail points backward (+? set at use)
+  const m = new THREE.ShaderMaterial({ transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide,
+    uniforms:{ uT:{value:0}, uHot:{value:0} },
+    vertexShader:`varying float vY; varying vec2 vUv; void main(){ vUv=uv; vY=uv.y; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+    fragmentShader:`varying float vY; varying vec2 vUv; uniform float uT; uniform float uHot;
+      float h(vec2 p){return fract(sin(dot(p,vec2(12.9,78.2)))*43758.5);}
+      void main(){ float flick=0.6+0.4*sin(uT*30.0+vUv.y*20.0)+0.3*h(vUv*40.0+uT);
+        vec3 hot=mix(vec3(1.0,0.95,0.7), vec3(1.0,0.45,0.1), vY); hot=mix(hot, vec3(0.7,0.15,0.35), smoothstep(0.6,1.0,vY));
+        float a=(1.0-vY)*flick*uHot; gl_FragColor=vec4(hot, a*0.9);}` });
+  const mesh = new THREE.Mesh(g,m); mesh.visible=false; return mesh;
+}
+const trail = makeBurnTrail(); ship.add(trail);
+
+// ---------- loading ----------
+const loadBar = document.getElementById('loadBar');
+async function buildWorld(onProgress){
+  let done=0; const total=3;
+  const tick=()=>{ done++; onProgress(done/total); };
+
+  // station (detailed, built in Blender → docs/assets/station.glb). Local copies live in
+  // docs/assets/ because GitHub Pages serves only /docs and cannot serve LFS-tracked GLBs.
+  try{ const s = await load('assets/station.glb');
+       const k = frameAll(s); s.scale.setScalar(20/k); s.rotation.y = 0.5; station.add(s);
+  }catch(e){ station.add(fallbackStation()); } tick();
+
+  // the descent ship that undocks (HAWC aboard → subship.glb). It's a Starship-style VERTICAL
+  // lander (nose +Y up, legs at the base) — it descends and lands upright on its legs.
+  try{ const sh = await load('assets/subship.glb');
+       const k = frameAll(sh); sh.scale.setScalar(8/k); ship.add(sh);
+  }catch(e){ ship.add(fallbackShip()); } tick();
+
+  // hero mech — loaded but kept off-screen until deploy (keeps the heavy GLB off the critical path visually)
+  try{ heroMech = await load('assets/hero.glb');
+       const k = frameAll(heroMech); heroMech.scale.setScalar(3.4/k);
+       heroMech.traverse(o=>{ if(o.isMesh){ o.castShadow=false; } });
+  }catch(e){ heroMech = fallbackMech(); } tick();
+}
+let heroMech=null;
+
+// ---- lightweight fallbacks so a missing GLB never breaks the film ----
+function boxMat(c){ return new THREE.MeshStandardMaterial({color:c,metalness:.6,roughness:.5}); }
+function fallbackStation(){ const g=new THREE.Group();
+  const core=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,9,16),boxMat(0x8a8577)); core.rotation.z=Math.PI/2; g.add(core);
+  for(let i=-1;i<=1;i+=2){ const ring=new THREE.Mesh(new THREE.TorusGeometry(4,.5,10,40),boxMat(0x6f6a5c)); ring.position.x=i*3; g.add(ring);}
+  const panel=new THREE.Mesh(new THREE.BoxGeometry(14,.2,4),boxMat(0x223)); panel.material.emissive=new THREE.Color(0x0a1830); g.add(panel);
+  g.scale.setScalar(1.6); return g; }
+function fallbackShip(){ const g=new THREE.Group();
+  const hull=new THREE.Mesh(new THREE.CapsuleGeometry(1.2,4,8,16),boxMat(0x9a7348)); hull.rotation.z=Math.PI/2; g.add(hull);
+  const fin=new THREE.Mesh(new THREE.BoxGeometry(.3,3,1.4),boxMat(0x6a4f30)); fin.position.x=-2.4; g.add(fin); return g; }
+function fallbackMech(){ const g=new THREE.Group();
+  const torso=new THREE.Mesh(new THREE.BoxGeometry(1.2,1.4,.9),boxMat(0xb0b4b8)); torso.position.y=2.2; g.add(torso);
+  for(let i=-1;i<=1;i+=2){ const leg=new THREE.Mesh(new THREE.BoxGeometry(.35,2,.4),boxMat(0x8a8d90)); leg.position.set(i*.35,1,0); g.add(leg);}
+  return g; }
+
+// ---------- a Mars-surface patch for the landing/deploy beats ----------
+let surfaceBuilt=false;
+function buildSurface(){
+  if(surfaceBuilt) return; surfaceBuilt=true;
+  const geo = new THREE.PlaneGeometry(400,400,120,120);
+  const pos = geo.attributes.position;
+  for(let i=0;i<pos.count;i++){ const x=pos.getX(i), y=pos.getY(i);
+    const hgt = Math.sin(x*0.05)*Math.cos(y*0.04)*2.2 + Math.sin(x*0.18+y*0.1)*0.6; pos.setZ(i,hgt); }
+  geo.computeVertexNormals(); geo.rotateX(-Math.PI/2);
+  const ground = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color:0x7a4f36, roughness:1, metalness:0 }));
+  ground.position.y = -2; surface.add(ground);
+  // scattered rocks (geological scatter — the "ecosystem" seed)
+  for(let i=0;i<60;i++){ const r=new THREE.Mesh(new THREE.IcosahedronGeometry(0.4+Math.random()*1.6,0),
+      new THREE.MeshStandardMaterial({color:0x5a4030,roughness:1,flatShading:true}));
+    r.position.set((Math.random()-.5)*300,-1.6,(Math.random()-.5)*300); r.rotation.set(Math.random(),Math.random(),Math.random());
+    r.scale.y=0.6+Math.random()*0.5; surface.add(r); }
+  surface.add(new THREE.Mesh(new THREE.PlaneGeometry(2000,2000),new THREE.MeshBasicMaterial({color:0x120a07})))
+    .rotation.x=-Math.PI/2, surface.children[surface.children.length-1].position.y=-60;
+  surface.visible=false;
+}
+
+// ---------- post: bloom for the entry burn + sun ----------
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, cam));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight), 0.7, 0.6, 0.85);
+composer.addPass(bloom);
+
+// ================= CINEMATIC TIMELINE =================
+// each beat is composed to hold as a still: camera key + object state, eased.
+const ease = t => t<0 ? 0 : t>1 ? 1 : (t*t*(3-2*t));
+const lerp = (a,b,t)=>a+(b-a)*t;
+function v3lerp(o,ax,ay,az,bx,by,bz,t){ o.set(lerp(ax,bx,t),lerp(ay,by,t),lerp(az,bz,t)); }
+
+const captions = [
+  ['Mars · high orbit',        'A station holds the line above a contested world.'],
+  ['Undock',                   'Clamps release. The ship — and the HAWC aboard — fall free.'],
+  ['Entry',                    'Friction lights the hull. Thirteen hundred degrees of welcome.'],
+  ['Descent',                  'Below the fire, the ground resolves.'],
+  ['Deploy',                   'The ramp drops. Something walks out.']
+];
+// beat time windows (seconds)
+const BEATS = [ [0,7], [7,15], [15,24], [24,32], [32,40] ];
+const DUR = 40;
+
+const capEl = document.getElementById('cap'), capK=document.getElementById('capK'), capT=document.getElementById('capT');
+let shownBeat=-1;
+function setCaption(i){
+  if(i===shownBeat) return; shownBeat=i; capEl.classList.remove('show');
+  if(i<0) return;
+  setTimeout(()=>{ capK.textContent=captions[i][0]; capT.textContent=captions[i][1]; capEl.classList.add('show'); }, 180);
+}
+
+const _p=new THREE.Vector3(), _l=new THREE.Vector3();
+function seg(t,a,b){ return ease((t-a)/(b-a)); }   // 0..1 within [a,b]
+
+function animate(time){
+  const u = mars.material.uniforms; u.uTime.value = time*0.001;
+
+  // which beat
+  let beat = BEATS.findIndex(([a,b])=> time>=a*1000 && time<b*1000);
+  if (time>=DUR*1000) beat=4;
+  if (beat>=0) setCaption(beat);
+
+  const T = time/1000;
+
+  // --- object states ---
+  // station sits near Mars limb
+  station.position.set(-30, 70, -40);
+  station.rotation.y = T*0.05;
+
+  // ship: docked → undocks → belly-first entry → flips upright → lands vertically on its legs.
+  // The subship is a Starship-style VERTICAL lander (nose +Y up, legs at the base), so it stays
+  // broadly upright and descends onto its legs — it does NOT fly nose-first like a plane.
+  const undock = seg(T,7,15), entry = seg(T,15,24), descent = seg(T,24,32), deploy = seg(T,32,40);
+  // position arc: drift off the dock, descend, then settle straight DOWN onto the pad
+  v3lerp(_p, -26,66,-36,  -8,42,-10, undock);          // drift off the dock
+  if(entry>0)  v3lerp(_p, -8,42,-10,  4,18,6, entry);  // descend toward atmosphere
+  if(descent>0)v3lerp(_p, 4,18,6,  2,3.0,6, descent);  // settle nearly straight down to the pad
+  if(deploy>0) _p.set(2,3.0,6);
+  ship.position.copy(_p);
+  // orientation: a gentle belly-lean during the entry burn, then right itself to vertical for
+  // a legs-down touchdown. Slow yaw throughout so we read all sides.
+  var lean = Math.sin(entry*Math.PI) * 0.5 * (1.0 - descent);   // lean out and back to 0
+  ship.rotation.set(lean, T*0.12, lean*0.3);
+
+  // entry burn ramps up then fades as it slows
+  const hot = Math.max(0, Math.sin(entry*Math.PI)) * (1-descent*0.7);
+  burn.value = hot; trail.visible = hot>0.02; trail.material.uniforms.uHot.value = hot;
+  trail.material.uniforms.uT.value = T;
+  // the retro/entry burn fires DOWN from the lander's base engines (it's vertical, legs-down)
+  trail.position.set(0, -3.2, 0); trail.rotation.set(0, 0, 0);
+  bloom.strength = 0.6 + hot*1.6;
+
+  // surface appears once we're low
+  if(descent>0.01){ buildSurface(); surface.visible=true; }
+
+  // deploy the mech out of the ship at the end
+  if(deploy>0 && heroMech){
+    if(!heroMech.parent) surface.add(heroMech);
+    heroMech.position.set(2, lerp(-2,-1.0,ease(deploy)), 6 + lerp(0,5,ease(deploy)));
+    heroMech.rotation.y = Math.PI*0.15;
+  }
+
+  // --- camera: a composed key per beat ---
+  if (beat<=0){        // orbit establishing — slow push on the station + Mars limb
+    const k=seg(T,0,7);
+    v3lerp(_p, -10,78,60,  -18,74,40, k); cam.position.copy(_p);
+    _l.set(-28,70,-38);
+  } else if (beat===1){ // undock — frame the ship leaving the dock
+    v3lerp(_p, -18,74,40, 0,52,24, undock); cam.position.copy(_p);
+    _l.copy(ship.position);
+  } else if (beat===2){ // entry — low, dramatic, behind-and-below so the burn fills frame
+    v3lerp(_p, 0,52,24, 14,20,26, entry); cam.position.copy(_p);
+    _l.copy(ship.position);
+  } else if (beat===3){ // descent — crane down toward the pad
+    v3lerp(_p, 14,20,26, 12,8,22, descent); cam.position.copy(_p);
+    _l.copy(ship.position);
+  } else {              // deploy — hero low-angle on the mech
+    v3lerp(_p, 12,8,22, 9,3.2,16, deploy); cam.position.copy(_p);
+    _l.set(2,1.5,8);
+    if(deploy>0.5){ document.getElementById('end').classList.add('show'); }
+  }
+  cam.lookAt(_l);
+
+  // show brand during the establishing beat, hide after
+  document.getElementById('brand').classList.toggle('show', beat===0 || beat===1);
+
+  composer.render();
+  if(playing) raf = requestAnimationFrame(animate);
+}
+
+// ---------- flow control ----------
+let raf=0, playing=false;
+function run(){
+  playing=true; document.getElementById('skip').hidden=false;
+  const t0=performance.now();
+  (function tick(now){ if(!playing) return; animate(now-t0); if(playing) raf=requestAnimationFrame(tick); })(t0);
+}
+function finish(){
+  playing=false; cancelAnimationFrame(raf);
+  // jump to final frame & show end card
+  buildSurface(); surface.visible=true;
+  if(heroMech){ if(!heroMech.parent) surface.add(heroMech); heroMech.position.set(2,-1.0,11); heroMech.rotation.y=Math.PI*0.15; }
+  ship.position.set(2,2.2,6); trail.visible=false;
+  cam.position.set(9,3.2,16); cam.lookAt(2,1.5,8); composer.render();
+  document.getElementById('end').classList.add('show');
+  setCaption(4);
+}
+
+// gate / play button
+const gate=document.getElementById('gate'), loadWrap=document.getElementById('load');
+document.getElementById('play').addEventListener('click', async ()=>{
+  loadWrap.classList.add('on');
+  await buildWorld(p=>{ loadBar.style.width = (p*100)+'%'; });
+  gate.classList.add('hide');
+  run();
+});
+document.getElementById('skip').addEventListener('click', finish);
+document.getElementById('replay').addEventListener('click', (e)=>{ e.preventDefault();
+  document.getElementById('end').classList.remove('show'); shownBeat=-1; surface.visible=false;
+  if(heroMech&&heroMech.parent) heroMech.parent.remove(heroMech);
+  run();
+});
+
+addEventListener('resize', ()=>{ cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight); composer.setSize(innerWidth,innerHeight); });
+
+// render one still frame behind the gate so it isn't black
+cam.position.set(-18,74,40); cam.lookAt(-28,70,-38); composer.render();
+</script>
+</body>
+</html>

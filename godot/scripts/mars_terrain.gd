@@ -188,9 +188,24 @@ void fragment(){
 	col = mix(col, high_col, smoothstep(0.5,0.8,patch)*0.5);
 	col = mix(col, low_col, smoothstep(0.5,0.2,patch)*0.3);
 
-	// SAND RIPPLES — directional wave pattern, subtle light/dark banding
+	// MEGARIPPLES (ecosystem #3): windblown sand ridges on the flats. Real megaripples
+	// (Perseverance, Kerrlaguna) are ~1 m ridges between small ripples and dunes, oriented
+	// perpendicular to the prevailing wind, still slowly migrating. Only appear on flat ground
+	// (not steep slopes), wavelength a few metres, with a sharpened crest and a sunward highlight.
+	float mr_flat = 1.0 - smoothstep(0.12, 0.35, 1.0 - clamp(v_nrm.y, 0.0, 1.0));  // flats only
+	vec2 wind = normalize(vec2(0.82, 0.57));              // prevailing wind direction
+	float across = dot(w, vec2(-wind.y, wind.x));         // coordinate across the ridges
+	float mwav = across * 0.42 + fbm(w*0.04) * 2.4;       // meander the ridge lines
+	float mega = sin(mwav);
+	mega = sign(mega) * pow(abs(mega), 0.6);              // sharpen crests, flatten troughs
+	float megaN = mega * 0.5 + 0.5;
+	// light/dark banding + a brighter sunward crest face (the crest catching the low sun)
+	col *= mix(1.0, 0.9 + megaN * 0.18, mr_flat);
+	float crest = smoothstep(0.78, 0.98, megaN);
+	col = mix(col, col * vec3(1.1, 1.06, 1.0), crest * mr_flat * 0.5);
+	// keep a faint fine ripple on top so close-up ground isn't pure megaripple
 	float ripple = sin(w.x*0.5 + fbm(w*0.08)*6.0) * 0.5 + 0.5;
-	col *= 0.94 + ripple*0.10;
+	col *= 0.97 + ripple*0.05;
 
 	// ROCK SPECKLE — scattered dark stones
 	float rocks = noise(w*2.5);
@@ -255,6 +270,20 @@ void fragment(){
 	float slope = 1.0 - clamp(v_nrm.y, 0.0, 1.0);
 	col = mix(col, slope_col, smoothstep(0.35,0.7,slope));
 
+	// RECURRING SLOPE LINEAE (ecosystem #5): dark narrow streaks that run DOWN steep slopes.
+	// Real RSL (HiRISE): 0.5-5 m wide, only on slopes steeper than ~28deg, darker than
+	// surroundings, following the fall line. Here: only where slope is steep, striped along
+	// the downhill horizontal direction so they read as vertical streaks on canyon walls.
+	float rsl_slope = smoothstep(0.42, 0.62, slope);                 // ~28deg+ only
+	if (rsl_slope > 0.001) {
+		vec2 downhill = normalize(v_nrm.xz + vec2(1e-5));            // horizontal downslope dir
+		float along = dot(w, vec2(-downhill.y, downhill.x));         // coordinate ACROSS the slope
+		float streak = fbm(vec2(along * 0.9, dot(w, downhill) * 0.08));
+		float lineae = smoothstep(0.52, 0.6, streak) * smoothstep(0.78, 0.62, streak); // thin bands
+		// dark, slightly reddened (briny/damp look), only on the steep faces
+		col = mix(col, slope_col * vec3(0.52, 0.46, 0.44), lineae * rsl_slope * 0.8);
+	}
+
 	// perturb normal slightly for a rougher, grittier surface under light
 	vec3 n = v_nrm;
 	float nx = fbm(w*3.0+vec2(1.0,0.0)) - fbm(w*3.0-vec2(1.0,0.0));
@@ -273,10 +302,17 @@ void fragment(){
 """
 	var m := ShaderMaterial.new()
 	m.shader = sh
-	# bind the real scanned regolith textures (extracted by tools/extract_ground_textures.py)
-	# so the terrain blends genuine photogrammetry over its procedural detail. Guarded: if a
-	# texture is missing the shader's hint_default_white keeps the procedural look intact.
-	var alb := load("res://assets/mars_ground_albedo.png") as Texture2D
+	# ground_albedo: the calibrated, SEAMLESS Mars-soil set baked by tools/build_ground_materials.py
+	# (assets/ground/soil/) replaces the old photogrammetry scan — that scan carried Earthly green
+	# (moss) we had to fight in-shader, and tiled visibly. The new soil is low-saturation Mars
+	# caramel, measured against the Perseverance panoramas, and wraps cleanly with no seam.
+	# ground_normal: KEPT as the old scanned normal — it still carries genuine gritty micro-relief;
+	# the baked soil normal came out near-flat (bump-from-noise doesn't survive the NORMAL bake),
+	# so we keep the detailed scan normal until the bake pipeline is fixed. Guarded loads: a missing
+	# texture leaves the shader's hint_default_white defaults, preserving the procedural look.
+	var alb := load("res://assets/ground/soil/albedo.png") as Texture2D
+	if alb == null:
+		alb = load("res://assets/mars_ground_albedo.png") as Texture2D   # fallback to the old scan
 	if alb:
 		m.set_shader_parameter("ground_albedo", alb)
 	var nrm := load("res://assets/mars_ground_normal.png") as Texture2D

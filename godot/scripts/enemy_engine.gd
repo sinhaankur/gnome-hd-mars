@@ -111,8 +111,12 @@ func _spawn_enemy(tier_key: String, fallback_hp: int, opts: Dictionary = {}) -> 
 
 	var visual := Node3D.new()
 	var arch: String = tier.get("arch", "")
-	# distinct archetype model if we have one; else the shared warrior fallback
-	var model_path: String = ARCH_MODELS.get(arch, mech_path)
+	# EVERY HAWC IS THE SAME MACHINE (user 2026-11-23): the rival mechs use the PLAYER's exact
+	# chassis (mech_path = hero_striker), set apart only by FACTION COLOR. This reinforces the
+	# core premise — you and the enemy fly the same hull, so stealing one (the hijack loop)
+	# gives you a machine identical to theirs. (The old 5 distinct archetype silhouettes in
+	# ARCH_MODELS are retired for this; kept in the const for reference / optional variety.)
+	var model_path: String = mech_path
 	# steal continuity: the possession loop rebuilds a commandeered hull from these,
 	# so the machine you board is the machine you emptied (same model, same paint)
 	e.set_meta("model_path", model_path)
@@ -122,10 +126,9 @@ func _spawn_enemy(tier_key: String, fallback_hp: int, opts: Dictionary = {}) -> 
 	var mech_model: Node = null
 	if scene:
 		var m := scene.instantiate()
-		# archetype models are real-meter scale -> use their per-class base multiplier;
-		# the warrior fallback keeps the old mech_scale. tier["scale"] varies within class.
-		var base: float = ARCH_BASE_SCALE.get(arch, mech_scale)
-		m.scale = Vector3.ONE * base * float(tier["scale"])
+		# the hero chassis is normalized to its real metre height already, so the per-class
+		# ARCH_BASE_SCALE no longer applies; tier["scale"] still varies size within a faction.
+		m.scale = Vector3.ONE * float(tier["scale"])
 		# VERIFIED BY RENDER (from the target's view): the flipped model shows its FACE
 		# toward the target, the unflipped shows its back. So enemies need the flip too.
 		# The new archetypes are built facing +Y (= forward), so PI still turns the face

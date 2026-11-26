@@ -20,6 +20,19 @@
 /Glb/
 /w9231-combat-mech-rigged/
 /w9231_combat_mech_rigged-2.glb
+# derived from w9231 (license unverified) — keep out of repo until cleared
+/godot/assets/hero_hawc.glb
+# ...and its Godot-extracted textures (same unverified source)
+/godot/assets/hero_hawc_Image_*.png
+/godot/assets/hero_hawc_Image_*.png.import
+/godot/assets/hero_hawc.glb.import
+# on-foot pilot placeholder — Master Chief / Halo is Microsoft/343 IP (CC-BY covers the
+# uploader's upload, not the underlying trademark). Dev placeholder only; see CREDITS.md.
+# Replace with an original armored trooper before public distribution.
+/godot/assets/pilot_human.glb
+/godot/assets/pilot_human.glb.import
+/godot/assets/pilot_human_Image_*
+/godot/assets/pilot_human_Image_*.import
 # raw CC-BY mech source dump (the game only ships the baked .glb in godot/assets/)
 /bot-mecha-warrior-3d-by-oscar-creativo/
 /design/bot_mecha_warrior_3d_by_oscar_creativo.glb

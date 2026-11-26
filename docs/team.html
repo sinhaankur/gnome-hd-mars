@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mars HAWC — The Team</title>
+<meta name="description" content="The Mars HAWC build team: nine specialist agents and the cycle they run to keep building the game.">
+<meta property="og:title" content="Mars HAWC — The Team">
+<meta property="og:description" content="Nine specialist agents and the build cycle that ships the game.">
+<meta property="og:image" content="img/hero_mech.png">
+<style>
+  :root{
+    --bg:#0e0d0b; --panel:#17150f; --panel2:#1e1b13;
+    --ink:#efe7d6; --muted:#a49a83; --line:#332e21;
+    --gold:#d9b25a; --gold-2:#c9a24a; --orange:#f08a2a; --green:#6fcf7c; --blue:#5aa0d9;
+    --hazard: repeating-linear-gradient(45deg,#d9b25a 0 14px,#17150f 14px 28px);
+    --ease: cubic-bezier(0.16,1,0.3,1);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:
+      radial-gradient(1100px 500px at 80% -200px, #241207 0%, transparent 60%),
+      radial-gradient(900px 500px at 0% 10%, #141a24 0%, transparent 55%), var(--bg);
+    color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6}
+  a{color:var(--gold);text-decoration:none}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+  .hazard{height:10px;background:var(--hazard);opacity:.85}
+
+  header{padding:52px 0 26px;text-align:center}
+  .kicker{font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;color:var(--orange)}
+  h1{margin:8px 0 6px;font:700 clamp(2rem,6vw,3.4rem)/1.03 system-ui;letter-spacing:.04em;text-transform:uppercase}
+  h1 b{color:var(--orange)}
+  header p{color:var(--muted);max-width:60ch;margin:10px auto 0}
+  .topnav{margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .btn{display:inline-block;padding:10px 18px;border-radius:8px;font-weight:600;font-size:.86rem;
+    background:transparent;color:var(--gold);border:1px solid var(--line);transition:border-color .2s,color .2s}
+  .btn:hover{border-color:var(--gold)}
+  .btn.solid{background:var(--gold);color:#1a1509;border-color:var(--gold)}
+
+  h2{font:600 1.5rem/1.2 system-ui;letter-spacing:.02em;margin:46px 0 4px}
+  h2 .k{color:var(--orange);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;vertical-align:middle;margin-left:10px}
+  .sub{color:var(--muted);margin:0 0 22px;max-width:70ch}
+
+  /* ---- roster grid ---- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+  .card{position:relative;border:1px solid var(--line);border-radius:14px;background:
+      linear-gradient(180deg,var(--panel2),var(--panel));padding:18px 18px 16px;overflow:hidden;
+    transition:transform .4s var(--ease),border-color .3s,box-shadow .3s;cursor:default}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--dept,var(--gold))}
+  .card:hover{transform:translateY(-4px);border-color:var(--dept,var(--gold));box-shadow:0 14px 40px #0008}
+  .card .top{display:flex;align-items:center;gap:12px}
+  .avatar{width:46px;height:46px;border-radius:11px;display:grid;place-items:center;flex:0 0 auto;
+    background:#0c0a07;border:1px solid var(--line);color:var(--dept,var(--gold))}
+  .avatar svg{width:26px;height:26px}
+  .role{font:600 1.08rem/1.1 system-ui}
+  .handle{font-size:.74rem;color:var(--muted);font-family:ui-monospace,Menlo,monospace}
+  .dept-tag{margin-left:auto;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--dept,var(--gold));border:1px solid var(--dept,var(--gold));border-radius:999px;padding:3px 9px;opacity:.9}
+  .owns{margin:12px 0 0;color:var(--ink);font-size:.92rem}
+  .owns b{color:var(--muted);font-weight:600;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:2px}
+  .skills{margin-top:11px;display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-size:.68rem;letter-spacing:.02em;color:var(--muted);background:#0c0a07;border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-family:ui-monospace,Menlo,monospace}
+  .invoke{margin-top:13px;padding-top:11px;border-top:1px dashed var(--line);font-size:.78rem;color:var(--muted)}
+  .invoke code{color:var(--gold);background:#0c0a07;border:1px solid var(--line);border-radius:5px;padding:2px 7px;font-size:.76rem}
+
+  /* ---- the loop ---- */
+  .loop{border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,var(--panel2),var(--panel));padding:26px 20px;margin-top:8px}
+  .steps{display:grid;grid-template-columns:repeat(6,1fr);gap:0;align-items:stretch}
+  @media(max-width:860px){.steps{grid-template-columns:repeat(2,1fr);gap:14px}}
+  .step{position:relative;text-align:center;padding:14px 10px}
+  .step .n{width:30px;height:30px;border-radius:50%;margin:0 auto 8px;display:grid;place-items:center;
+    font:700 .82rem/1 system-ui;background:#0c0a07;border:1px solid var(--step,var(--gold));color:var(--step,var(--gold))}
+  .step h4{margin:0;font:600 .92rem/1.2 system-ui;letter-spacing:.06em;text-transform:uppercase}
+  .step p{margin:5px 0 0;font-size:.76rem;color:var(--muted)}
+  .step .who{margin-top:7px;font-size:.68rem;font-family:ui-monospace,Menlo,monospace;color:var(--step,var(--gold))}
+  .step:not(:last-child)::after{content:"→";position:absolute;right:-9px;top:20px;color:var(--line);font-size:1.1rem}
+  @media(max-width:860px){.step:not(:last-child)::after{display:none}}
+  .loop .cycle{margin-top:16px;text-align:center;font-size:.8rem;color:var(--muted)}
+  .loop .cycle b{color:var(--green)}
+
+  /* ---- constitution ---- */
+  .rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+  .rule{border:1px solid var(--line);border-radius:11px;background:var(--panel);padding:13px 15px}
+  .rule h5{margin:0 0 3px;font:600 .92rem/1.2 system-ui;color:var(--gold)}
+  .rule p{margin:0;font-size:.82rem;color:var(--muted)}
+
+  footer{color:var(--muted);font-size:.82rem;text-align:center;padding:40px 0 60px}
+  .dim{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="hazard"></div>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Mars HAWC · Production</div>
+  <h1>The <b>Team</b></h1>
+  <p>Nine specialist agents build this game — each a role on a real games team. A producer runs the loop; the rest define, build, verify and judge. One thing finished to quality before the next.</p>
+  <div class="topnav">
+    <a class="btn solid" href="index.html">← Devlog</a>
+    <a class="btn" href="intro.html">▶ Arrival cinematic</a>
+    <a class="btn" href="https://github.com/sinhaankur/gnome-hd-mars">GitHub</a>
+  </div>
+</header>
+
+<h2>The roster <span class="k">9 agents</span></h2>
+<p class="sub">Each lives in <code style="font-size:.8rem;color:var(--gold)">.claude/agents/</code> and is invoked by name in Claude Code. Colour = department.</p>
+<div class="grid" id="roster"></div>
+
+<h2>The build cycle <span class="k">how work ships</span></h2>
+<p class="sub">Every iteration is one shippable improvement. Work flows through six stations and loops. Fail a gate (verify or judge) and it goes back to build — never forward.</p>
+<div class="loop">
+  <div class="steps" id="steps"></div>
+  <div class="cycle">…then the producer picks the next piece. <b>Repeat.</b> One thing finished to quality at a time.</div>
+</div>
+
+<h2>The constitution <span class="k">rules every agent defends</span></h2>
+<p class="sub">The house rules, hard-won. No agent ships work that breaks them.</p>
+<div class="rules" id="rules"></div>
+
+<footer>
+  <div class="hazard" style="max-width:200px;margin:0 auto 18px;border-radius:3px"></div>
+  Mars HAWC is independent and non-commercial. The team &amp; cycle live in
+  <span class="dim">.claude/agents/</span> and <span class="dim">design/BUILD_CYCLE.md</span>.
+</footer>
+</div>
+
+<script>
+// ---- data: derived from the actual agent files + BUILD_CYCLE.md ----
+const ICON = {
+  producer:'<path d="M3 3h18v4H3zM3 10h11v4H3zM3 17h18v4H3z"/>',
+  creative:'<path d="M12 2l2.4 6.3L21 9l-5 4.2L17.6 20 12 16.5 6.4 20 8 13.2 3 9l6.6-.7z"/>',
+  art:'<circle cx="7" cy="8" r="2.4"/><circle cx="15" cy="6.5" r="2"/><circle cx="17" cy="13" r="2.2"/><path d="M12 22c-5 0-9-3.4-9-8 0-1.6 1.3-2.6 3-2.3 2 .4 2.6 2.3 4 2.3 2 0 2.4-2 5-2 2 0 3 1.4 3 3 0 4-3 7-6 7z"/>',
+  model:'<path d="M12 2l9 5v10l-9 5-9-5V7z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 12l9-5M12 12v10M12 12L3 7" fill="none" stroke="currentColor" stroke-width="1.2"/>',
+  code:'<path d="M8 6l-6 6 6 6M16 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2"/>',
+  shader:'<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 3a9 9 0 000 18z"/>',
+  level:'<path d="M3 20l5-14 4 8 3-5 6 11z" fill="none" stroke="currentColor" stroke-width="1.6"/>',
+  web:'<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="currentColor" stroke-width="1.2"/>',
+  qa:'<path d="M5 13l4 4L19 7" fill="none" stroke="currentColor" stroke-width="2.4"/>'
+};
+const DEPT = { direction:'#d9b25a', art:'#f08a2a', engineering:'#5aa0d9', production:'#6fcf7c' };
+
+const AGENTS = [
+  { h:'producer', role:'Producer', dept:'production', icon:'producer',
+    owns:'The loop: picks the next most valuable work, routes it to a specialist, tracks it to “done and verified,” enforces scope.',
+    skills:['tasks','git','memory'] },
+  { h:'creative-director', role:'Creative Director', dept:'direction', icon:'creative',
+    owns:'Vision, the four G-NOME pillars, story & premise. Answers “is this the right thing, and is it true to the game?”',
+    skills:['GDD','design docs','WebSearch'] },
+  { h:'art-director', role:'Art Director', dept:'art', icon:'art',
+    owns:'The visual quality bar. Judges every frame against real reference photos and sends back slop in payoff order.',
+    skills:['godot-art-pass'] },
+  { h:'asset-artist', role:'3D Asset Artist', dept:'art', icon:'model',
+    owns:'Mechs, ships, props, structures & terrain in Blender → game-ready GLBs (Y-up, real metres, export immediately).',
+    skills:['blender-asset','mars-hawc-asset-sourcing','blender suite'] },
+  { h:'godot-engineer', role:'Gameplay Engineer', dept:'engineering', icon:'code',
+    owns:'The Godot game: three engines (Environment / HAWC / Enemy), the hijack loop, physics, combat, HUD, mission flow.',
+    skills:['Godot','GDScript'] },
+  { h:'technical-artist', role:'Technical Artist', dept:'engineering', icon:'shader',
+    owns:'Shaders, materials, lighting calibration, the Mars surface “ecosystem.” Between the meshes and how they render.',
+    skills:['blender-shader-nodes','Godot shaders'] },
+  { h:'level-designer', role:'Level / Mission Designer', dept:'direction', icon:'level',
+    owns:'Level layout, mission flow, encounters, pacing — the dominance→catastrophe→gamble→reversal arc of every fight.',
+    skills:['design docs'] },
+  { h:'web-dev', role:'Web / Showcase Dev', dept:'engineering', icon:'web',
+    owns:'The browser “window to watch what’s built” — devlog, the arrival cinematic, viewers, and the Pages deploy.',
+    skills:['Three.js','anatomy'] },
+  { h:'qa', role:'QA / Build Engineer', dept:'production', icon:'qa',
+    owns:'Verifies everything runs error-free, assets are valid, the deploy is green, and the repo stays clean. The last gate.',
+    skills:['bash','CI','git'] },
+];
+
+const STEPS = [
+  { n:1, t:'Plan',   who:'producer',                 p:'Pick the single highest-value next piece.', c:'#6fcf7c' },
+  { n:2, t:'Define', who:'creative · level-designer', p:'Decide what to build and why it serves a pillar.', c:'#d9b25a' },
+  { n:3, t:'Build',  who:'asset · godot · tech-art · web', p:'Make it — model, code, shader, screen.', c:'#f08a2a' },
+  { n:4, t:'Verify', who:'qa',                        p:'Prove it runs error-free; assets valid; deploy green.', c:'#5aa0d9' },
+  { n:5, t:'Judge',  who:'art-director',              p:'Compare to real photos; send back slop in payoff order.', c:'#f08a2a' },
+  { n:6, t:'Ship',   who:'producer',                  p:'Commit, update memory, pick the next piece.', c:'#6fcf7c' },
+];
+
+const RULES = [
+  ['Real, not sloppy','Visuals are judged only against real photos — never “looks fine to me.”'],
+  ['Library-first','Before any code: “how do we do this without endless coding?”'],
+  ['Repo-first assets','Check the user’s own repos/assets before building anything new.'],
+  ['Finish one thing','One piece finished to quality before the next starts. This ships games.'],
+  ['Godot stays the game','The web build is a progress window, not a port.'],
+  ['Always clean up','No temp or dead files; review git status before every commit.'],
+  ['Every frame good','4K, composed, well-designed — every screen holds as a still.'],
+];
+
+// ---- render ----
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+const roster=document.getElementById('roster');
+AGENTS.forEach(a=>{
+  const card=el('div','card');
+  card.style.setProperty('--dept', DEPT[a.dept]);
+  card.innerHTML=`
+    <div class="top">
+      <div class="avatar"><svg viewBox="0 0 24 24" fill="currentColor">${ICON[a.icon]}</svg></div>
+      <div><div class="role">${a.role}</div><div class="handle">@${a.h}</div></div>
+      <div class="dept-tag">${a.dept}</div>
+    </div>
+    <div class="owns"><b>Owns</b>${a.owns}</div>
+    <div class="skills">${a.skills.map(s=>`<span class="chip">${s}</span>`).join('')}</div>
+    <div class="invoke">Invoke: <code>${a.h}</code></div>`;
+  roster.appendChild(card);
+});
+
+const steps=document.getElementById('steps');
+STEPS.forEach(s=>{
+  const d=el('div','step'); d.style.setProperty('--step', s.c);
+  d.innerHTML=`<div class="n">${s.n}</div><h4>${s.t}</h4><p>${s.p}</p><div class="who">${s.who}</div>`;
+  steps.appendChild(d);
+});
+
+const rules=document.getElementById('rules');
+RULES.forEach(r=>rules.appendChild(el('div','rule',`<h5>${r[0]}</h5><p>${r[1]}</p>`)));
+</script>
+</body>
+</html>

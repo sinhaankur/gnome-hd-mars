@@ -58,27 +58,12 @@ func _build_space() -> void:
 	sun.light_color = Color(1.0, 0.96, 0.9)
 	add_child(sun)
 
-	# starfield: hundreds of tiny unshaded points on a far shell
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	var star := SphereMesh.new()
-	star.radius = 0.06; star.height = 0.12; star.radial_segments = 4; star.rings = 2
-	var sm := StandardMaterial3D.new()
-	sm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	sm.albedo_color = Color(0.9, 0.92, 1.0)
-	star.material = sm
-	mm.mesh = star
-	mm.instance_count = 600
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 42
-	for i in range(mm.instance_count):
-		var dir := Vector3(rng.randfn(), rng.randfn(), rng.randfn()).normalized()
-		var xf := Transform3D(Basis().scaled(Vector3.ONE * rng.randf_range(0.4, 1.4)),
-							  dir * rng.randf_range(55.0, 90.0))
-		mm.set_instance_transform(i, xf)
-	var mmi := MultiMeshInstance3D.new()
-	mmi.multimesh = mm
-	add_child(mmi)
+	# the real universe backdrop (same engine as the Mars night sky + the web cinematic):
+	# colour-varied stars with a power-law brightness spread and a Milky Way band, always on
+	# here since the strategic view has no day cycle. Radius 120 fits the small globe scale.
+	var StarsScript := load("res://scripts/mars_stars.gd")
+	if StarsScript:
+		add_child(StarsScript.make(42, 120.0, true))
 
 	_cam = Camera3D.new()
 	_cam.position = Vector3(0, 0, _cam_dist)

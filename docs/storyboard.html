@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mars HAWC — Storyboard</title>
+<meta name="description" content="Mars HAWC opening, boarded as composed grayscale panels with real shot grammar — establishing, over-shoulder, low, close-up, POV.">
+<style>
+  :root{ --ink:#141414; --paper:#f4f2ec; --board:#dedad0; --muted:#4a463e; --accent:#a85a1a; }
+  *{box-sizing:border-box}
+  body{margin:0;background:#c8c4ba;color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.45}
+  .sheet{max-width:1180px;margin:0 auto;background:var(--paper);padding:40px 44px 80px;box-shadow:0 0 50px #0004}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:3px solid var(--ink);padding-bottom:12px}
+  .head h1{margin:0;font:700 clamp(1.7rem,4vw,2.6rem)/1 Georgia,serif;letter-spacing:.01em}
+  .head .meta{text-align:right;font-size:.8rem;color:var(--muted);line-height:1.6}
+  .nav{margin:12px 0 26px;font-size:.86rem}
+  .nav a{color:var(--accent);text-decoration:none;margin-right:18px;font-weight:700}
+  .act{margin:34px 0 14px;font:700 .8rem/1 Georgia,serif;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid #bbb6a8;padding-bottom:8px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px 24px}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+  .panel{break-inside:avoid}
+  .pane{position:relative;border:2px solid var(--ink);background:#000;aspect-ratio:16/9;overflow:hidden;box-shadow:3px 3px 0 #0002}
+  .pane svg{position:absolute;inset:0;width:100%;height:100%}
+  .shot{position:absolute;left:0;top:0;background:var(--ink);color:var(--paper);font:700 .62rem/1 Arial,sans-serif;letter-spacing:.06em;padding:4px 7px;z-index:3;text-transform:uppercase}
+  .no{position:absolute;right:0;top:0;background:#fff;color:#000;font:700 .68rem/1 Arial,sans-serif;padding:4px 7px;border-left:2px solid #000;border-bottom:2px solid #000;z-index:3}
+  .cap{margin-top:9px;font-size:.92rem;color:#222}
+  .cap b{color:#000}
+  .dir{display:block;margin-top:3px;font-size:.76rem;color:var(--muted);font-style:italic}
+  .foot{margin-top:44px;border-top:2px solid var(--ink);padding-top:10px;display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="head">
+    <div><h1>MARS HAWC — Storyboard</h1></div>
+    <div class="meta">Opening sequence · v2<br>Grayscale · shot grammar · boarded before build</div>
+  </div>
+  <div class="nav"><a href="index.html">← Devlog</a><a href="intro.html">▶ Arrival cinematic</a><a href="team.html">The team</a></div>
+  <div id="board"></div>
+  <div class="foot"><span>Shots: EST establishing · FULL · OS over-shoulder · LOW · HIGH · CU close-up · POV</span><span>© 2026 sinhaankur · Mars HAWC</span></div>
+</div>
+
+<script>
+// ---- grayscale tonal palette (like the B.R.O board): 5 values dark→light ----
+const V = { k:'#121212', d:'#2f2f30', m:'#565659', l:'#8a8a8e', hi:'#c3c3c7', paper:'#e9e7e0', sky0:'#9a9aa0', sky1:'#cfccc6' };
+// helpers
+const grad = (id,a,b)=>`<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
+// a loose rough mech (side/3q), tonal
+const mech = (x,y,s,dark=V.d,lit=V.l)=>`<g transform="translate(${x},${y}) scale(${s})" stroke="#000" stroke-width="1.4">
+  <rect x="-18" y="-34" width="36" height="34" rx="5" fill="${dark}"/>
+  <polygon points="-18,-34 6,-40 18,-34" fill="${V.m}"/>
+  <rect x="-10" y="-30" width="20" height="11" rx="2" fill="${V.hi}"/>
+  <rect x="16" y="-28" width="22" height="9" rx="2" fill="${V.m}"/>
+  <rect x="-20" y="0" width="12" height="20" fill="${dark}"/><polygon points="-20,20 -8,20 -4,34 -24,34" fill="${V.m}"/>
+  <rect x="8" y="0" width="12" height="18" fill="${dark}"/><polygon points="8,18 20,18 26,34 4,34" fill="${V.m}"/>
+  <rect x="-14" y="-6" width="28" height="6" fill="${lit}" opacity=".5"/>
+</g>`;
+
+// a UI-screen helper for the shell flow (framed like an in-game screen, still tonal)
+const screen = inner => `<rect width="320" height="180" fill="${V.k}"/><rect x="10" y="10" width="300" height="160" fill="none" stroke="${V.l}" stroke-width="1" opacity=".4"/>${inner}`;
+const uibtn = (x,y,w,t,hot=false)=>`<rect x="${x}" y="${y}" width="${w}" height="22" rx="3" fill="${hot?V.l:V.d}" stroke="${V.hi}" stroke-width="1"/><text x="${x+w/2}" y="${y+15}" font-size="11" fill="${hot?V.k:V.hi}" font-family="Arial" text-anchor="middle">${t}</text>`;
+
+const FRAMES = {
+ 'ACT 0 — THE SHELL (boot → deploy)': [
+  ['UI','00a','Title screen.','The HAWC stands under the logo on Mars. "PRESS START". First impression — set the grim tone.',
+   screen(`<text x="160" y="56" font-size="30" fill="${V.hi}" font-family="Arial" font-weight="bold" text-anchor="middle">MARS HAWC</text>
+     ${mech(160,135,0.8,V.d,V.l)}${uibtn(110,150,100,'PRESS START',true)}`)],
+  ['UI','00b','Main menu.','Start Campaign · Select Mission · Story · Settings · Quit. Over a slow-rotating Mars.',
+   screen(`<circle cx="260" cy="150" r="80" fill="${V.d}"/><text x="90" y="40" font-size="16" fill="${V.hi}" font-family="Arial" font-weight="bold">MENU</text>
+     ${uibtn(30,56,150,'START CAMPAIGN',true)}${uibtn(30,84,150,'SELECT MISSION')}${uibtn(30,112,150,'STORY / BRIEFING')}${uibtn(30,140,70,'SETTINGS')}${uibtn(108,140,72,'QUIT')}`)],
+  ['UI','00c','Mars globe — pick territory.','A real NASA globe rotates; contested territories marked. Player rotates and picks a target.',
+   screen(`<circle cx="160" cy="100" r="74" fill="${V.m}"/><path d="M100 70 Q160 58 220 88 M90 130 Q160 148 230 128" stroke="${V.l}" fill="none" opacity=".5"/>
+     <circle cx="130" cy="82" r="6" fill="${V.hi}"/><circle cx="192" cy="122" r="6" fill="${V.l}"/><text x="202" y="126" font-size="10" fill="${V.hi}" font-family="Arial">◀ contested</text>
+     <text x="160" y="24" font-size="13" fill="${V.hi}" font-family="Arial" text-anchor="middle">SELECT TERRITORY</text>`)],
+  ['UI','00d','Briefing.','China holds a mining base on contested ground — take it back. Read, tap DEPLOY.',
+   screen(`<text x="160" y="34" font-size="15" fill="${V.hi}" font-family="Arial" font-weight="bold" text-anchor="middle">BRIEFING</text>
+     <rect x="24" y="48" width="78" height="56" fill="${V.d}" stroke="${V.l}"/><text x="63" y="80" font-size="10" fill="${V.l}" font-family="Arial" text-anchor="middle">MAP</text>
+     ${[...Array(5)].map((_,i)=>`<line x1="118" y1="${56+i*11}" x2="286" y2="${56+i*11}" stroke="${V.m}" stroke-width="2"/>`).join('')}${uibtn(200,150,86,'DEPLOY ▶',true)}`)],
+  ['UI','00e','Loadout — your HAWC.','The player HAWC with stats + weapons (FLECH guns, HAWK rifle). Confirm → LAUNCH.',
+   screen(`<text x="160" y="32" font-size="14" fill="${V.hi}" font-family="Arial" font-weight="bold" text-anchor="middle">YOUR HAWC</text>
+     ${mech(90,120,0.95,V.d,V.hi)}<rect x="176" y="48" width="118" height="92" fill="${V.d}" stroke="${V.l}"/>
+     ${[...Array(5)].map((_,i)=>`<line x1="186" y1="${62+i*13}" x2="284" y2="${62+i*13}" stroke="${V.m}" stroke-width="2"/>`).join('')}${uibtn(196,150,90,'LAUNCH ▶',true)}`)],
+ ],
+ 'ACT I — ARRIVAL': [
+  ['EST','01','The station over Mars.','WIDE. Slow push-in. Establish scale and loneliness.',
+   `<defs>${grad('g1',V.k,'#1a1a1f')}</defs><rect width="320" height="180" fill="url(#g1)"/>
+    <circle cx="90" cy="180" r="150" fill="${V.m}"/><circle cx="90" cy="180" r="150" fill="none" stroke="${V.l}" opacity=".4"/>
+    <path d="M0 150 Q90 120 180 150" stroke="${V.l}" fill="none" opacity=".3"/>
+    <g stroke="#000" stroke-width="1.4" fill="${V.l}"><rect x="210" y="56" width="74" height="12" rx="3"/><rect x="238" y="34" width="10" height="56"/><rect x="198" y="40" width="26" height="7" fill="${V.m}"/><rect x="262" y="40" width="26" height="7" fill="${V.m}"/><rect x="244" y="20" width="14" height="10" fill="${V.hi}"/></g>
+    ${[...Array(26)].map(()=>`<circle cx="${Math.random()*320}" cy="${Math.random()*80}" r=".8" fill="#fff" opacity=".8"/>`).join('')}`],
+
+  ['FULL','02','Undock — the lander falls free.','MEDIUM. Track the ship leaving the dock, station filling the left.',
+   `<rect width="320" height="180" fill="${V.k}"/><circle cx="20" cy="170" r="130" fill="${V.d}"/>
+    <g stroke="#000" stroke-width="1.4" fill="${V.l}"><rect x="10" y="26" width="46" height="10"/><rect x="26" y="36" width="12" height="26"/></g>
+    <g transform="translate(176,74) rotate(18)" stroke="#000" stroke-width="1.4"><rect x="-11" y="-36" width="22" height="72" rx="8" fill="${V.hi}"/><polygon points="-11,-36 11,-36 0,-52" fill="${V.l}"/><rect x="-7" y="30" width="6" height="12" fill="${V.k}"/><rect x="2" y="30" width="6" height="12" fill="${V.k}"/><rect x="-14" y="-10" width="6" height="30" fill="${V.m}"/></g>
+    <text x="250" y="150" fill="${V.hi}" font-size="10" font-family="Arial">releasing</text>`],
+
+  ['LOW','03','Entry burn.','LOW, from behind/below. Plasma fills frame — the danger frame. Hold on it.',
+   `<defs>${grad('g3',V.k,V.d)}</defs><rect width="320" height="180" fill="url(#g3)"/>
+    <g transform="translate(160,74) rotate(30)" stroke="#000" stroke-width="1.4"><rect x="-12" y="-34" width="24" height="68" rx="9" fill="${V.hi}"/><polygon points="-12,-34 12,-34 0,-52" fill="${V.l}"/></g>
+    <polygon points="150,112 170,112 232,180 88,180" fill="${V.l}"/><polygon points="155,112 165,112 206,180 114,180" fill="${V.hi}"/>
+    <polygon points="158,112 162,112 180,180 140,180" fill="#fff" opacity=".8"/>`],
+
+  ['HIGH','04','Descent — legs deploy, retro-burn.','HIGH, craning down as the surface resolves below.',
+   `<defs>${grad('g4',V.l,V.hi)}</defs><rect width="320" height="118" fill="url(#g4)"/><rect y="118" width="320" height="62" fill="${V.m}"/>
+    <path d="M0 150 Q160 132 320 150 L320 180 L0 180Z" fill="${V.d}" opacity=".5"/>
+    <g transform="translate(160,66)" stroke="#000" stroke-width="1.4"><rect x="-11" y="-30" width="22" height="60" rx="9" fill="${V.hi}"/><polygon points="-11,-30 11,-30 0,-44" fill="${V.l}"/>
+     <line x1="-9" y1="30" x2="-22" y2="50" stroke="#000" stroke-width="2"/><line x1="9" y1="30" x2="22" y2="50" stroke="#000" stroke-width="2"/>
+     <polygon points="-6,30 6,30 13,52 -13,52" fill="${V.hi}" opacity=".8"/></g>`],
+
+  ['LOW','05','Deploy — boots on Mars.','HERO LOW ANGLE. Ramp drops, HAWC walks out, dust kicks. The reveal.',
+   `<defs>${grad('g5',V.l,V.hi)}</defs><rect width="320" height="116" fill="url(#g5)"/><rect y="116" width="320" height="64" fill="${V.m}"/>
+    <ellipse cx="160" cy="116" rx="130" ry="10" fill="${V.l}" opacity=".5"/>
+    <g transform="translate(96,100)" stroke="#000" stroke-width="1.4"><rect x="-54" y="-16" width="48" height="34" rx="4" fill="${V.d}"/><polygon points="-6,-16 -6,18 20,24 20,-10" fill="${V.m}"/></g>
+    ${mech(200,70,1.05,V.d,V.hi)}
+    <ellipse cx="200" cy="116" rx="34" ry="7" fill="${V.m}" opacity=".6"/>`],
+ ],
+ 'ACT II — FIRST CONTACT': [
+  ['EST','06','The installation.','WIDE. Across the plain: the rival mining base. The objective, small and far.',
+   `<defs>${grad('g6',V.l,V.hi)}</defs><rect width="320" height="120" fill="url(#g6)"/><rect y="120" width="320" height="60" fill="${V.m}"/>
+    <path d="M0 150 Q160 138 320 150 L320 180 L0 180Z" fill="${V.d}" opacity=".4"/>
+    <g stroke="#000" stroke-width="1.4" fill="${V.d}"><rect x="118" y="80" width="118" height="40"/><rect x="150" y="58" width="20" height="24" fill="${V.m}"/><rect x="202" y="52" width="12" height="30" fill="${V.m}"/><polygon points="236,80 236,60 252,80" fill="${V.l}"/></g>
+    <rect x="175" y="62" width="7" height="7" fill="#fff"/>`],
+
+  ['OS','07','Enemy HAWC — your mirror.','OVER-SHOULDER past your HAWC. The enemy, same silhouette, darker. Turns toward you.',
+   `<defs>${grad('g7',V.l,V.m)}</defs><rect width="320" height="118" fill="url(#g7)"/><rect y="118" width="320" height="62" fill="${V.d}"/>
+    <g transform="translate(60,120) scale(1.5)" opacity=".92"><rect x="-20" y="-40" width="40" height="40" fill="${V.k}"/><rect x="-22" y="0" width="12" height="30" fill="${V.k}"/><rect x="10" y="0" width="12" height="30" fill="${V.k}"/></g>
+    ${mech(220,68,0.95,V.k,V.m)}
+    <text x="220" y="30" fill="${V.hi}" font-size="9" font-family="Arial" text-anchor="middle">hostile</text>`],
+
+  ['CU','08','Taking fire — leg down.','CLOSE-UP (use sparingly). Cockpit lists, "LEG ACTUATOR CRITICAL". Dominance → catastrophe.',
+   `<rect width="320" height="180" fill="${V.d}"/>
+    <g transform="translate(150,96) rotate(-7)"><rect x="-70" y="-50" width="150" height="120" fill="${V.m}"/><rect x="-40" y="-36" width="80" height="40" rx="4" fill="${V.k}" stroke="#000" stroke-width="1.4"/><rect x="-30" y="-28" width="60" height="22" fill="${V.hi}"/></g>
+    <polygon points="60,20 72,0 84,20" fill="${V.hi}"/><polygon points="64,20 72,6 80,20" fill="#fff"/>
+    <rect x="70" y="140" width="180" height="20" fill="${V.k}"/><text x="160" y="154" fill="#fff" font-size="12" font-family="Arial" text-anchor="middle">LEG ACTUATOR CRITICAL</text>`],
+ ],
+ 'ACT III — THE HIJACK': [
+  ['FULL','09','Eject — the pilot drops out.','PUNCH to 3rd person. Canopy blows. Suddenly a fragile human in the open. Desperation.',
+   `<defs>${grad('g9',V.l,V.m)}</defs><rect width="320" height="120" fill="url(#g9)"/><rect y="120" width="320" height="60" fill="${V.d}"/>
+    <g transform="translate(120,74)" opacity=".7"><rect x="-20" y="-34" width="40" height="34" fill="${V.d}"/><rect x="-22" y="0" width="12" height="34" fill="${V.d}"/></g>
+    <g transform="translate(206,54)" stroke="#000" stroke-width="1.4"><circle cx="0" cy="0" r="8" fill="${V.hi}"/><rect x="-5" y="8" width="10" height="18" rx="2" fill="${V.l}"/><polygon points="-11,-11 11,-11 0,-24" fill="${V.hi}" opacity=".6"/></g>
+    <text x="206" y="118" fill="${V.k}" font-size="9" font-family="Arial" text-anchor="middle">ON FOOT · EXPOSED</text>`],
+
+  ['POV','10','HAWK the enemy — capture, not kill.','POV / aim down the HAWK. Spike the enemy HAWC — its pilot force-ejects. The gamble.',
+   `<defs>${grad('g10',V.l,V.m)}</defs><rect width="320" height="120" fill="url(#g10)"/><rect y="120" width="320" height="60" fill="${V.d}"/>
+    <rect x="0" y="120" width="60" height="60" fill="${V.k}"/><rect x="40" y="96" width="120" height="10" fill="${V.k}" transform="rotate(-6 40 96)"/>
+    ${mech(230,66,0.9,V.k,V.m)}
+    <circle cx="230" cy="66" r="26" fill="none" stroke="${V.hi}" stroke-width="2"/><line x1="210" y1="66" x2="250" y2="66" stroke="${V.hi}" stroke-width="2"/><line x1="230" y1="46" x2="230" y2="86" stroke="${V.hi}" stroke-width="2"/>
+    <line x1="60" y1="92" x2="206" y2="70" stroke="#fff" stroke-width="2" stroke-dasharray="4 4"/>`],
+
+  ['FULL','11','Commandeer — the reversal begins.','MEDIUM. Sprint to the stilled machine, climb in. 0.8s boot — the vulnerable beat.',
+   `<defs>${grad('g11',V.l,V.hi)}</defs><rect width="320" height="120" fill="url(#g11)"/><rect y="120" width="320" height="60" fill="${V.m}"/>
+    ${mech(180,66,1.1,V.d,V.hi)}
+    <text x="180" y="28" fill="${V.k}" font-size="10" font-family="Arial" text-anchor="middle">◗ BOOT 0.8s</text>
+    <g transform="translate(120,96)" stroke="#000" stroke-width="1.4"><circle cx="0" cy="-8" r="6" fill="${V.hi}"/><rect x="-4" y="-2" width="8" height="16" fill="${V.l}"/></g>`],
+
+  ['LOW','12','Turn the tide — this is G-Nome.','HERO LOW, pulling back. In the enemy\'s own HAWC, you flank the base. The gamble paid.',
+   `<defs>${grad('g12',V.l,V.hi)}</defs><rect width="320" height="118" fill="url(#g12)"/><rect y="118" width="320" height="62" fill="${V.m}"/>
+    <g stroke="#000" stroke-width="1.4" fill="${V.d}" opacity=".7"><rect x="206" y="78" width="96" height="42"/><rect x="232" y="58" width="16" height="22" fill="${V.m}"/></g>
+    ${mech(110,68,1.15,V.d,V.hi)}
+    <ellipse cx="110" cy="118" rx="36" ry="7" fill="${V.m}" opacity=".6"/>`],
+ ],
+};
+
+const board=document.getElementById('board');
+Object.entries(FRAMES).forEach(([act,frames])=>{
+  const a=document.createElement('div'); a.className='act'; a.textContent=act; board.appendChild(a);
+  const g=document.createElement('div'); g.className='grid';
+  frames.forEach(([shot,no,title,dir,svg])=>{
+    const p=document.createElement('div'); p.className='panel';
+    p.innerHTML=`<div class="pane"><span class="shot">${shot}</span><span class="no">${no}</span>
+      <svg viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice">${svg}</svg></div>
+      <p class="cap"><b>${title}</b><span class="dir">${dir}</span></p>`;
+    g.appendChild(p);
+  });
+  board.appendChild(g);
+});
+</script>
+</body>
+</html>

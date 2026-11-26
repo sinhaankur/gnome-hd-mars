@@ -1,0 +1,52 @@
+name: Deploy docs to GitHub Pages
+
+# The legacy Pages builder errored on this repo, so we deploy via Actions.
+# Uses GitHub's canonical TWO-JOB pattern (build → deploy): the build job produces the
+# "github-pages" artifact, the deploy job consumes it. Splitting the jobs avoids the
+# artifact-not-found race that failed the single-job form (deploy-pages querying before
+# the artifact was registered).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# never cancel an in-flight deploy; queue the next
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false              # docs/assets/*.glb are committed as real files, not LFS
+      - uses: actions/configure-pages@v5
+      - name: Verify docs/ exists and list what ships
+        run: |
+          test -f docs/index.html || { echo "::error::docs/index.html missing"; exit 1; }
+          echo "Publishing these pages:"; ls -1 docs/*.html
+          echo "Assets:"; ls -1 docs/assets/ 2>/dev/null || true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

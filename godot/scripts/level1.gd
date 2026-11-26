@@ -80,6 +80,11 @@ func _build_environment() -> void:
 		_terrain.set_script(load("res://scripts/terrain.gd"))
 	add_child(_terrain)
 
+	# Mars ecosystem Phase 1 (#2): scatter real rocks on the relief, outside the base pad.
+	var MarsScatter := load("res://scripts/mars_scatter.gd")
+	if MarsScatter and _terrain.has_method("height"):
+		add_child(MarsScatter.make(_terrain, 400.0, 30.0))
+
 # ---------------------------------------------------------------- assets
 func _load_assets() -> Node3D:
 	var packed: PackedScene = load("res://assets/gnome_assets.glb")

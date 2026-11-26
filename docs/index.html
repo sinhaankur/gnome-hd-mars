@@ -81,6 +81,7 @@
   .btn{display:inline-block;padding:11px 20px;border-radius:8px;text-decoration:none;font-weight:600;
     background:var(--gold);color:#1a1509;border:1px solid var(--gold-2)}
   .btn.ghost{background:transparent;color:var(--gold)}
+  .btn.play{background:var(--orange);color:#1a0c02;border-color:#b5661a}
 </style>
 </head>
 <body>
@@ -101,6 +102,10 @@
       <div class="hero-cap">The strategic layer — a real NASA/Viking Mars globe you fight across, territory by territory.</div>
     </div>
     <div class="btnrow">
+      <a class="btn play" href="intro.html">▶ Watch the arrival</a>
+      <a class="btn" href="team.html">Meet the team</a>
+      <a class="btn" href="storyboard.html">Storyboard</a>
+      <a class="btn" href="pitch.html">Pitch deck</a>
       <a class="btn" href="https://github.com/sinhaankur/gnome-hd-mars">View on GitHub</a>
       <a class="btn ghost" href="#roadmap">What's being built ↓</a>
     </div>
@@ -131,6 +136,8 @@
       <div class="card"><h3><span class="dot"></span>Strategic Mars globe</h3><p>Rotate the real planet, pick a contested territory, deploy.</p></div>
       <div class="card"><h3><span class="dot"></span>Orbital arrival cinematic</h3><p>A mothership releases your drop-ship, which burns down to the chosen territory.</p></div>
       <div class="card"><h3><span class="dot"></span>Drivable HAWC + HUD</h3><p>WASD + jump, mouse aim, health/shield bars, minimap radar, wave-defense combat.</p></div>
+      <div class="card"><h3><span class="dot"></span>Eject &amp; hijack loop</h3><p>Exit on foot, GASHR an enemy HAWC to eject its pilot, board the intact hull — the G-Nome signature, built.</p></div>
+      <div class="card"><h3><span class="dot"></span>Living Mars surface</h3><p>Discovery-based ecosystem: scattered rocks, windblown megaripples, wandering dust devils, slope streaks on canyon walls.</p></div>
     </div>
 
     <div class="cols" style="margin-top:22px;align-items:center">
@@ -178,9 +185,9 @@
 
     <div class="phase">
       <div class="no">2</div>
-      <div class="body"><h3>World elements — built right in Blender</h3>
-        <p>Break the world into real, art-directed elements: <strong>rocks &amp; regolith, dust &amp; wind, atmosphere &amp; climate, sky &amp; light, hazards</strong>, verified against NASA photos. Done so far: terrain colour re-sampled to real Perseverance ground, rock scatter densified to match rock-littered Mars.</p></div>
-      <span class="status now">In progress</span>
+      <div class="body"><h3>Mars surface ecosystem — discovery-based, phased</h3>
+        <p>The ground the player sees every frame, built one component at a time against real rover/orbiter findings: <strong>Phase 1 rock scatter</strong> (breccia, potato-chip plates, iron-nickel meteorites, placed by slope), <strong>Phase 2 megaripples</strong> (wind ridges), <strong>Phase 3 dust devils</strong> (wandering columns), <strong>Phase 4 slope streaks / RSL</strong> on steep walls. All four shipped; in-game visual tuning next.</p></div>
+      <span class="status done">Shipped</span>
     </div>
 
     <div class="phase">
@@ -215,7 +222,7 @@
 
 <footer>
   <div class="wrap">
-    <p><strong>Mars HAWC</strong> — G-Nome lineage · © 2026 Ankur Sinha · MIT License</p>
+    <p><strong>Mars HAWC</strong> — G-Nome lineage · © 2026 sinhaankur · MIT License</p>
     <p>Built with Godot 4 and Blender. Mars imagery: NASA/Viking mosaic &amp; HiRISE elevation data.</p>
     <div class="btnrow">
       <a class="btn" href="https://github.com/sinhaankur/gnome-hd-mars">GitHub repository</a>

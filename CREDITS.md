@@ -35,12 +35,24 @@ licenses — retain these attributions in any distribution.
   "Gravel Ground Module Scan" by **Pers Scans** — CC-BY 4.0 (Sketchfab).
 - **Kenney assets** (`dust_cc0.glb`, `flag_cc0.glb`, `cloud_cc0.glb`) —
   Kenney.nl — CC0.
-- **On-foot pilot** (`pilot_trooper.glb`) — "Sci-Fi Soldier / Futuristic Combat Trooper"
-  by **ART_LOLL** — CC-BY 4.0 (Sketchfab). Normalized upright to 1.85 m as the Union
-  pilot for the eject/hijack loop. https://sketchfab.com/3d-models/de876bfdce1c47a4aa67670faee7208e
+- **On-foot pilot** (`pilot_human.glb`) — "Halo-Infinite-Master-Chief-rigged-walk" by
+  **bensimulator2** — CC-BY (Sketchfab). Normalized upright to 1.9 m as the on-foot pilot.
+  https://sketchfab.com/3d-models/halo-infinite-master-chief-rigged-walk-2ab775a1c67141d9a03bb5c92c115b36
+  ⚠️ **PLACEHOLDER — do NOT ship publicly — IP.** Master Chief / Halo is a trademarked
+  Microsoft / 343 Industries character; the uploader's CC-BY covers their upload, not the
+  underlying IP. Use only as a private dev placeholder. Replace with an original armored
+  trooper before any public distribution (same policy as the AT-ST entry below).
+  *(Previous pilot: "Sci-Fi Soldier" by **ART_LOLL**, CC-BY 4.0, `pilot_trooper.glb` —
+  static, no rig; retired as the on-foot pilot.)*
 - **Player hero HAWC** (`hero_striker.glb`) — "Medium Mech Striker" by **MSGDI**
   — CC-BY 4.0 (Sketchfab). Normalized to 7 m + Union-tinted as the player mech.
   https://sketchfab.com/3d-models/27ba717c173a40b7841d2f2c6a89d823
+- **Art-pass hero HAWC** (`hero_hawc.glb`) — derived from `Glb/w9231_combat_mech`
+  (user-supplied; see note below). Normalized to 2.5 u, given a Mars-faction PBR
+  art-pass (metallic armour, warm dust tint, emissive optics). **Not yet the active
+  player mech** — it has no animations; retarget `hero_striker`'s clips before use.
+  ⚠️ **LICENSE UNVERIFIED** — confirm the w9231 source's license before any public
+  distribution. Do not ship publicly until cleared.
 - **Crashed insertion shuttle** (`shuttle_wreck.glb`) — "Sci-fi Dropship" by
   **Pascal T. Monette** — CC-BY 4.0 (Sketchfab). Normalized to 14 m as the prologue
   crash-site wreck. https://sketchfab.com/3d-models/709a1916c0cc4cbebe197e7ef26964cb

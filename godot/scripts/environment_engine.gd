@@ -68,6 +68,10 @@ func _ready() -> void:
 	# Never Earth-style cumulus — the old scaled Kenney clouds read as white slabs.
 	_build_clouds()
 	_build_wind_dust()
+	# Mars ecosystem Phase 3 (#4): a wandering dust devil — the "alive surface" moment.
+	var DustDevil := load("res://scripts/mars_dust_devil.gd")
+	if DustDevil:
+		add_child(DustDevil.make(self))
 	# --- installation to defend ---
 	installation = _build_installation(installation_pos)
 	add_child(installation)

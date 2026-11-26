@@ -5,6 +5,10 @@ class_name GameHUD
 
 const RADAR_SIZE := 160.0
 const RADAR_RANGE := 220.0   # world units the radar covers (half-map)
+# enemy health-bar range gating (COMPONENT_AUDIT.md #4): bars fade past BAR_FADE_DIST and
+# vanish past BAR_MAX_DIST so far specks don't litter the screen with floating labels.
+const BAR_FADE_DIST := 80.0
+const BAR_MAX_DIST := 160.0
 
 var _player: Node
 var _env: Node
@@ -181,11 +185,22 @@ func _update_enemy_bars() -> void:
 			bar.queue_free()
 			_enemy_bars.erase(e)
 			continue
-		var head: Vector3 = e.global_position + Vector3.UP * 8.0
+		# COMPONENT_AUDIT.md #4: distant enemies read as tiny silhouettes, so a bar floating
+		# 8 m above one looked like a "lollipop plant" label. Fix: (a) cap display distance so
+		# far specks carry no bar (declutter), (b) sit the bar just over the mech's head (~7 m)
+		# scaled by its render scale so it tracks the body instead of hovering in the air.
+		var cam_dist := cam.global_position.distance_to(e.global_position)
+		if cam_dist > BAR_MAX_DIST:
+			bar.visible = false
+			continue
+		var head_h: float = 7.0 * (e.scale.y if e is Node3D else 1.0)
+		var head: Vector3 = e.global_position + Vector3.UP * head_h
 		if cam.is_position_behind(head):
 			bar.visible = false
 			continue
 		bar.visible = true
+		# fade the bar out with distance so the near fight stays legible
+		bar.modulate.a = clampf(1.0 - (cam_dist - BAR_FADE_DIST) / (BAR_MAX_DIST - BAR_FADE_DIST), 0.25, 1.0)
 		var sp := cam.unproject_position(head)
 		bar.position = sp - bar.custom_minimum_size * 0.5
 		var cur: float = float(e.hp) if "hp" in e else 0.0

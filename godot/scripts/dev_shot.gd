@@ -41,7 +41,43 @@ func _process(delta: float) -> void:
 		q.exclude = [mech.get_rid()]
 		var hit: Dictionary = space.intersect_ray(q)
 		var gy: float = hit.position.y if not hit.is_empty() else NAN
-		print("DEV mech y=%.2f floor=%s ground=%.2f vy=%.2f" % [p.y, mech.is_on_floor(), gy, mech.velocity.y])
+		print("DEV mech y=%.2f floor=%s ground=%.2f vy=%.2f %s" % [p.y, mech.is_on_floor(), gy, mech.velocity.y, _aabb_report(mech, "Visual")])
+	# AXIS DIAG: report the on-foot pilot's upright-ness + foot-vs-ground (the Pilot body is
+	# the one in the "player" group that exposes max_speed and has a Visual child)
+	for g in get_tree().get_nodes_in_group("player"):
+		if g and g.get("max_speed") != null and g.has_node("Visual"):
+			print("DEV pilot ", _aabb_report(g, "Visual"), " worldY=%.2f" % (g as Node3D).global_position.y)
+			break
 	_count += 1
 	if _count >= MAX_SHOTS:
 		get_tree().quit()
+
+# AXIS DIAG helper: world-space AABB of a body's Visual, reporting height, tallest axis,
+# and how far the lowest mesh point sits above/below the body origin (feet-at-origin check).
+func _aabb_report(body: Node, visual_name: String) -> String:
+	var vis := body.get_node_or_null(visual_name) as Node3D
+	if vis == null:
+		return "[no Visual]"
+	var lo := Vector3(INF, INF, INF)
+	var hi := -lo
+	var stack: Array = [vis]
+	while stack.size() > 0:
+		var n = stack.pop_back()
+		if n is MeshInstance3D:
+			var mi := n as MeshInstance3D
+			var ab := mi.get_aabb()
+			var xf := mi.global_transform
+			for i in range(8):
+				var wp: Vector3 = xf * ab.get_endpoint(i)
+				lo = Vector3(minf(lo.x, wp.x), minf(lo.y, wp.y), minf(lo.z, wp.z))
+				hi = Vector3(maxf(hi.x, wp.x), maxf(hi.y, wp.y), maxf(hi.z, wp.z))
+		for c in n.get_children():
+			stack.append(c)
+	if lo.x == INF:
+		return "[no meshes]"
+	var dx := hi.x - lo.x
+	var dy := hi.y - lo.y
+	var dz := hi.z - lo.z
+	var tallest := ("Y" if (dy >= dx and dy >= dz) else ("X" if dx >= dz else "Z"))
+	var by: float = (body as Node3D).global_position.y
+	return "[dims %.2fx%.2fx%.2f tallest=%s footY=%.2f(vs bodyY=%.2f -> %+.2f)]" % [dx, dy, dz, tallest, lo.y, by, lo.y - by]

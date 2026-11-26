@@ -31,6 +31,12 @@ const MECH_FOOT_LIFT := 0.0
 # Model face orientation vs movement. 0 = faces forward (model +Z = body +Z = movement dir).
 # Flip to PI if it ever reads backward. Single source of truth so it's one edit to fix.
 const MECH_FACE_FLIP := 0.0
+# Upright correction for the hero mech. Measured in-engine (Godot orient-probe, 2026-11-23):
+# of 0/+90/-90/180deg about X, ONLY 0deg stands hero_striker.glb upright (heightY 3.28 m vs
+# 1.57 m lying at +/-90). So no X-correction is needed — the earlier pivot was the bug that
+# tipped it over. Kept as a named constant so any future mech with a real axis offset is a
+# one-line fix here (verify with the probe, never guess).
+const MECH_UPRIGHT_X := 0.0
 
 var env: EnvironmentEngine
 var enemies: EnemyEngine
@@ -446,7 +452,17 @@ func _build_hawc(pos: Vector3, model_path: String = HERO_PATH, tint: String = "u
 		# faction paint over the baked textures: union tan for the hero loadout, or the
 		# stolen hull's original colors (you fly false colors after a hijack).
 		FactionLib.tint(hawk, tint)
-		visual.add_child(hawk)
+		# UPRIGHT PIVOT: hero_striker.glb is a Sketchfab export whose 41 baked animations were
+		# authored in a tipped-over orientation (a -90deg X root rotation), so in Godot the mech
+		# LIES DOWN (long axis on Z, only ~4.8 m "tall"). We can't fix it in the GLB — applying a
+		# rotation leaves the animated bones in the old space. So we stand it up with a wrapper
+		# node rotated +90deg about X; the animations still play, the mech stands. (Found 2026-11-22
+		# via the GLB root quat + AABB; see align_foot below which then seats its feet at Y=0.)
+		var pivot := Node3D.new()
+		pivot.name = "UprightPivot"
+		pivot.rotation.x = MECH_UPRIGHT_X
+		pivot.add_child(hawk)
+		visual.add_child(pivot)
 		mech_model = hawk
 	visual.position.y = MECH_FOOT_LIFT
 	body.add_child(visual)

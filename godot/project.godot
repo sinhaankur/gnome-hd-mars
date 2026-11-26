@@ -35,6 +35,29 @@ window/stretch/aspect="expand"
 
 project/assembly_name="G-NOME HD"
 
+[rendering]
+
+anti_aliasing/quality/msaa_3d=2
+anti_aliasing/quality/screen_space_aa=1
+lights_and_shadows/directional_shadow/size=4096
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
+# FX budget (2026-11-02, GITHUB_RESEARCH.md P-03): SSAO 3->1 (max was costly for little
+# gain outdoors), SSIL left OFF (screen-space indirect light is expensive and barely
+# visible on open Mars terrain). TAA + 4096 soft shadows kept — they define the look and
+# are protected (project-gnome-lighting-calibration). Re-measure with the perf overlay.
+environment/ssao/quality=1
+environment/glow/upscale_mode=1
+anti_aliasing/quality/use_taa=true
+
+[physics]
+
+# Physics interpolation smooths body/camera motion between physics ticks so the
+# mech reads buttery at any framerate — the classic "suddenly feels fast/smooth"
+# switch. Safe here because the mech (hawc.gd) moves via move_and_slide() in
+# _physics_process and the follow camera tracks it in _physics_process too, so
+# both interpolate together. (Added 2026-11-02 — see design/GITHUB_RESEARCH.md P-01.)
+common/physics_interpolation=true
+
 [input]
 
 move_forward={
@@ -171,11 +194,3 @@ interact={
 "type": "InputEventKey"
 }]
 }
-
-[rendering]
-
-lights_and_shadows/directional_shadow/soft_shadow_filter_quality=3
-environment/ssao/quality=3
-anti_aliasing/quality/msaa_3d=2
-anti_aliasing/quality/screen_space_aa=1
-anti_aliasing/quality/use_taa=true
